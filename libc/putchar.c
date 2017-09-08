@@ -3,7 +3,6 @@
 #include <unistd.h>
 
 int putchar(int c) {
-  // write character to stdout
   
   char ch = c;
   int length = write(1, &ch, 1);

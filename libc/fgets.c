@@ -5,7 +5,6 @@ char *
 fgets(char *res, int max, FILE *fp)
 {
 	char letter, *pntr;
-
 	for (pntr = res; max > 0; max--) {
 		if (read (fp->fd, &letter, 1) == 0)
 			break;

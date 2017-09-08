@@ -1,8 +1,8 @@
 
+#define _GNU_SOURCE
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#define _GNU_SOURCE
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <syscalls.h>
@@ -152,7 +152,6 @@ run_command(char command_array[][150], int inlet, int outlet, int args_num){
     }
     else if (pid > 0){
         // Parent process
-
         // Wait for child only when it is not background process
         if(!background) {
             do {
@@ -160,14 +159,14 @@ run_command(char command_array[][150], int inlet, int outlet, int args_num){
             } while (!WIFSIGNALED(st) && !WIFEXITED(st));
         }
     }
-    else
+    else{
         puts("ERROR: Failed to execute command.");
+    }
 }
 
 
 char* getenv(char* key)
 {
-puts("b0");    
 int ary_itr=0;
     while(ary_itr<ENV_ARRAY_LENGTH)
     {
@@ -175,11 +174,7 @@ int ary_itr=0;
             break;
         ary_itr++;
     }
-puts("b1");
-puts(ENV_VALUE[ary_itr]);
     str_copy(ENV_VALUE[ary_itr],ENV_BUFFER);
-puts("b2");
-puts(ENV_BUFFER);
     return ENV_BUFFER;
 }
 
@@ -196,9 +191,6 @@ void cache_env( char *env_array[])
         }
         char split_array[2][150];
         split_and_count(env_array[ary_itr], '=', split_array);
-        puts("key>");
-        puts(split_array[0]);
-        puts(split_array[1]);
         str_copy(split_array[0],ENV_KEY[ary_itr]);
         str_copy(split_array[1],ENV_VALUE[ary_itr]);
         ary_itr++;
@@ -321,14 +313,10 @@ void clear_3darray(char array2[150][150][150])
 int
 main(int argc, char *argv[], char *envp[])
 {
-    putchar(48+argc);
-    puts("hi");
-    puts(argv[1]);
-    puts(envp[0]);
-    cache_env(envp);
+cache_env(envp);
     while (1)
     {
-        char temp_parsed_array[150][150];
+char temp_parsed_array[150][150];
         char final_parsed_array[150][150][150];
         char string_buffer_array[INPUT_STRING_BUFFER_LENGTH];
         int num_pipes = 0, cnt = 0;
@@ -343,7 +331,7 @@ main(int argc, char *argv[], char *envp[])
         char* resp;
         // Input command
         resp = fgets(string_buffer_array, INPUT_STRING_BUFFER_LENGTH, stdin);
-        if(resp== NULL)
+ if(resp== NULL)
         {
             puts("ERROR: Failed To Take Input");
         }

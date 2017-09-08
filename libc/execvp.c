@@ -14,11 +14,6 @@ char * _get_first(const char *str, const char chr) {
 
     str++;
   }
-/*
-  if (*str == ch) {
-    return (char *) str;
-  }
-*/
   return NULL;
 
 }
@@ -48,8 +43,8 @@ int execvp(const char *file, char *const argv[], char *const envp[]) {
   if (_get_first(file, '/') != NULL) {
      
      //XXX: Call execve
-     execve(file, argv, NULL);
-     return -1;
+     execve(file, argv, NULL);     
+return -1;
   }
 
   //char * path = getenv("PATH");
@@ -83,12 +78,8 @@ int execvp(const char *file, char *const argv[], char *const envp[]) {
     ptr= memcopy(ptr+1, file, fileLength);
     *ptr = '\0';
     // call execve here
-    // call execve here
    if (access(buffer, 0) == 0) {
-     puts(buffer);
-     puts(argv[0]); 
      execve(buffer, argv, NULL);
-
    }
   }
   

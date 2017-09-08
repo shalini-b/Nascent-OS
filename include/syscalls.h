@@ -30,7 +30,7 @@ type name(type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6
 syscall1_def(void, exit, int, value);
 syscall3_def(size_t, execve, const char *, fileName,  char *const*, argv, char *const*, envp);
 syscall2_def(int, dup2, int, oldfd, int, newfd);
-syscall3_def(pid_t, wait4, pid_t, pid, int *, status, int, options);
+syscall4_def(pid_t, wait4, pid_t, pid, int *, status, int, options, char*, rusage);
 syscall2_def(int, access, const char *, filename, int, mode);
 
 #endif

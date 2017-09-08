@@ -4,12 +4,8 @@
 
 typedef struct _iobuf {
   int fd;
-  char *base;
-  int cnt;
-  int flag;
-  char *ptr;
 } FILE;
-FILE _iob[3];
+extern FILE _iob[3];
 
 #define stdin	(&_iob[0])
 #define stdout	(&_iob[1])

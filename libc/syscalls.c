@@ -94,8 +94,8 @@ type name(type1 arg1, type2 arg2, type3 arg3, type4 arg4) \
                              "r" ((uint64_t)(arg1)), \
                              "r" ((uint64_t)(arg2)), \
                              "r" ((uint64_t)(arg3)), \
-                             "r" ((uint64_t)(arg4))) \
-                             :"%rax", "%rdi", "%rsi","%rdx", "%r10"); \
+                             "r" ((uint64_t)(arg4)) \
+                             :"%rax", "%rdi", "%rsi", "%rdx", "%r10"); \
     return (type) output; \
 }
 
@@ -159,5 +159,6 @@ syscall3(size_t, execve, const char *, fileName, char *const*, argv, char *const
 syscall0(pid_t, fork);
 syscall2(char *, getcwd, char *, buf, unsigned long, size);
 syscall2(int, dup2, int, oldfd, int, newfd);
-syscall3(pid_t, wait4, pid_t, pid, int *, status, int, options);
+//TODO: add rusage struct for wait4
+syscall4(pid_t, wait4, pid_t, pid, int *, status, int, options, char*, rusage); 
 syscall2(int, access, const char *, filename, int, mode);
