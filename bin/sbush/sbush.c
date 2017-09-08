@@ -6,14 +6,17 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <syscalls.h>
+#include <strings.h>
 
 #define INPUT_STRING_BUFFER_LENGTH 1024
 char PS1[150] = "sbush>";
-char ENV_KEY[150][150];
+/*char ENV_KEY[150][150];
 char ENV_VALUE[150][4096];
 int ENV_ARRAY_LENGTH;
 char ENV_BUFFER[1024];
+*/
 
+/*
 //Length of string
 int
 len(char string[])
@@ -105,7 +108,7 @@ split_and_count(char *string_to_split, char delimiter, char final_array[][150])
     final_array[block][fin_arr_itr] = '\0';
 
     return block;
-}
+}*/
 
 void
 run_command(char command_array[][150], int inlet, int outlet, int args_num){
@@ -140,15 +143,9 @@ run_command(char command_array[][150], int inlet, int outlet, int args_num){
             close(outlet);
         }
 
-        // FIXME: Now call execvpe with env
-        // Define env
-       // char *path = getenv("PATH");
-        //char  env[500];
-        //sprintf(env, "PATH=%s", path);
-
         // Execute command
         // FIXME: do error handling
-        execvp(args[0], args, NULL);
+       execvp(args[0], args, NULL);
     }
     else if (pid > 0){
         // Parent process
@@ -164,10 +161,14 @@ run_command(char command_array[][150], int inlet, int outlet, int args_num){
     }
 }
 
-
+/*
 char* getenv(char* key)
 {
-int ary_itr=0;
+    int ary_itr=0;
+    if(str_compare(key,"PS1")==0)
+    {
+        return PS1;
+    }
     while(ary_itr<ENV_ARRAY_LENGTH)
     {
         if(str_compare(ENV_KEY[ary_itr], key) == 0)
@@ -177,7 +178,6 @@ int ary_itr=0;
     str_copy(ENV_VALUE[ary_itr],ENV_BUFFER);
     return ENV_BUFFER;
 }
-
 
 void cache_env( char *env_array[])
 {
@@ -223,6 +223,7 @@ int setenv( char *name, char *value, int overwrite)
     }
     return 0;
 }
+*/
 
 int
 command_handler(char command_array[][150], int fdin, int fdout, int args_num)
@@ -242,7 +243,6 @@ command_handler(char command_array[][150], int fdin, int fdout, int args_num)
         {
             puts("ERROR: Failed To Change Directory 2");
         }
-
     }
     else if (str_compare(command_array[0], "pwd") == 0)
     {
@@ -261,14 +261,16 @@ command_handler(char command_array[][150], int fdin, int fdout, int args_num)
         // Set environment variable
         char split_array[2][150];
         split_and_count(command_array[1], '=', split_array);
-        if (setenv(split_array[0], split_array[1], 1))
+	if (str_compare(split_array[0], "PS1") == 0)
         {
-            puts("ERROR: Failed To Change ENV Variable");
-        }
-        if (str_compare(split_array[0], "PS1") == 0)
-        {
+
+            setenv(split_array[0], split_array[1], 1);
             str_copy(split_array[1],PS1);
         }
+        else
+        {
+            setenv(split_array[0], split_array[1], 1);
+        }    
     }
     else if (str_compare(command_array[0], "getenv") == 0)
     {
@@ -313,10 +315,14 @@ void clear_3darray(char array2[150][150][150])
 int
 main(int argc, char *argv[], char *envp[])
 {
-cache_env(envp);
+    FILE *fp = NULL;
+    if(argc==2)
+    {
+        fp = fopen(argv[1],"r+");
+    }
     while (1)
     {
-char temp_parsed_array[150][150];
+        char temp_parsed_array[150][150];
         char final_parsed_array[150][150][150];
         char string_buffer_array[INPUT_STRING_BUFFER_LENGTH];
         int num_pipes = 0, cnt = 0;
@@ -327,13 +333,24 @@ char temp_parsed_array[150][150];
         clear_3darray(final_parsed_array);
 
         // Display shell prompt 
-        puts(PS1);
         char* resp;
         // Input command
-        resp = fgets(string_buffer_array, INPUT_STRING_BUFFER_LENGTH, stdin);
- if(resp== NULL)
+	if(argc==1)
         {
-            puts("ERROR: Failed To Take Input");
+            puts(PS1);
+            resp = fgets(string_buffer_array, INPUT_STRING_BUFFER_LENGTH, stdin);
+            if(resp== NULL)
+            {
+                puts("ERROR: Failed To Take Input");
+            }
+        }
+        else
+        {
+            if(fgets(string_buffer_array,INPUT_STRING_BUFFER_LENGTH,fp)==NULL)
+            {
+                break;
+
+            }
         }
 
         // Split with pipe delimiter

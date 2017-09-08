@@ -41,8 +41,6 @@ char *  memcopy(char *dst, const char *src, size_t len ) {
 int execvp(const char *file, char *const argv[], char *const envp[]) {
   
   if (_get_first(file, '/') != NULL) {
-     
-     //XXX: Call execve
      execve(file, argv, NULL);     
 return -1;
   }
@@ -60,8 +58,8 @@ return -1;
 
   char buffer[pathLength + fileLength + 1];
 
-  
-  for (const char *curr = path; ; curr = temp) {
+  int found = 0;  
+  for (const char *curr = path; found != 1 ; curr = temp) {
     temp = _get_first(curr, ':');
     
     if (temp == NULL) {
@@ -79,6 +77,7 @@ return -1;
     *ptr = '\0';
     // call execve here
    if (access(buffer, 0) == 0) {
+     found = 1;
      execve(buffer, argv, NULL);
    }
   }

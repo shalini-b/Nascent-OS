@@ -1,8 +1,32 @@
 #include <stdlib.h>
+#include <stdio.h>
+#include <strings.h>
+
+char ENV_KEY[150][150];
+char ENV_VALUE[150][4096];
+int ENV_ARRAY_LENGTH;
+
+void cache_env( char *env_array[])
+{
+    int ary_itr =0;
+    while(env_array[ary_itr]!=NULL)
+    {
+        if(env_array[ary_itr][0]=='L' && env_array[ary_itr][1]=='S')
+        {
+            ary_itr++;
+            continue;
+        }
+        char split_array[2][150];
+        split_and_count(env_array[ary_itr], '=', split_array);
+        str_copy(split_array[0],ENV_KEY[ary_itr]);
+        str_copy(split_array[1],ENV_VALUE[ary_itr]);
+        ary_itr++;
+    }
+    ENV_ARRAY_LENGTH = ary_itr;
+}
 
 void _start(void) {
   // call main() and exit() here
-//   main(0, NULL, NULL);
 
   long resp;
   int a;
@@ -15,6 +39,7 @@ void _start(void) {
   a=*((int*)(resp+8));
   char** b=(char**)(resp+16);
   char** c=(char**)(a*8+8+resp+16);
+  cache_env(c);
   main(a,b,c);
   exit(0); 
 }

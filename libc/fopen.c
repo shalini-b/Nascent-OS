@@ -11,12 +11,12 @@
 #define	O_APPEND 0x0008		/* set append mode */
 
 FILE _iob[3] = {{0},{1},{2}};
+FILE ptr;
 
 FILE *fopen(const char *path, const char *mode)
 {
   int fd;
-  FILE out;
-  FILE *pointer = &out;
+  FILE *pointer = &ptr;
   if (mode[0] == 'r' && mode[1] == '+') {
     fd = open(path, O_RDWR);
   }
@@ -37,7 +37,7 @@ FILE *fopen(const char *path, const char *mode)
   } 
   else {
     
-    return NULL;
+   return NULL;
   }
 
   if (fd == -1) {
