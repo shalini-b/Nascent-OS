@@ -1,6 +1,7 @@
 #include <sys/idt.h>
 #include <sys/defs.h>
 #include <sys/kprintf.h>
+#include <sys/pic.h>
 
 void timer();
 void  keyboard();
@@ -68,6 +69,7 @@ kprintf("undeclared ISR called");
 
 void init_idt() {
   // Fill up IDT here
+PIC_remap();
   for(int i=0; i<32; i++){
      add_idt((uint64_t)dummy_exc, i);
 }
