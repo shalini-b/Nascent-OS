@@ -1,5 +1,6 @@
 #include <sys/idt.h>
 #include <sys/defs.h>
+#include <sys/kprintf.h>
 
 void timer();
 void  keyboard();
@@ -54,11 +55,27 @@ void add_idt(uint64_t func_base, int offset) {
   id->zero1 = 0;
 }
 
+void dummy_exc();
+void dummy();
+
+void dummy_exc(){
+kprintf("Receiving exception");
+}
+
+void dummy(){
+kprintf("undeclared ISR called");
+}
+
 void init_idt() {
   // Fill up IDT here
-//  add_idt((uint64_t)timer,0);
+  for(int i=0; i<32; i++){
+     add_idt((uint64_t)dummy_exc, i);
+}
   add_idt((uint64_t)timer, 32);
   add_idt((uint64_t)keyboard,33); 
+for(int j=34; j<256; j++){
+   add_idt((uint64_t)dummy, j);
+}
  // Call LIDT
   load_idt(&idtr);
 }
