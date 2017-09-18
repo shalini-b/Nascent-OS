@@ -8,7 +8,7 @@ void timer_int()
     if (timer_count == 18){
         timer_count = -1;
         time_from_reboot++;
-        kprintf("------ Time since boot: %d ------\r\n",time_from_reboot);
+        print_time(time_from_reboot);
     }
     timer_count++;
     outb(0x20, 0x20);

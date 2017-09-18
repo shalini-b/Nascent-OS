@@ -7,6 +7,7 @@
 int OUTPUT_BUFFER_LENGTH = 0;
 int array_pointer = 0;
 char OUTPUT_BUFFER[OUTPUT_BUFFER_MAX_LENGTH];
+char TIME[OUTPUT_BUFFER_MAX_LENGTH];
 //Prototypes
 int
 len(char *string);
@@ -24,6 +25,11 @@ void
 clear_global_array();
 void
 print_to_console();
+void
+print_key(int shift_flag,char c);
+void
+print_time(int time);
+
 
 //Print Main Function
 void
@@ -32,7 +38,7 @@ kprintf(const char *string_to_format, ...)
     va_list args;
     va_start(args, string_to_format);
     OUTPUT_BUFFER_LENGTH = 0;
-    clear_global_array();
+    clear_global_array(OUTPUT_BUFFER);
     for (int i = 0; string_to_format[i] != '\0'; i++)
     {
         if (string_to_format[i] == '%' && string_to_format[i + 1] == 'c')
@@ -92,7 +98,7 @@ kprintf(const char *string_to_format, ...)
 }
 
 void
-clear_global_array()
+clear_global_array(char* OUTPUT_BUFFER)
 {
     for (int i = 0; i < OUTPUT_BUFFER_MAX_LENGTH; i++)
     {
@@ -217,6 +223,41 @@ pointer(unsigned long number, char *output_buffer)
     return index+1;
 }
 
+void print_key(int shift_flag,char c)
+{
+    register char *base_address;
+    base_address = (char *) 0xb8000;
+
+    if(shift_flag)
+    {
+        *(base_address+24*160+80) = '^';
+        *(base_address+24*160+82) = c;
+    }
+    else
+    {
+        *(base_address+24*160+80) = c;
+        *(base_address+24*160+82) = ' ';
+    }
+
+}
+
+void print_time(int time)
+{
+    register char *video_address;
+    register char *base_address;
+    int array_pointer =0;
+    int length;
+    base_address = (char *) 0xb8000;
+    clear_global_array(TIME);
+    length = num(time, TIME, 10);
+    for (int final_ary_itr = 0; final_ary_itr < length; final_ary_itr++)
+    {
+        video_address =base_address+24*160+array_pointer;
+        *video_address = TIME[final_ary_itr];
+        array_pointer += 2;
+    }
+}
+
 void
 print_to_console()
 {
@@ -225,17 +266,17 @@ print_to_console()
     base_address = (char *) 0xb8000;
     int  row = 0;
     //scroll
-    if(array_pointer>=160*25)
+    if(array_pointer>=160*24)
     {
-        for(array_pointer=160;array_pointer<=160*25;array_pointer+=2)
+        for(array_pointer=160;array_pointer<=160*24;array_pointer+=2)
         {
             video_address =base_address+array_pointer;
             *(video_address-160)=*video_address;
         }
-        array_pointer = 160*24;
+        array_pointer = 160*23;
 
         //clear last row
-        for(int tmp=160*24;tmp<160*25;tmp++)
+        for(int tmp=160*23;tmp<160*24;tmp++)
         {
             video_address =base_address+tmp;
             *video_address = ' ';

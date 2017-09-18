@@ -2,7 +2,7 @@
 #include <sys/defs.h>
 
 void timer();
-
+void  keyboard();
 uint8_t inb(uint16_t port) {
     uint8_t ret;
     __asm__ __volatile__ ( "inb %1, %0"
@@ -58,7 +58,8 @@ void init_idt() {
   // Fill up IDT here
 //  add_idt((uint64_t)timer,0);
   add_idt((uint64_t)timer, 32);
-  // Call LIDT
+  add_idt((uint64_t)keyboard,33); 
+ // Call LIDT
   load_idt(&idtr);
 }
 
