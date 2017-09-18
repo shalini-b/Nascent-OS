@@ -225,18 +225,25 @@ pointer(unsigned long number, char *output_buffer)
 
 void print_key(int shift_flag,char c)
 {
+    register char *video_address;
     register char *base_address;
     base_address = (char *) 0xb8000;
+    char str[14]="Key Entered: ";
+    for (int i=0;i<14;i++)
+    {
+        video_address =base_address+24*160+80+i*2;
+        *video_address = str[i];
+    }
 
     if(shift_flag)
     {
-        *(base_address+24*160+80) = '^';
-        *(base_address+24*160+82) = c;
+        *(base_address+24*160+80+28) = '^';
+        *(base_address+24*160+82+28) = c;
     }
     else
     {
-        *(base_address+24*160+80) = c;
-        *(base_address+24*160+82) = ' ';
+        *(base_address+24*160+80+28) = c;
+        *(base_address+24*160+82+28) = ' ';
     }
 
 }
@@ -250,9 +257,15 @@ void print_time(int time)
     base_address = (char *) 0xb8000;
     clear_global_array(TIME);
     length = num(time, TIME, 10);
+    char str[20]="Time Since Reboot: ";
+    for (int i=0;i<20;i++)
+    {
+        video_address =base_address+24*160+i*2;
+        *video_address = str[i];
+     }
     for (int final_ary_itr = 0; final_ary_itr < length; final_ary_itr++)
     {
-        video_address =base_address+24*160+array_pointer;
+        video_address =base_address+24*160+40+array_pointer;
         *video_address = TIME[final_ary_itr];
         array_pointer += 2;
     }

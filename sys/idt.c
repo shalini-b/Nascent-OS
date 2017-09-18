@@ -70,14 +70,15 @@ kprintf("undeclared ISR called");
 void init_idt() {
   // Fill up IDT here
 PIC_remap();
-  for(int i=0; i<32; i++){
+/*  for(int i=0; i<32; i++){
      add_idt((uint64_t)dummy_exc, i);
 }
+*/
   add_idt((uint64_t)timer, 32);
   add_idt((uint64_t)keyboard,33); 
-for(int j=34; j<256; j++){
+/*for(int j=34; j<256; j++){
    add_idt((uint64_t)dummy, j);
-}
+}*/
  // Call LIDT
   load_idt(&idtr);
 }
