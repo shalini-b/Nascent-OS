@@ -1,6 +1,5 @@
 #include <sys/idt.h>
 #include <sys/defs.h>
-#include <sys/kprintf.h>
 #include <sys/pic.h>
 
 void timer();
@@ -18,8 +17,9 @@ void outb( uint16_t port, uint8_t val )
    __asm__ __volatile__("outb %0, %1" :: "a"(val), "Nd"(port) );
 }
 
-void load_idt(void *ptr){
-__asm__ __volatile__("lidt (%0)"::"r" (ptr));
+void load_idt(void *idt_ptr)
+{
+__asm__ __volatile__("lidt (%0)"::"r" (idt_ptr));
 }
 
 // Define IDT
@@ -56,30 +56,12 @@ void add_idt(uint64_t func_base, int offset) {
   id->zero1 = 0;
 }
 
-void dummy_exc();
-void dummy();
-
-void dummy_exc(){
-kprintf("Receiving exception");
-}
-
-void dummy(){
-kprintf("undeclared ISR called");
-}
-
 void init_idt() {
   // Fill up IDT here
-PIC_remap();
-/*  for(int i=0; i<32; i++){
-     add_idt((uint64_t)dummy_exc, i);
-}
-*/
+  PIC_remap();
   add_idt((uint64_t)timer, 32);
   add_idt((uint64_t)keyboard,33); 
-/*for(int j=34; j<256; j++){
-   add_idt((uint64_t)dummy, j);
-}*/
- // Call LIDT
+  // Call LIDT
   load_idt(&idtr);
 }
 

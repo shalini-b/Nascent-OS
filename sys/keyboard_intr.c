@@ -1,7 +1,3 @@
-//
-// Created by MOHANGANDHI on 18-09-2017.
-//
-
 //reference : http://www.cs.umd.edu/~hollings/cs412/s98/project/proj1/scancode
 
 #include<sys/idt.h>
@@ -10,7 +6,6 @@ void
 keyboard_intr()
 {
     int keyboard_value = inb(0x60);
-//c
     static int shift_flag =0,control_flag =0;
     char c;
     char asciicodes[58][2] =
