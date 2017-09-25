@@ -4,6 +4,7 @@
 #include <sys/tarfs.h>
 #include <sys/ahci.h>
 #include <sys/idt.h>
+#include <sys/pci.h>
 
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
@@ -24,6 +25,9 @@ void start(uint32_t *modulep, void *physbase, void *physfree)
   }
   kprintf("physfree %p\n", (uint64_t)physfree);
   kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+  init_idt();
+  __asm__ __volatile__ ("sti");
+  checkAllBuses();
   while(1);
 }
 
@@ -41,8 +45,6 @@ void boot(void)
     :"r"(&initial_stack[INITIAL_STACK_SIZE])
   );
   init_gdt();
-  init_idt();
-  __asm__ __volatile__ ("sti");
   start(
     (uint32_t*)((char*)(uint64_t)loader_stack[3] + (uint64_t)&kernmem - (uint64_t)&physbase),
     (uint64_t*)&physbase,
