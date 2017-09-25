@@ -147,8 +147,9 @@ void checkAllBuses() {
                  // kprintf("BAR4 %p", bar4);
 	         bar5 = pciConfigReadLong(bus, device, 0, 24);
                  kprintf("BAR5 %p", bar5);
-		 abar = (hba_mem_t *) bar5;
-		 probe_port(bar5); 
+		 outl(0xCF8, bar5);
+		 abar = (hba_mem_t *)(inl (0xCFC));
+		 probe_port(abar); 
              }
          }
      }
