@@ -86,23 +86,23 @@ void probe_port(hba_mem_t *abar)
 			int dt = check_type(&abar->ports[i]);
 			if (dt == AHCI_DEV_SATA)
 			{
-				kprintf("SATA drive found at port %d\n", i);
+				kprintf("SATA drive found at port %d \n", i);
 			}
 			else if (dt == AHCI_DEV_SATAPI)
 			{
-				kprintf("SATAPI drive found at port %d\n", i);
+				kprintf("SATAPI drive found at port %d \n", i);
 			}
 			else if (dt == AHCI_DEV_SEMB)
 			{
-				kprintf("SEMB drive found at port %d\n", i);
+				kprintf("SEMB drive found at port %d \n", i);
 			}
 			else if (dt == AHCI_DEV_PM)
 			{
-				kprintf("PM drive found at port %d\n", i);
+				kprintf("PM drive found at port %d \n", i);
 			}
 			else
 			{
-				kprintf("No drive found at port %d\n", i);
+				kprintf("No drive found at port %d \n", i);
 			}
 		}
  
@@ -111,10 +111,10 @@ void probe_port(hba_mem_t *abar)
 	}
 }
 
-static int check_type(hba_port_t *port)
+int check_type(hba_port_t *port)
 {
 	uint32_t ssts = port->ssts;
-	kprintf("Drive status: %p", ssts); 
+	kprintf("Drive status: %p;  ", ssts); 
  
 	switch (port->sig)
 	{
@@ -134,22 +134,20 @@ void checkAllBuses() {
      uint8_t bus;
      uint8_t device;
      int found;
-     hba_mem_t *abar;
-     uint32_t bar5;
+     uint32_t bar5, abar;
  
      for(bus = 0; bus < 255; bus++) {
          for(device = 0; device < 32; device++) {
              found=0;
              found = pciCheckForAHCI(bus, device);
              if (found == 1){
-                 kprintf("Found AHCI");
-                 // bar4 =  pciConfigReadLong(bus, device, 0, 20);
-                 // kprintf("BAR4 %p", bar4);
-	         bar5 = pciConfigReadLong(bus, device, 0, 24);
-                 kprintf("BAR5 %p", bar5);
+                 kprintf("Found AHCI at bus %p device %p; ", bus, device);
+	         bar5 = pciConfigReadLong(bus, device, 0, 0x24);
+                 kprintf("BAR5 original value %p; ", bar5);
 		 outl(0xCF8, bar5);
-		 abar = (hba_mem_t *)(inl (0xCFC));
-		 probe_port(abar); 
+		 outl(0xCFC, 0x3cffffff);
+		 abar = inl (0xCFC);
+		 probe_port((hba_mem_t *)(uint64_t)abar); 
              }
          }
      }
