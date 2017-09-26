@@ -1,3 +1,5 @@
+#include <sys/defs.h>
+
 #ifndef _AHCI_H
 #define _AHCI_H
 
@@ -29,6 +31,11 @@
 
 #define MAX_CMD_SLOT_CNT 32
 #define MAX_PORT_CNT     32
+
+#define ATA_DEV_BUSY 0x80
+#define ATA_DEV_DRQ 0x08
+#define ATA_CMD_READ_DMA_EX 0x25
+#define ATA_CMD_WRITE_DMA_EX 0x35
 
 typedef enum {
   FIS_TYPE_REG_H2D = 0x27,   // Register FIS - host to device
@@ -333,5 +340,11 @@ typedef volatile struct {
   // 0x100 - 0x10FF, Port control registers
   hba_port_t ports[MAX_PORT_CNT]; // 1 ~ 32
 }__attribute__((__packed__)) hba_mem_t;
+
+int read_or_write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buf, int rf)
+void start_cmd(hba_port_t *port);
+void stop_cmd(hba_port_t *port);
+int find_cmdslot(hba_port_t *port);
+void  *memset(void *string_to_memset, int char_to_memset_with, int length_to_memset);
 
 #endif

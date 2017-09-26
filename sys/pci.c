@@ -3,6 +3,10 @@
 #include <sys/defs.h>
 #include <sys/ahci.h>
 
+#define HBA_PORT_IPM_ACTIVE   0x1
+#define HBA_PORT_DET_PRESENT   0x3
+#define AHCI_DEV_NULL 0x0
+
 #define	SATA_SIG_ATA	0x00000101	// SATA drive
 #define	SATA_SIG_ATAPI	0xEB140101	// SATAPI drive
 #define	SATA_SIG_SEMB	0xC33C0101	// Enclosure management bridge
@@ -56,15 +60,15 @@ uint32_t pciConfigReadLong (uint8_t bus, uint8_t device,
  }
 
 
-int pciCheckForAHCI(uint8_t bus, uint8_t device)
+int pciCheckForAHCI(uint8_t bus, uint8_t device, uint8_t f)
  {
      uint16_t resp, vendor;
-     vendor = pciConfigReadWord(bus,device,0,0);
+     vendor = pciConfigReadWord(bus,device,f,0);
      if (vendor == 0xFFFF){
       return 0;
      }
     
-     resp = pciConfigReadWord(bus,device,0,10);
+     resp = pciConfigReadWord(bus,device,f,10);
     if (resp == 0x0106) {
         return 1;
     }
@@ -73,13 +77,38 @@ int pciCheckForAHCI(uint8_t bus, uint8_t device)
     }
  }
 
+static int check_type(hba_port_t *port)
+{
+        uint32_t ssts = port->ssts;
+
+        uint8_t ipm = (ssts >> 8) & 0x0F;
+        uint8_t det = ssts & 0x0F;
+
+
+        if (det != HBA_PORT_DET_PRESENT)        // Check drive status
+                return AHCI_DEV_NULL;
+        if (ipm != HBA_PORT_IPM_ACTIVE)
+                return AHCI_DEV_NULL;
+
+        switch (port->sig)
+        {
+        case SATA_SIG_ATAPI:
+                return AHCI_DEV_SATAPI;
+        case SATA_SIG_SEMB:
+                return AHCI_DEV_SEMB;
+        case SATA_SIG_PM:
+                return AHCI_DEV_PM;
+        default:
+                return AHCI_DEV_SATA;
+        }
+}
 
 void probe_port(hba_mem_t *abar)
 {
 	// Search disk in implemented ports
 	uint32_t pi = abar->pi;
 	int i = 0;
-	while (i<32)
+        while (i<32)
 	{
 		if (pi & 1)
 		{
@@ -100,10 +129,6 @@ void probe_port(hba_mem_t *abar)
 			{
 				kprintf("PM drive found at port %d \n", i);
 			}
-			else
-			{
-				kprintf("No drive found at port %d \n", i);
-			}
 		}
  
 		pi >>= 1;
@@ -111,44 +136,26 @@ void probe_port(hba_mem_t *abar)
 	}
 }
 
-int check_type(hba_port_t *port)
-{
-	uint32_t ssts = port->ssts;
-	kprintf("Drive status: %p;  ", ssts); 
- 
-	switch (port->sig)
-	{
-	case SATA_SIG_ATAPI:
-		return AHCI_DEV_SATAPI;
-	case SATA_SIG_SEMB:
-		return AHCI_DEV_SEMB;
-	case SATA_SIG_PM:
-		return AHCI_DEV_PM;
-	default:
-		return AHCI_DEV_SATA;
-	}
-}
-
 
 void checkAllBuses() {
-     uint8_t bus;
-     uint8_t device;
+     uint8_t bus, device, f;
      int found;
      uint32_t bar5, abar;
  
      for(bus = 0; bus < 255; bus++) {
          for(device = 0; device < 32; device++) {
+           for(f=0; f<8; f++){  
              found=0;
-             found = pciCheckForAHCI(bus, device);
+             found = pciCheckForAHCI(bus, device, f);
              if (found == 1){
-                 kprintf("Found AHCI at bus %p device %p; ", bus, device);
-	         bar5 = pciConfigReadLong(bus, device, 0, 0x24);
-                 kprintf("BAR5 original value %p; ", bar5);
-		 outl(0xCF8, bar5);
+                 kprintf("Found AHCI at bus %p device %p; \n ", bus, device);
+	         bar5 = pciConfigReadLong(bus, device, f, 0x24);
+                 kprintf("BAR5 original value %p; \n", bar5);
 		 outl(0xCFC, 0x3cffffff);
 		 abar = inl (0xCFC);
 		 probe_port((hba_mem_t *)(uint64_t)abar); 
              }
+           }
          }
      }
 }

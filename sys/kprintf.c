@@ -112,8 +112,8 @@ num(int number, char *output_buffer, int base)
     int n_flag = 0;
     if (number == 0)
     {
-        output_buffer = "0";
-        return 1;
+        output_buffer[0] = '0';
+        return 2;
     }
     if (number < 0)
     {
