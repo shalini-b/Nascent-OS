@@ -12,6 +12,8 @@
 #define	SATA_SIG_SEMB	0xC33C0101	// Enclosure management bridge
 #define	SATA_SIG_PM	0x96690101	// Port multiplier
 
+hba_port_t ioports[32];
+
 uint32_t inl(uint16_t port) {
     uint32_t ret;
     __asm__ __volatile__ ( "inl %1, %0"
@@ -107,27 +109,32 @@ void probe_port(hba_mem_t *abar)
 {
 	// Search disk in implemented ports
 	uint32_t pi = abar->pi;
-	int i = 0;
+	int i = 0, j = 0;
         while (i<32)
 	{
 		if (pi & 1)
 		{
-			int dt = check_type(&abar->ports[i]);
+			hba_port_t _port = abar->ports[i];
+                        int dt = check_type(&_port);
 			if (dt == AHCI_DEV_SATA)
 			{
 				kprintf("SATA drive found at port %d \n", i);
+                                ioports[j++] = _port;
 			}
 			else if (dt == AHCI_DEV_SATAPI)
 			{
 				kprintf("SATAPI drive found at port %d \n", i);
+				ioports[j++] = _port;
 			}
 			else if (dt == AHCI_DEV_SEMB)
 			{
 				kprintf("SEMB drive found at port %d \n", i);
+				ioports[j++] = _port;
 			}
 			else if (dt == AHCI_DEV_PM)
 			{
 				kprintf("PM drive found at port %d \n", i);
+				ioports[j++] = _port;
 			}
 		}
  

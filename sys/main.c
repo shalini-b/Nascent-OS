@@ -10,6 +10,7 @@
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t* loader_stack;
 extern char kernmem, physbase;
+hba_port_t ioports[32];
 
 void start(uint32_t *modulep, void *physbase, void *physfree)
 {
