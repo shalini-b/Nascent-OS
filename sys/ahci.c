@@ -2,7 +2,7 @@
 #include <sys/defs.h>
 #include <sys/kprintf.h>
 
-int read_or_write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buf, int rf)
+int read_write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buf, int rf)
 {
     port->is_rwc = (uint32_t)-1;		// Clear pending interrupt bits
     int spin = 0; // Spin lock timeout counter
@@ -24,14 +24,14 @@ int read_or_write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t c
     int i=0;
     for (i=0; i<cmdheader->prdtl-1; i++)
     {
-        cmdtbl->prdt_entry[i].dba = (uint32_t) *buf;
+        cmdtbl->prdt_entry[i].dba = (uint64_t)buf;
         cmdtbl->prdt_entry[i].dbc = 8*1024;	// 8K bytes
         cmdtbl->prdt_entry[i].i = 1;
         buf += 4*1024;	// 4K words
         count -= 16;	// 16 sectors
     }
     // Last entry
-    cmdtbl->prdt_entry[i].dba = (uint32_t) *buf;
+    cmdtbl->prdt_entry[i].dba =(uint64_t) buf;
     cmdtbl->prdt_entry[i].dbc = count<<9;	// 512 bytes per sector
     cmdtbl->prdt_entry[i].i = 1;
 
@@ -133,6 +133,12 @@ int find_cmdslot(hba_port_t *port)
     kprintf("Cannot find free command list entry\n");
     return -1;
 }
+void intitialise(hba_port_t *port)
+{
+    port->cmd |= HBA_PxCMD_FRE;
+    port->cmd |= HBA_PxCMD_ST;
+}
+
 
 void  *memset(void *string_to_memset, int char_to_memset_with, int length_to_memset)
 {
