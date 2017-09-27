@@ -5,8 +5,6 @@
 #include <sys/ahci.h>
 #include <sys/idt.h>
 #include <sys/pci.h>
-hba_port_t *port_ptr;
-
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t *loader_stack;
@@ -33,25 +31,31 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     kprintf("physfree %p\n", (uint64_t) physfree);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
     init_idt();
-    checkAllBuses();
+    hba_port_t* port_ptr = checkAllBuses();
     intitialise(port_ptr);
     for(int write_block=0;write_block<100;write_block++)
     {
 	char* rd_buf = (char*)0x70000;
-        char* wt_buf = (char*)0x75000;
+        char* wt_buf = (char*)0x4f000;
+        /**wt_buf = 'a';
+        kprintf("char->%c,add->%p\n",wt_buf[0],&wt_buf[0]);*/
         for(int i=0; i<4096; i++){
             wt_buf[i]=(char)write_block;
 	}
-        read_write(port_ptr, write_block*8, 0, 8, (char *)wt_buf, 0);
-        read_write(port_ptr, write_block*8 ,0, 8, (char *)rd_buf, 1);
-        //str_cmp
+        /*for(int i=0; i<4096; i++){
+            kprintf("char->%c,add->%p\n",wt_buf[i],&wt_buf[i]);
+        }*/
+        read_write(port_ptr, write_block*8, 0, 8, (uint16_t *)wt_buf, 0);
+        //kprintf("write done");
+        read_write(port_ptr, write_block*8 ,0, 8, (uint16_t *)rd_buf, 1);
+        //kprintf("read done"); 
+       //str_cmp
        for(int i=0; i<4096; i++)
         {
-	     kprintf("&&&&&&&& %c, %c \n", rd_buf[i], wt_buf[i]);
+	     //kprintf("&&&&&&&& %c, %c \n", rd_buf[i], wt_buf[i]);
             if(rd_buf[i]!=wt_buf[i])
                 kprintf("mismatch between value stored and read");
         }
-        kprintf("tb");
     }
     __asm__ __volatile__ ("sti");
     while (1);

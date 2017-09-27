@@ -12,8 +12,6 @@
 #define	SATA_SIG_SEMB	0xC33C0101	// Enclosure management bridge
 #define	SATA_SIG_PM	0x96690101	// Port multiplier
 
-hba_port_t *port_ptr;
-
 uint32_t inl(uint16_t port) {
     uint32_t ret;
     __asm__ __volatile__ ( "inl %1, %0"
@@ -121,7 +119,7 @@ static int check_type(hba_port_t *port)
         }
 }
 
-void probe_port(hba_mem_t *abar)
+hba_port_t* probe_port(hba_mem_t *abar)
 {
 	// Search disk in implemented ports
 	uint32_t pi = abar->pi;
@@ -153,33 +151,32 @@ void probe_port(hba_mem_t *abar)
 				j++;
 			}
 			if (j == 2){
-				port_ptr = _port;
+				return  _port;
 			}
 		}
  
 		pi >>= 1;
 		i ++;
 	}
+    return NULL;
 }
 
 
-void checkAllBuses() {
+hba_port_t* checkAllBuses() {
      uint8_t bus, device, f;
      int found;
-     uint32_t abar;
- 
      for(bus = 0; bus < 255; bus++) {
          for(device = 0; device < 32; device++) {
            for(f=0; f<8; f++){  
              found=0;
              found = pciCheckForAHCI(bus, device, f);
              if (found == 1){
-                 kprintf("Found AHCI at bus %p device %p; \n ", bus, device);
-	         movebar5(bus, device, f, 0x24, 0x3cf00000);
-		 abar = inl (0xCFC);
-		 probe_port((hba_mem_t *)(uint64_t)abar);
+                    kprintf("Found AHCI at bus %p device %p; \n ", bus, device);
+	                movebar5(bus, device, f, 0x24, 0x3c000000);
+		            return probe_port((hba_mem_t *)0x3c000000);
              }
            }
          }
      }
+ return NULL;
 }

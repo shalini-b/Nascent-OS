@@ -2,7 +2,7 @@
 #include <sys/defs.h>
 #include <sys/kprintf.h>
 
-int read_write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, char *buf, int rf)
+int read_write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buf, int rf)
 {
     port->is_rwc = (uint32_t)-1;		// Clear pending interrupt bits
     int spin = 0; // Spin lock timeout counter
