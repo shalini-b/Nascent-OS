@@ -341,10 +341,11 @@ typedef volatile struct {
   hba_port_t ports[MAX_PORT_CNT]; // 1 ~ 32
 }__attribute__((__packed__)) hba_mem_t;
 
-int read_write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, uint16_t *buf, int rf);
+int read_write(hba_port_t *port, uint32_t startl, uint32_t starth, uint32_t count, char *buf, int rf);
 void start_cmd(hba_port_t *port);
 void stop_cmd(hba_port_t *port);
 int find_cmdslot(hba_port_t *port);
-void  *memset(void *string_to_memset, int char_to_memset_with, int length_to_memset);
+//void  *memset(void *string_to_memset, int char_to_memset_with, int length_to_memset);
+void *memset(void *s, int c, size_t n);
 void intitialise(hba_port_t *port);
 #endif

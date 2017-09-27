@@ -12,7 +12,7 @@
 #define	SATA_SIG_SEMB	0xC33C0101	// Enclosure management bridge
 #define	SATA_SIG_PM	0x96690101	// Port multiplier
 
-hba_port_t ioports[32];
+hba_port_t *port_ptr;
 
 uint32_t inl(uint16_t port) {
     uint32_t ret;
@@ -61,6 +61,22 @@ uint32_t pciConfigReadLong (uint8_t bus, uint8_t device,
     return (tmp);
  }
 
+void  movebar5(uint8_t bus, uint8_t slot,
+              uint8_t func, uint8_t offset,uint32_t new_address)
+{
+    uint32_t address;
+    uint32_t lbus  = (uint32_t)bus;
+    uint32_t lslot = (uint32_t)slot;
+    uint32_t lfunc = (uint32_t)func;
+
+    /* create configuration address as per Figure 1 */
+    address = (uint32_t)((lbus << 16) | (lslot << 11) |
+        (lfunc << 8) | (offset & 0xfc) | ((uint32_t)0x80000000));
+
+    /* write out the address */
+    outl(0xCF8, address);
+    outl(0xCFC,new_address);
+}
 
 int pciCheckForAHCI(uint8_t bus, uint8_t device, uint8_t f)
  {
@@ -114,27 +130,30 @@ void probe_port(hba_mem_t *abar)
 	{
 		if (pi & 1)
 		{
-			hba_port_t _port = abar->ports[i];
-                        int dt = check_type(&_port);
+			hba_port_t* _port = &(abar->ports[i]);
+                        int dt = check_type(_port);
 			if (dt == AHCI_DEV_SATA)
 			{
 				kprintf("SATA drive found at port %d \n", i);
-                                ioports[j++] = _port;
+                                j++;
 			}
 			else if (dt == AHCI_DEV_SATAPI)
 			{
 				kprintf("SATAPI drive found at port %d \n", i);
-				ioports[j++] = _port;
+				j++;
 			}
 			else if (dt == AHCI_DEV_SEMB)
 			{
 				kprintf("SEMB drive found at port %d \n", i);
-				ioports[j++] = _port;
+				j++;
 			}
 			else if (dt == AHCI_DEV_PM)
 			{
 				kprintf("PM drive found at port %d \n", i);
-				ioports[j++] = _port;
+				j++;
+			}
+			if (j == 2){
+				port_ptr = _port;
 			}
 		}
  
@@ -147,7 +166,7 @@ void probe_port(hba_mem_t *abar)
 void checkAllBuses() {
      uint8_t bus, device, f;
      int found;
-     uint32_t bar5, abar;
+     uint32_t abar;
  
      for(bus = 0; bus < 255; bus++) {
          for(device = 0; device < 32; device++) {
@@ -156,11 +175,9 @@ void checkAllBuses() {
              found = pciCheckForAHCI(bus, device, f);
              if (found == 1){
                  kprintf("Found AHCI at bus %p device %p; \n ", bus, device);
-	         bar5 = pciConfigReadLong(bus, device, f, 0x24);
-                 kprintf("BAR5 original value %p; \n", bar5);
-		 outl(0xCFC, 0x3cffffff);
+	         movebar5(bus, device, f, 0x24, 0x3cf00000);
 		 abar = inl (0xCFC);
-		 probe_port((hba_mem_t *)(uint64_t)abar); 
+		 probe_port((hba_mem_t *)(uint64_t)abar);
              }
            }
          }
