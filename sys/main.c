@@ -5,6 +5,7 @@
 #include <sys/ahci.h>
 #include <sys/idt.h>
 #include <sys/pci.h>
+#include <sys/virmem.h>
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t *loader_stack;
@@ -18,6 +19,7 @@ start(uint32_t *modulep, void *physbase, void *physfree)
         uint64_t base, length;
         uint32_t type;
     }__attribute__((packed)) *smap;
+    uint64_t *mem_end = NULL;
     while (modulep[0] != 0x9001)
         modulep += modulep[1] + 2;
     for (smap = (struct smap_t *) (modulep + 2); smap < (struct smap_t *) ((char *) modulep + modulep[1] + 2 * 4);
@@ -27,9 +29,11 @@ start(uint32_t *modulep, void *physbase, void *physfree)
         {
             kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
         }
+        mem_end = (uint64_t *) smap->base + smap->length;
     }
     kprintf("physfree %p\n", (uint64_t) physfree);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+    init_mem((uint64_t *) physfree, modulep, mem_end);
     init_idt();
     hba_port_t* port_ptr = checkAllBuses();
     intitialise(port_ptr);
