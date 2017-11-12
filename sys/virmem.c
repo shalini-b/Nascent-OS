@@ -14,10 +14,10 @@ void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
    struct page *page1 = fetch_free_page();
    
    // FIXME: converting to PA to get pml4
-   uint64_t *pml_addr = (uint64_t *) KERNBASE + (page1 - pages) * PAGE_SIZE; 
+   uint64_t *pml_addr = (uint64_t *) page1; 
    create_vir_phy_mapping(pml_addr);
 
-   LOAD_CR3(pml_addr - KERNBASE);
+   LOAD_CR3(pml_addr);
 }
 
 
@@ -29,16 +29,14 @@ void create_vir_phy_mapping(uint64_t *pml_addr) {
         uint64_t viraddr = KERNBASE + cnt * PAGE_SIZE;
         // First PML table
         uint64_t *addr = pml_addr + ((viraddr >> 39) & 0x1FF);
-        uint64_t pdpte_addr = create_dir_table(viraddr, addr);
+        uint64_t *pdpte = (uint64_t *) create_dir_table(viraddr, addr);
         // PDPTE table
         // Converting to vir addr
         // FIXME: align to 4k?
-        uint64_t *pdpte = (uint64_t *) pdpte_addr + KERNBASE;
         addr = pdpte + ((viraddr >> 30) & 0x1FF);
-        uint64_t pde_addr = create_dir_table(viraddr, addr);
+        uint64_t *pde = (uint64_t *) create_dir_table(viraddr, addr);
 
         // FIXME: align to 4k?
-        uint64_t *pde = (uint64_t *) pde_addr + KERNBASE;
         uint64_t *res = create_pde(viraddr, pde);
 
         // FIXME: check for value in res to be empty or not
@@ -53,10 +51,9 @@ uint64_t create_dir_table(uint64_t viraddr, uint64_t *addr) {
   uint64_t next_addr_value = (uint64_t) *addr;
   if (!(next_addr_value & 1)) {
       // FIXME: handle no free page
-      struct page* new = fetch_free_page();
-      uint64_t newPhyAddr = (uint64_t) ((new - pages) * PAGE_SIZE);
+      uint64_t newPhyAddr = (uint64_t) fetch_free_page();
       // FIXME: USR permission required?
-      *(addr) = newPhyAddr | 7;
+      *(addr) = newPhyAddr | 3;
       next_addr_value = (uint64_t) *(addr);
   }
   return next_addr_value;
@@ -70,14 +67,13 @@ uint64_t *create_pde(uint64_t viraddr, uint64_t *pde_addr) {
 
   if (!(addr_val & 1)) {
       // FIXME: handle no free page
-      struct page* new = fetch_free_page();
-      uint64_t newPhyAddr = (uint64_t) ((new - pages) * PAGE_SIZE);
-      *(addr) = newPhyAddr | 7;
+      uint64_t newPhyAddr = (uint64_t) fetch_free_page();
+      *(addr) = newPhyAddr | 3;
       addr_val = (uint64_t) *(addr);
   }
   // FIXME: align to 4k?
-  uint64_t *pte =(uint64_t *) addr_val + KERNBASE;
-  return &pte[page_offset];
+  uint64_t *pte = (uint64_t *) addr_val;
+  return pte + page_offset;
 }
 
 void create_page_list(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
@@ -109,29 +105,29 @@ void create_page_list(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) 
           {
               if (smap->type == 1 && smap->length != 0)
               {
-                  if ((page_start < smap->base + smap->length && page_start  > smap->base) || 
+                  if ((page_start < smap->base + smap->length && page_start  > smap->base) && 
                          (page_end < smap->base + smap->length && page_end  > smap->base)) 
                   {
                       page_marked = 1;
-                      pages[page_num].ref_count = 1;
+                      if (free_page_head == NULL) {
+                         pages[page_num].ref_count = 0;
+                         free_page_head = &pages[page_num];
+                         free_page_head->next = NULL;
+                         free_page_end = free_page_head;
+
+                      }
+                      else {
+                         pages[page_num].ref_count = 0;
+                         free_page_end->next = &pages[page_num];
+                         free_page_end = &pages[page_num];
+                         free_page_end->next = NULL;
+              }
                   }
                   
               }
           }
           if (page_marked == 0) {
-              if (free_page_head == NULL) {
-                 pages[page_num].ref_count = 0;
-                 free_page_head = &pages[page_num];
-                 free_page_head->next = NULL;
-                 free_page_end = free_page_head;
-
-              }
-              else {
-                 pages[page_num].ref_count = 0;
-                 free_page_end->next = &pages[page_num];
-                 free_page_end = &pages[page_num];
-                 free_page_end->next = NULL;
-              }
+              pages[page_num].ref_count = 1;
         }
       } 
    } 
@@ -146,10 +142,12 @@ struct page* fetch_free_page() {
 
     struct page* tmp = free_page_head;
     free_page_head = free_page_head->next;
+    // FIXME: check if free_page_head is 8 byte aligned 
+    struct page* free_pg = (struct page *) ((((uint64_t) tmp - (uint64_t) pages) / sizeof(struct page)) * PAGE_SIZE);
     //FIXME: Is it correct to do this here?
     tmp->ref_count = 1;
 
-    return tmp;
+    return free_pg;
 }
 
 

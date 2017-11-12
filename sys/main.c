@@ -28,8 +28,8 @@ start(uint32_t *modulep, void *physbase, void *physfree)
         if (smap->type == 1 /* memory */ && smap->length != 0)
         {
             kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+            mem_end = (uint64_t *)(smap->base + smap->length);
         }
-        mem_end = (uint64_t *) smap->base + smap->length;
     }
     kprintf("physfree %p\n", (uint64_t) physfree);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
