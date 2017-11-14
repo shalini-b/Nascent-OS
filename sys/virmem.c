@@ -2,6 +2,7 @@
 #include <sys/types.h>
 #include <sys/virmem.h>
 #include <sys/kprintf.h>
+#include <sys/ahci.h>
 
 void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
 
@@ -17,9 +18,11 @@ void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
    uint64_t *pml_addr = (uint64_t *) page1; 
    create_vir_phy_mapping(pml_addr);
 
+   get_mapping(pml_addr, (uint64_t) KERNBASE);
+   get_mapping(pml_addr, (uint64_t) KERNBASE+PHYSBASE);
+   get_mapping(pml_addr, (uint64_t) KERNBASE+0xb8000);
    LOAD_CR3(pml_addr);
 }
-
 
 void create_vir_phy_mapping(uint64_t *pml_addr) {
     uint64_t cnt = 0;
@@ -41,10 +44,25 @@ void create_vir_phy_mapping(uint64_t *pml_addr) {
 
         // FIXME: check for value in res to be empty or not
         *res = (0x00 + cnt * PAGE_SIZE) | 3;
-
+      
         cnt++;
     }
 }
+
+void get_mapping(uint64_t *pml_addr, uint64_t viraddr) {
+        // First PML table
+        uint64_t *addr = pml_addr + ((viraddr >> 39) & 0x1FF);
+        uint64_t *pdpte = (uint64_t *) create_dir_table(viraddr, addr);
+        // PDPTE table
+        // Converting to vir addr
+        addr = pdpte + ((viraddr >> 30) & 0x1FF);
+        uint64_t *pde = (uint64_t *) create_dir_table(viraddr, addr);
+
+        uint64_t *res = create_pde(viraddr, pde);
+
+        kprintf("Mapping for viraddr %p is %p", viraddr, *res);
+}
+
 
 uint64_t create_dir_table(uint64_t viraddr, uint64_t *addr) {
 
@@ -88,8 +106,11 @@ void create_page_list(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) 
     page_count = (uint64_t) mem_end / PAGE_SIZE;
     // page_count = 32735;
     // FIXME: align this to nearest 4k page
-    physfree = (uint64_t *) ((uint64_t) physfree + sizeof(struct page) * page_count + 5 * PAGE_SIZE); // Keeping buffer for page tables and pages array
+    physfree = (uint64_t *) ((uint64_t) physfree + sizeof(struct page) * page_count); // Keeping buffer for page tables and pages array
    // Traversing pages to assign free pages & page list array proper values
+
+   memset((void* )physfree, 0, 5*PAGE_SIZE);
+
    for (int page_num = 0; page_num < page_count; page_num++){
       uint64_t page_start = page_num * PAGE_SIZE;
       uint64_t page_end = page_start + PAGE_SIZE - 1;
