@@ -6,6 +6,7 @@
 #include <sys/idt.h>
 #include <sys/pci.h>
 #include <sys/virmem.h>
+#include <sys/page.h>
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t *loader_stack;
@@ -27,28 +28,29 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     {
         if (smap->type == 1 /* memory */ && smap->length != 0)
         {
-            kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+            // kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
             mem_end = (uint64_t *)(smap->base + smap->length);
         }
     }
+    init_mem((uint64_t *) physfree, modulep, mem_end);
     kprintf("physfree %p\n", (uint64_t) physfree);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-    init_mem((uint64_t *) physfree, modulep, mem_end);
+    // init_mem((uint64_t *) physfree, modulep, mem_end);
     init_idt();
-    hba_port_t* port_ptr = checkAllBuses();
+/*    hba_port_t* port_ptr = checkAllBuses();
     intitialise(port_ptr);
     for(int write_block=0;write_block<100;write_block++)
     {
-	char* rd_buf = (char*)0x70000;
-        char* wt_buf = (char*)0x4f000;
-        /**wt_buf = 'a';
-        kprintf("char->%c,add->%p\n",wt_buf[0],&wt_buf[0]);*/
+	char* rd_buf = (char*) get_viraddr(0x70000);
+        char* wt_buf = (char*) get_viraddr(0x4f000);
+       
+        kprintf("char->%c,add->%p\n",wt_buf[0],&wt_buf[0]);
         for(int i=0; i<4096; i++){
             wt_buf[i]=(char)write_block;
 	}
-        /*for(int i=0; i<4096; i++){
+        for(int i=0; i<4096; i++){
             kprintf("char->%c,add->%p\n",wt_buf[i],&wt_buf[i]);
-        }*/
+        }
         read_write(port_ptr, write_block*8, 0, 8, (uint16_t *)wt_buf, 0);
         //kprintf("write done");
         read_write(port_ptr, write_block*8 ,0, 8, (uint16_t *)rd_buf, 1);
@@ -60,7 +62,7 @@ start(uint32_t *modulep, void *physbase, void *physfree)
             if(rd_buf[i]!=wt_buf[i])
                 kprintf("mismatch between value stored and read");
         }
-    }
+    }*/
     __asm__ __volatile__ ("sti");
     while (1);
 }
@@ -71,7 +73,7 @@ boot(void)
     // note: function changes rsp, local stack variables can't be practically used
     register char *temp1, *temp2;
 
-    for (temp2 = (char *) 0xb8001; temp2 < (char *) 0xb8000 + 160 * 25; temp2 += 2)
+    for (temp2 = (char *) get_viraddr(0xb8001); temp2 < (char *) get_viraddr(0xb8000) + 160 * 25; temp2 += 2)
         *temp2 = 7 /* white */;
     __asm__ volatile (
     "cli;"
@@ -88,7 +90,7 @@ boot(void)
     loader_stack[4]
     );
     for (
-        temp1 = "!!!!! start() returned !!!!!", temp2 = (char *) 0xb8000;
+        temp1 = "!!!!! start() returned !!!!!", temp2 = (char *) get_viraddr(0xb8000);
         *temp1;
         temp1 += 1, temp2 += 2
         )

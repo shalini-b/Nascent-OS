@@ -1,6 +1,7 @@
 #ifndef _PAGE_H
 #define _PAGE_H
 
+#include <sys/types.h>
 #define PAGE_SIZE 4096
 #define TBL_ENTRIES 512
 
@@ -21,5 +22,7 @@ struct page* free_page_head;
 struct page* pages;
 
 int page_count;
+
+uint64_t get_viraddr(uint64_t paddr);
 
 #endif

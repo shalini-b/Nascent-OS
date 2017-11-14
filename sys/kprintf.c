@@ -4,6 +4,8 @@
 #define OUTPUT_BUFFER_MAX_LENGTH 20480
 #include <stdarg.h>
 #include <stdio.h>
+#include <sys/page.h>
+
 int OUTPUT_BUFFER_LENGTH = 0;
 int array_pointer = 0;
 char OUTPUT_BUFFER[OUTPUT_BUFFER_MAX_LENGTH];
@@ -227,7 +229,7 @@ void print_key(int shift_flag,char c)
 {
     register char *video_address;
     register char *base_address;
-    base_address = (char *) 0xb8000;
+    base_address = (char *) get_viraddr(0xb8000);
     char str[14]="Key Entered: ";
     for (int i=0;i<14;i++)
     {
@@ -254,7 +256,7 @@ void print_time(int time)
     register char *base_address;
     int array_pointer =0;
     int length;
-    base_address = (char *) 0xb8000;
+    base_address = (char *) get_viraddr(0xb8000);
     clear_global_array(TIME);
     length = num(time, TIME, 10);
     char str[20]="Time Since Reboot: ";
@@ -276,7 +278,7 @@ print_to_console()
 {
     register char *video_address;
     register char *base_address;
-    base_address = (char *) 0xb8000;
+    base_address = (char *) get_viraddr(0xb8000);
     int  row = 0;
     //scroll
     if(array_pointer>=160*24)

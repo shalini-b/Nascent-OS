@@ -88,7 +88,7 @@ void create_page_list(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) 
     page_count = (uint64_t) mem_end / PAGE_SIZE;
     // page_count = 32735;
     // FIXME: align this to nearest 4k page
-    physfree = physfree + sizeof(struct page) * page_count + 5 * PAGE_SIZE; // Keeping buffer for page tables and pages array
+    physfree = (uint64_t *) ((uint64_t) physfree + sizeof(struct page) * page_count + 5 * PAGE_SIZE); // Keeping buffer for page tables and pages array
    // Traversing pages to assign free pages & page list array proper values
    for (int page_num = 0; page_num < page_count; page_num++){
       uint64_t page_start = page_num * PAGE_SIZE;

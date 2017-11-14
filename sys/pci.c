@@ -95,7 +95,7 @@ int pciCheckForAHCI(uint8_t bus, uint8_t device, uint8_t f)
 
 static int check_type(hba_port_t *port)
 {
-        uint32_t ssts = port->ssts;
+/*        uint32_t ssts = port->ssts;
 
         uint8_t ipm = (ssts >> 8) & 0x0F;
         uint8_t det = ssts & 0x0F;
@@ -105,7 +105,7 @@ static int check_type(hba_port_t *port)
                 return AHCI_DEV_NULL;
         if (ipm != HBA_PORT_IPM_ACTIVE)
                 return AHCI_DEV_NULL;
-
+*/
         switch (port->sig)
         {
         case SATA_SIG_ATAPI:
