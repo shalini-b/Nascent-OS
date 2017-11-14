@@ -40,7 +40,7 @@ void create_vir_phy_mapping(uint64_t *pml_addr) {
         uint64_t *res = create_pde(viraddr, pde);
 
         // FIXME: check for value in res to be empty or not
-        *res = ((0x00 + cnt * PAGE_SIZE)<<3) | 7;
+        *res = (0x00 + cnt * PAGE_SIZE) | 3;
 
         cnt++;
     }
@@ -53,7 +53,7 @@ uint64_t create_dir_table(uint64_t viraddr, uint64_t *addr) {
       // FIXME: handle no free page
       uint64_t newPhyAddr = (uint64_t) fetch_free_page();
       // FIXME: USR permission required?
-      *(addr) = (newPhyAddr <<3)| 7;
+      *(addr) = newPhyAddr | 3;
       next_addr_value = (uint64_t) *(addr);
   }
   return next_addr_value;
@@ -68,7 +68,7 @@ uint64_t *create_pde(uint64_t viraddr, uint64_t *pde_addr) {
   if (!(addr_val & 1)) {
       // FIXME: handle no free page
       uint64_t newPhyAddr = (uint64_t) fetch_free_page();
-      *(addr) = (newPhyAddr<<3) | 7;
+      *(addr) = newPhyAddr | 3;
       addr_val = (uint64_t) *(addr);
   }
   // FIXME: align to 4k?
