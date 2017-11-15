@@ -28,37 +28,28 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     {
         if (smap->type == 1 /* memory */ && smap->length != 0)
         {
-            // kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+            kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
             mem_end = (uint64_t *)(smap->base + smap->length);
         }
     }
-    init_mem((uint64_t *) physfree, modulep, mem_end);
     kprintf("physfree %p\n", (uint64_t) physfree);
+    init_mem((uint64_t *) physfree, modulep, mem_end);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
-    // init_mem((uint64_t *) physfree, modulep, mem_end);
     init_idt();
-/*    hba_port_t* port_ptr = checkAllBuses();
+    /* hba_port_t* port_ptr = checkAllBuses();
     intitialise(port_ptr);
-    for(int write_block=0;write_block<100;write_block++)
+    for(int write_block=0; write_block<100; write_block++)
     {
 	char* rd_buf = (char*) get_viraddr(0x70000);
         char* wt_buf = (char*) get_viraddr(0x4f000);
-       
-        kprintf("char->%c,add->%p\n",wt_buf[0],&wt_buf[0]);
         for(int i=0; i<4096; i++){
             wt_buf[i]=(char)write_block;
-	}
-        for(int i=0; i<4096; i++){
-            kprintf("char->%c,add->%p\n",wt_buf[i],&wt_buf[i]);
-        }
+	}   
         read_write(port_ptr, write_block*8, 0, 8, (uint16_t *)wt_buf, 0);
-        //kprintf("write done");
         read_write(port_ptr, write_block*8 ,0, 8, (uint16_t *)rd_buf, 1);
-        //kprintf("read done"); 
        //str_cmp
        for(int i=0; i<4096; i++)
         {
-	     //kprintf("&&&&&&&& %c, %c \n", rd_buf[i], wt_buf[i]);
             if(rd_buf[i]!=wt_buf[i])
                 kprintf("mismatch between value stored and read");
         }
