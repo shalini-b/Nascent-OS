@@ -1,10 +1,11 @@
 #include <sys/task.h>
 #include <sys/virmem.h>
 #include <sys/kprintf.h>
- 
+#include <sys/types.h>
 static Task *runningTask;
 static Task mainTask;
 static Task otherTask;
+void contextswitch(Registers *,Registers *);
  
 static void otherMain() {
     kprintf("Hello multitasking world!");
@@ -12,11 +13,11 @@ static void otherMain() {
 }
  
 void init() {
-    // Get EFLAGS and CR3
+    // Get flags and CR3
     __asm__ __volatile__ ("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
-    __asm__ __volatile__ ("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.eflags)::"%rax");
+    __asm__ __volatile__ ("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.flags)::"%rax");
  
-    createTask(&otherTask, otherMain, mainTask.regs.eflags, (uint64_t *)mainTask.regs.cr3);
+    createTask(&otherTask, otherMain, mainTask.regs.flags, (uint64_t *)mainTask.regs.cr3);
     mainTask.next = &otherTask;
     otherTask.next = &mainTask;
  
@@ -33,7 +34,7 @@ void createTask(Task *task, void (*main)(), uint64_t flags, uint64_t *pagedir) {
     task->regs.r13 = 0;
     task->regs.r14 = 0;
     task->regs.r15 = 0;
-    task->regs.eflags = flags;
+    task->regs.flags = flags;
     task->regs.rip = (uint64_t) main;
     task->regs.cr3 = (uint64_t) pagedir;
     task->regs.rsp = (uint64_t) fetch_free_page() + 0x1000;
@@ -43,5 +44,5 @@ void createTask(Task *task, void (*main)(), uint64_t flags, uint64_t *pagedir) {
 void yield() {
     Task *last = runningTask;
     runningTask = runningTask->next;
-    switchTask(&last->regs, &runningTask->regs);
+    contextswitch(&last->regs, &runningTask->regs);
 }
