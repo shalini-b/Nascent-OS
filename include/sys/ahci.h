@@ -346,6 +346,6 @@ void start_cmd(hba_port_t *port);
 void stop_cmd(hba_port_t *port);
 int find_cmdslot(hba_port_t *port);
 //void  *memset(void *string_to_memset, int char_to_memset_with, int length_to_memset);
-void *memset(void *s, int c, size_t n);
+//void *memset(void *s, int c, size_t n);
 void intitialise(hba_port_t *port);
 #endif

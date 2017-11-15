@@ -3,6 +3,7 @@
 #include <sys/virmem.h>
 #include <sys/kprintf.h>
 #include <sys/ahci.h>
+#include <sys/memset.h>
 
 void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
 
