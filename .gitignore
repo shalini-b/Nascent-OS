@@ -1,0 +1,15 @@
+        cmake-build-debug/
+	kernel
+	obj/
+	rootfs/bin/cat
+	rootfs/bin/ls
+	rootfs/bin/sbush
+	rootfs/boot/kernel/kernel
+	rootfs/boot/large-file-padding
+	rootfs/lib/crt1.o
+	rootfs/lib/libc.a
+	shbhaskara-data.img
+	shbhaskara.img
+	shbhaskara.iso
+	sys/dummy.s
+	test.sbush
