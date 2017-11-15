@@ -25,5 +25,7 @@ int page_count;
 
 // void memset(char *initial_mem, int length,int value_memset);
 uint64_t get_viraddr(uint64_t paddr);
+uint64_t *ScaleDown(uint64_t *phyaddr);
+uint64_t *ScaleUp(uint64_t *phyaddr);
 
 #endif

@@ -2,7 +2,6 @@
 #include <sys/types.h>
 #include <sys/virmem.h>
 #include <sys/kprintf.h>
-#include <sys/ahci.h>
 #include <sys/memset.h>
 
 void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
@@ -15,7 +14,6 @@ void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
    create_page_list(physfree, modulep, mem_end);
    struct page *page1 = fetch_free_page();
    
-   // FIXME: converting to PA to get pml4
    uint64_t *pml_addr = (uint64_t *) page1; 
    create_vir_phy_mapping(pml_addr);
 
@@ -75,7 +73,7 @@ uint64_t create_dir_table(uint64_t viraddr, uint64_t *addr) {
       *(addr) = newPhyAddr | 3;
       next_addr_value = (uint64_t) *(addr);
   }
-  return next_addr_value;
+  return (uint64_t) ScaleDown((uint64_t *) next_addr_value);
 }
 
 uint64_t *create_pde(uint64_t viraddr, uint64_t *pde_addr) {
@@ -91,7 +89,7 @@ uint64_t *create_pde(uint64_t viraddr, uint64_t *pde_addr) {
       addr_val = (uint64_t) *(addr);
   }
   // FIXME: align to 4k?
-  uint64_t *pte = (uint64_t *) addr_val;
+  uint64_t *pte = ScaleDown((uint64_t *) addr_val);
   return pte + page_offset;
 }
 
@@ -107,7 +105,7 @@ void create_page_list(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) 
     page_count = (uint64_t) mem_end / PAGE_SIZE;
     // page_count = 32735;
     // FIXME: align this to nearest 4k page
-    physfree = (uint64_t *) ((uint64_t) physfree + sizeof(struct page) * page_count); // Keeping buffer for page tables and pages array
+    physfree = ScaleUp((uint64_t *) ((uint64_t) physfree + sizeof(struct page) * page_count)); // Keeping buffer for page tables and pages array
    // Traversing pages to assign free pages & page list array proper values
 
    memset((void* )physfree, 0, 5*PAGE_SIZE);
@@ -117,7 +115,7 @@ void create_page_list(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) 
       uint64_t page_end = page_start + PAGE_SIZE - 1;
 
       // FIXME: add rest of the locations to free list once paging is done
-      if (page_start <= (uint64_t) physfree || page_end <= (uint64_t) physfree) { // FIXME: should it be page_end < physfree?
+      if (page_start < (uint64_t) physfree || page_end < (uint64_t) physfree) { // FIXME: should it be page_end < physfree?
           pages[page_num].ref_count = 1;
       }
       else {
@@ -155,6 +153,18 @@ void create_page_list(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) 
    } 
 }
 
+
+uint64_t *ScaleDown(uint64_t *phyaddr) {
+   return (uint64_t *) ((uint64_t) phyaddr & 0xFFF000);
+}
+
+uint64_t *ScaleUp(uint64_t *phyaddr) {
+   void * diff = (void *)(PAGE_SIZE - ((uint64_t)phyaddr % PAGE_SIZE));
+   if((uint64_t)diff == PAGE_SIZE)
+       diff = 0;
+   return (uint64_t *)((uint64_t)phyaddr + (uint64_t)diff);
+}
+
 struct page* fetch_free_page() {
     // FIXME: handle no free page
     if ((free_page_head == NULL) || (free_page_head == free_page_end)) {
@@ -171,6 +181,4 @@ struct page* fetch_free_page() {
 
     return free_pg;
 }
-
-
 
