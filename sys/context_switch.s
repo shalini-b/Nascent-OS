@@ -35,8 +35,8 @@ contextswitch:
     movq  8(%rsi),%rbx
     movq  16(%rsi),%rcx
     movq  24(%rsi),%rdx
-    movq  32(%rsi),%rsi#fixme :: can we load these registers rsi & rdi
-    movq  40(%rsi),%rdi
+    #fixme :: can we load these registers rsi & rdi
+
     movq  48(%rsi),%rsp
     movq  56(%rsi),%rbp
     #for rip
