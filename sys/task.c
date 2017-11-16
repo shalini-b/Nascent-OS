@@ -12,7 +12,7 @@ static void otherMain() {
     yield();
 }
  
-void init() {
+void init_tasks() {
     // Get flags and CR3
     __asm__ __volatile__ ("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
     __asm__ __volatile__ ("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.flags)::"%rax");

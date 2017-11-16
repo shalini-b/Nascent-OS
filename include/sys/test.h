@@ -1,4 +1,6 @@
-#ifndef __TASK_H__
-#define __TASK_H__
+#ifndef __TEST_H__
+#define __TEST_H__
+
 void doIt();
-#endif /* __TASK_H__ */
+
+#endif

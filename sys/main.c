@@ -8,6 +8,7 @@
 #include <sys/virmem.h>
 #include <sys/page.h>
 #include <sys/test.h>
+#include <sys/task.h>
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t *loader_stack;
@@ -37,7 +38,8 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     init_mem((uint64_t *) physfree, modulep, mem_end);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
     init_idt();
-    doIt();
+    // init_tasks();
+    // doIt();
     /* hba_port_t* port_ptr = checkAllBuses();
     intitialise(port_ptr);
     for(int write_block=0; write_block<100; write_block++)
