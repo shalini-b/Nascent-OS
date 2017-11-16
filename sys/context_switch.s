@@ -2,44 +2,51 @@
 .section .text
 .global contextswitch
 contextswitch:
+    #rax,rbx,rcx,rdx,rsi,rdi,rsp,rbp,rip,flags,cr3;
+    #0    8   16  24  32  40  48  56  64  72    80
     #old function
-    movq %rbx, (%rdi)
+    #backup rbx
+    movq %rbx, 8(%rdi)
+    #get rip
     popq %rbx
-    movq %rbx, 88(%rdi)
-    movq %rbp, 8(%rdi)
-    movq %rdi, 16(%rdi)
-    movq %rsi, 24(%rdi)
-    movq %rsp, 32(%rdi)
-    movq %r12, 40(%rdi)
-    movq %r13, 48(%rdi)
-    movq %r14, 56(%rdi)
-    movq %r15, 64(%rdi)
-    movq %cr3,%rbx
-    movq %rbx,72(%rdi)
+    movq %rbx, 64(%rdi)
+    #backup other registers
+    movq %rax,  (%rdi)
+    movq %rcx, 16(%rdi)
+    movq %rdx, 24(%rdi)
+    movq %rsi, 32(%rdi)
+    movq %rdi, 40(%rdi)
+    movq %rsp, 48(%rdi)
+    movq %rbp, 56(%rdi)
+    #flags
     pushfq
     popq %rbx
-    movq %rbx, 80(%rdi)
+    movq %rbx, 72(%rdi)
+    #cr3
+    movq %cr3,%rbx
+    movq %rbx,80(%rdi)
 
 
+     #rax,rbx,rcx,rdx,rsi,rdi,rsp,rbp,rip,flags,cr3;
+     #0    8   16  24  32  40  48  56  64  72    80
     #new function
-    movq    (%rsi),%rbx
-    movq  8(%rsi),%rbp
-    movq  16(%rsi),%rdi
-    movq  24(%rsi),%rsi
-    movq  32(%rsi),%rsp
-    movq  40(%rsi),%r12
-    movq  48(%rsi),%r13
-    movq  56(%rsi),%r14
-    movq  64(%rsi),%r15
+    #load registers
+    movq    (%rsi),%rax
+    movq  8(%rsi),%rbx
+    movq  16(%rsi),%rcx
+    movq  24(%rsi),%rdx
+    movq  32(%rsi),%rsi#fixme :: can we load these registers rsi & rdi
+    movq  40(%rsi),%rdi
+    movq  48(%rsi),%rsp
+    movq  56(%rsi),%rbp
+    #for rip
+    movq  64(%rsi),%rbx
+    movq  %rbx,(%rsp)
+    #flags
     movq  72(%rsi),%rbx
-    movq  %rbx,%cr3
-    movq  80(%rsi),%rbx
     pushq %rbx
     popfq
-    movq  88(%rsi),%rbx
-    #load new function
-    movq  %rbx,(%rsp)
     #restore rbx
-        movq    (%rsi),%rbx
+    movq   8(%rsi),%rbx
     ret
 
