@@ -166,3 +166,19 @@ struct page* fetch_free_page() {
     return free_pg;
 }
 
+struct page* fetch_free_page_cr3() {
+    // FIXME: handle no free page
+    if ((free_page_head == NULL) || (free_page_head == free_page_end)) {
+        // return NULL;
+        kprintf("Out of free pages!!!");
+    }
+
+    struct page* tmp = free_page_head;
+    free_page_head = (KERNBASE+free_page_head)->next;
+    struct page* free_pg = (struct page *) ((((uint64_t) tmp - (uint64_t) pages) / sizeof(struct page)) * PAGE_SIZE);
+    //FIXME: Is it correct to do this here?
+    tmp->ref_count = 1;
+
+    return free_pg+KERNBASE;
+}
+

@@ -41,7 +41,7 @@ contextswitch:
     movq  56(%rsi),%rbp
     #for rip
     movq  64(%rsi),%rbx
-    movq  %rbx,(%rsp)
+    pushq  %rbx
     #flags
     movq  72(%rsi),%rbx
     pushq %rbx
