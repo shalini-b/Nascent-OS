@@ -2,7 +2,11 @@
 #include "sys/kprintf.h"
 
 void doIt() {
-    kprintf("Switching to otherTask... \n");
-    yield();
-    kprintf("Returned to mainTask!\n");
+    while(1)
+    {
+        kprintf("Switching to task2... \n");
+        yield();
+        kprintf("switching to task 1!\n");
+    }
+
 }
