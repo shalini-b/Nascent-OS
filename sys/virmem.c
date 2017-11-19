@@ -16,10 +16,15 @@ void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
    uint64_t *pml_addr = (uint64_t *) page1; 
    create_vir_phy_mapping(pml_addr);
 
-   // get_mapping(pml_addr, (uint64_t) KERNBASE);
-   // get_mapping(pml_addr, (uint64_t) KERNBASE+PHYSBASE);
-   // get_mapping(pml_addr, (uint64_t) KERNBASE+0xb8000);
+   // test_mapping(pml_addr);
+   
    LOAD_CR3(pml_addr);
+}
+
+void test_mapping (uint64_t *pml_addr) {
+   get_mapping(pml_addr, (uint64_t) KERNBASE);
+   get_mapping(pml_addr, (uint64_t) KERNBASE+PHYSBASE);
+   get_mapping(pml_addr, (uint64_t) KERNBASE+0xb8000);
 }
 
 void create_vir_phy_mapping(uint64_t *pml_addr) {
@@ -158,30 +163,12 @@ struct page* fetch_free_page() {
     }
 
     struct page* tmp = free_page_head;
-    free_page_head = free_page_head->next;
-    struct page* free_pg = (struct page *) ((((uint64_t) tmp - (uint64_t) pages) / sizeof(struct page)) * PAGE_SIZE);
+    struct page* free_pg = (struct page *) getPA(tmp);
     //FIXME: Is it correct to do this here?
     tmp->ref_count = 1;
 
+    free_page_head = free_page_head->next;
+
     return free_pg;
-}
-
-struct page* fetch_free_page_cr3() {
-    // FIXME: handle no free page
-//    if ((free_page_head == NULL) || (free_page_head == free_page_end)) {
-//        // return NULL;
-//        kprintf("Out of free pages!!!");
-//    }
-    struct page* tmp1;
-    struct page* tmp2;
-    struct page* tmp = free_page_head;
-    tmp1 = (struct page*)(KERNBASE+(uint64_t)free_page_head);
-    free_page_head = tmp1->next;
-    struct page* free_pg = (struct page *) ((((uint64_t) tmp - (uint64_t) pages) / sizeof(struct page)) * PAGE_SIZE);
-    //FIXME: Is it correct to do this here?
-    tmp2 = (struct page*)((uint64_t)tmp+KERNBASE);
-    tmp2->ref_count = 1;
-
-    return (struct page*)((uint64_t)free_pg+KERNBASE);
 }
 

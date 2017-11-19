@@ -1,5 +1,5 @@
 #include <sys/task.h>
-#include <sys/virmem.h>
+#include <sys/page.h>
 #include <sys/kprintf.h>
 #include <sys/types.h>
 static Task *runningTask;
@@ -64,7 +64,7 @@ createTask(Task *task, void (*main)(), uint64_t flags, uint64_t *pagedir)
     task->regs.rip = (uint64_t) main;;
     task->regs.flags = flags;
     task->regs.cr3 = (uint64_t) pagedir;
-    task->regs.rsp = (uint64_t) fetch_free_page_cr3() + (0x1000);
+    task->regs.rsp = (uint64_t) page_alloc() + (0x1000);
     task->next = 0;
 }
 

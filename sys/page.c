@@ -22,13 +22,15 @@ struct page *page_alloc() {
     // FIXME: handle no free page
     if ((free_page_head == NULL) || (free_page_head == free_page_end)) {
         // return NULL;
-        kprintf("All free pages exhausted :( ");
+        kprintf("Out of free pages!!!");
     }
-
-    struct page *tmp = (struct page *) get_viraddr((uint64_t)free_page_head);
+    // Increment free_page_head and increase ref_count
+    struct page* tmp = (struct page*) get_viraddr((uint64_t)free_page_head);
     free_page_head = tmp->next;
     //FIXME: Is it correct to do this here?
     tmp->ref_count = 1;
-
-    return tmp;
+    
+    // return viraddr of page
+    struct page* free_pg = (struct page *) convertVA(free_page_head);
+    return free_pg;
 }
