@@ -39,7 +39,7 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
     init_idt();
     init_tasks();
-    doIt();
+    yield();
     /* hba_port_t* port_ptr = checkAllBuses();
     intitialise(port_ptr);
     for(int write_block=0; write_block<100; write_block++)

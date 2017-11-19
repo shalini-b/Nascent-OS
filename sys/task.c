@@ -1,3 +1,5 @@
+//FIX ME :: change this code(ref:osdev)
+
 #include <sys/task.h>
 #include <sys/page.h>
 #include <sys/kprintf.h>
