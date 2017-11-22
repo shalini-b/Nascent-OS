@@ -41,7 +41,7 @@ void create_vir_phy_mapping(uint64_t *pml_addr) {
         uint64_t *res = create_pde(viraddr, pde);
 
         // FIXME: check for value in res to be empty or not
-        *res = (0x00 + cnt * PAGE_SIZE) | 3;
+        *res = (0x00 + cnt * PAGE_SIZE) | 7;
       
         cnt++;
     }
@@ -67,7 +67,7 @@ uint64_t create_dir_table(uint64_t viraddr, uint64_t *addr) {
   if (!(next_addr_value & 1)) {
       uint64_t newPhyAddr = (uint64_t) fetch_free_page();
       // FIXME: USR permission required?
-      *(addr) = newPhyAddr | 3;
+      *(addr) = newPhyAddr | 7;
       next_addr_value = (uint64_t) *(addr);
   }
   return (uint64_t) ScaleDown((uint64_t *) next_addr_value);
@@ -81,7 +81,7 @@ uint64_t *create_pde(uint64_t viraddr, uint64_t *pde_addr) {
 
   if (!(addr_val & 1)) {
       uint64_t newPhyAddr = (uint64_t) fetch_free_page();
-      *(addr) = newPhyAddr | 3;
+      *(addr) = newPhyAddr | 7;
       addr_val = (uint64_t) *(addr);
   }
   uint64_t *pte = ScaleDown((uint64_t *) addr_val);

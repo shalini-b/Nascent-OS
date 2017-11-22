@@ -1,4 +1,5 @@
-//FIX ME :: change this code(ref:osdev)
+//FIX ME :: change this code
+//reference os dev
 
 #include <sys/task.h>
 #include <sys/page.h>
@@ -9,16 +10,18 @@ static Task mainTask;
 static Task otherTask1,otherTask2;
 void
 contextswitch(Registers *, Registers *);
+void
+ring_0_3_switch(Registers *, Registers *);
 
 static void
 otherMain1()
 {
-    kprintf("Hello multitasking world11111!");
+    kprintf("Hello multitasking world11111!\n");
     //runningTask = &otherTask1;
     while(1)
     {
         yield();
-        kprintf("Hello multitasking world11111!");
+        kprintf("Hello multitasking world11111!\n");
     }
 
 }
@@ -27,15 +30,22 @@ otherMain1()
 static void
 otherMain2()
 {
-    kprintf("Hello multitasking world22222!");
-    //runningTask = &otherTask2;
+    kprintf("Hello multitasking world22222!\n");
     yield();
-    kprintf("Hello multitasking world22222!");
+    kprintf("Hello multitasking world22222!\n");
     while(1)
     {
         yield();
-        kprintf("Hello multitasking world222222!");
+        kprintf("Hello multitasking world222222!\n");
     }
+}
+
+static void
+otherMain3()
+{
+    kprintf("Hello multitasking world22222!\n");
+    yield_0_3();
+
 }
 
 void
@@ -47,6 +57,30 @@ init_tasks()
 
     createTask(&otherTask1, otherMain1, mainTask.regs.flags, (uint64_t *) mainTask.regs.cr3);
     createTask(&otherTask2, otherMain2, mainTask.regs.flags, (uint64_t *) mainTask.regs.cr3);
+    otherTask1.next = &otherTask2;
+    otherTask2.next = &otherTask1;
+    mainTask.next = &otherTask1;
+    runningTask = &mainTask;
+}
+
+void user_mode_test()
+{
+    kprintf("inside user mode\n");
+    while(1)
+    {
+
+    }
+}
+
+void
+init_tasks_0_3()
+{
+    // Get flags and CR3
+    __asm__ __volatile__ ("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
+    __asm__ __volatile__ ("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.flags)::"%rax");
+
+    createTask(&otherTask1, otherMain3, mainTask.regs.flags, (uint64_t *) mainTask.regs.cr3);
+    createTask(&otherTask2, user_mode_test, mainTask.regs.flags, (uint64_t *) mainTask.regs.cr3);
     otherTask1.next = &otherTask2;
     otherTask2.next = &otherTask1;
     mainTask.next = &otherTask1;
@@ -76,4 +110,13 @@ yield()
     Task *last = runningTask;
     runningTask = runningTask->next;
     contextswitch(&last->regs, &runningTask->regs);
+}
+
+
+void
+yield_0_3()
+{
+    Task *last = runningTask;
+    runningTask = runningTask->next;
+    ring_0_3_switch(&last->regs, &runningTask->regs);
 }

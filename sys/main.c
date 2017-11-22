@@ -13,6 +13,7 @@
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t *loader_stack;
 extern char kernmem, physbase;
+//int ring_0_3_switch();
 
 void
 start(uint32_t *modulep, void *physbase, void *physfree)
@@ -38,8 +39,15 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     init_mem((uint64_t *) physfree, modulep, mem_end);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
     init_idt();
-    init_tasks();
+
+    //kernel task switch
+    //init_tasks();
+    //yield();
+
+    //ring 0 to 3 switch
+    init_tasks_0_3();
     yield();
+
     /* hba_port_t* port_ptr = checkAllBuses();
     intitialise(port_ptr);
     for(int write_block=0; write_block<100; write_block++)
