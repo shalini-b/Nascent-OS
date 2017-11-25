@@ -60,6 +60,18 @@ void get_mapping(uint64_t *pml_addr, uint64_t viraddr) {
         kprintf("Mapping for viraddr %p is %p", viraddr, *res);
 }
 
+void set_mapping(uint64_t *pml_addr, uint64_t viraddr, uint64_t phyaddr) {
+    // First PML table
+    uint64_t *addr = pml_addr + ((viraddr >> 39) & 0x1FF);
+    uint64_t *pdpte = (uint64_t *) create_dir_table(viraddr, addr);
+    // PDPTE table
+    addr = pdpte + ((viraddr >> 30) & 0x1FF);
+    uint64_t *pde = (uint64_t *) create_dir_table(viraddr, addr);
+
+    uint64_t *res = create_pde(viraddr, pde);
+    // FIXME: to give permissions or not?
+    *res = phyaddr | 7;
+}
 
 uint64_t create_dir_table(uint64_t viraddr, uint64_t *addr) {
 
@@ -156,6 +168,7 @@ uint64_t *ScaleUp(uint64_t *phyaddr) {
 }
 
 struct page* fetch_free_page() {
+    // Returns the physical address of free page
     // FIXME: handle no free page
     if ((free_page_head == NULL) || (free_page_head == free_page_end)) {
        // return NULL;
