@@ -26,11 +26,26 @@ struct page *page_alloc() {
     }
     // Increment free_page_head and increase ref_count
     struct page* tmp = (struct page*) get_viraddr((uint64_t)free_page_head);
-    free_page_head = tmp->next;
     //FIXME: Is it correct to do this here?
     tmp->ref_count = 1;
-    
     // return viraddr of page
     struct page* free_pg = (struct page *) convertVA(free_page_head);
+    free_page_head = tmp->next;
+    return free_pg;
+}
+
+uint64_t *kmalloc(int size) {
+    // FIXME: handle no free page
+    if ((free_page_head == NULL) || (free_page_head == free_page_end)) {
+        // return NULL;
+        kprintf("Out of free pages!!!");
+    }
+    // Increment free_page_head and increase ref_count
+    struct page* tmp = (struct page*) get_viraddr((uint64_t)free_page_head);
+    //FIXME: Is it correct to do this here?
+    tmp->ref_count = 1;
+    // return phyaddr of page
+    uint64_t *free_pg = (uint64_t *) getPA(free_page_head);
+    free_page_head = tmp->next;
     return free_pg;
 }
