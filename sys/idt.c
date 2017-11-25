@@ -2,6 +2,7 @@
 #include <sys/defs.h>
 #include <sys/pic.h>
 
+extern void sys_int();
 void timer();
 void  keyboard();
 uint8_t inb(uint16_t port) {
@@ -60,7 +61,8 @@ void init_idt() {
   // Fill up IDT here
   PIC_remap();
   add_idt((uint64_t)timer, 32);
-  add_idt((uint64_t)keyboard,33); 
+    add_idt((uint64_t)sys_int, 128);
+  add_idt((uint64_t)keyboard,33);
   // Call LIDT
   load_idt(&idtr);
 }
