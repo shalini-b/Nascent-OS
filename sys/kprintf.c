@@ -5,18 +5,15 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <sys/page.h>
+#include <strings.h>
 
 int OUTPUT_BUFFER_LENGTH = 0;
 int array_pointer = 0;
 char OUTPUT_BUFFER[OUTPUT_BUFFER_MAX_LENGTH];
 char TIME[OUTPUT_BUFFER_MAX_LENGTH];
 //Prototypes
-int
-len(char *string);
 void
 reverse(char *string, int length);
-void
-str_copy(char *source_string, char *destination_string);
 char
 convert_num_to_char(int num);
 int
@@ -176,28 +173,7 @@ reverse(char *string, int length)
     }
 }
 
-void
-str_copy(char *source_string, char *destination_string)
-{
-    int str_itr = 0;
-    while (source_string[str_itr] != '\0')
-    {
-        destination_string[str_itr] = source_string[str_itr];
-        str_itr++;
-    }
-    destination_string[str_itr] = '\0';
-}
 
-int
-len(char *string)
-{
-    int string_length = 0;
-    while (string[string_length] != '\0')
-    {
-        string_length++;
-    }
-    return string_length;
-}
 
 int
 pointer(unsigned long number, char *output_buffer)

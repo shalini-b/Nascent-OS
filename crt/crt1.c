@@ -28,18 +28,19 @@ void cache_env( char *env_array[])
 void _start(void) {
   // call main() and exit() here
 
-  long resp;
-  int a;
-   __asm__ __volatile__(
-                            "movq %%rsp, %0"
-                             :"=r" (resp)
-                             :
-                             :"%rsp");
-
-  a=*((int*)(resp+8));
-  char** b=(char**)(resp+16);
-  char** c=(char**)(a*8+8+resp+16);
-  cache_env(c);
-  main(a,b,c);
+//  long resp;
+//  int a;
+//   __asm__ __volatile__(
+//                            "movq %%rsp, %0"
+//                             :"=r" (resp)
+//                             :
+//                             :"%rsp");
+//
+////  a=*((int*)(resp+8));
+//  char** b=(char**)(resp+16);
+//  char** c=(char**)(a*8+8+resp+16);
+//  cache_env(c);
+  //main(a,b,c);
+    main();
   exit(0); 
 }

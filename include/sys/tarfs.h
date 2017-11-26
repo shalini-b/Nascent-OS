@@ -24,4 +24,8 @@ struct posix_header_ustar {
   char pad[12];
 };
 
+int convert_oct_int(char *oct_string);
+struct posix_header_ustar* get_next_tar_header(struct posix_header_ustar* present_header);
+int file_exists(char* f_name);
+uint64_t print_elf_file(char* binary_name);
 #endif

@@ -16,12 +16,30 @@ len(char string[])
 }
 
 int
-str_compare(char s1[150], char s2[150])
+str_compare1(char s1[150], char s2[150])
 {   
     int str_itr = 0;
     if (len(s1) != len(s2))
         return 1;
     
+    while (s1[str_itr] != '\0')
+    {
+        if (s1[str_itr] != s2[str_itr])
+        {
+            return 1;
+        }
+        str_itr++;
+    }
+    return 0;
+}
+
+int
+str_compare(char s1[150], char s2[150])
+{
+    int str_itr = 0;
+    if (len(s1) != len(s2))
+        return 1;
+
     while (s1[str_itr] != '\0')
     {
         if (s1[str_itr] != s2[str_itr])
