@@ -181,9 +181,10 @@ struct page* fetch_free_page() {
     struct page* tmp = free_page_head;
     struct page* free_pg = (struct page *) getPA(tmp);
     //FIXME: Is it correct to do this here?
-    tmp->ref_count = 1;
+    struct page *free_pntr = (struct page *) convertVA(tmp);
+    free_pntr->ref_count = 1;
 
-    free_page_head = free_page_head->next;
+    free_page_head = free_pntr->next;
 
     return free_pg;
 }
