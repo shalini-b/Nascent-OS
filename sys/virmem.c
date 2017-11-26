@@ -11,14 +11,14 @@ void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
    free_page_head = NULL;
    
    create_page_list(physfree, modulep, mem_end);
-   struct page *page1 = fetch_free_page();
+   struct page *page1 = page_alloc();
    
    uint64_t *pml_addr = (uint64_t *) page1; 
    create_vir_phy_mapping(pml_addr);
 
    // test_mapping(pml_addr);
    
-   LOAD_CR3(pml_addr);
+   LOAD_CR3((uint64_t *) get_phyaddr((uint64_t) pml_addr));
 }
 
 void test_mapping (uint64_t *pml_addr) {
@@ -35,9 +35,11 @@ void create_vir_phy_mapping(uint64_t *pml_addr) {
         uint64_t *addr = pml_addr + ((viraddr >> 39) & 0x1FF);
         uint64_t *pdpte = (uint64_t *) create_dir_table(viraddr, addr);
         // PDT table
-        addr = pdpte + ((viraddr >> 30) & 0x1FF);
-        uint64_t *pde = (uint64_t *) create_dir_table(viraddr, addr);
+        
+        addr = ((uint64_t *) get_viraddr((uint64_t)pdpte)) + ((viraddr >> 30) & 0x1FF);
+        uint64_t *pde_phy = (uint64_t *) create_dir_table(viraddr, addr);
         // PTE table
+	uint64_t *pde = ((uint64_t *) get_viraddr((uint64_t)pde_phy));
         uint64_t *res = create_pde(viraddr, pde);
 
         // FIXME: check for value in res to be empty or not
@@ -65,9 +67,10 @@ void set_mapping(uint64_t *pml_addr, uint64_t viraddr, uint64_t phyaddr) {
     uint64_t *addr = pml_addr + ((viraddr >> 39) & 0x1FF);
     uint64_t *pdpte = (uint64_t *) create_dir_table(viraddr, addr);
     // PDPTE table
-    addr = pdpte + ((viraddr >> 30) & 0x1FF);
-    uint64_t *pde = (uint64_t *) create_dir_table(viraddr, addr);
+    addr = ((uint64_t *) get_viraddr((uint64_t)pdpte)) + ((viraddr >> 30) & 0x1FF);
+    uint64_t *pde_phy = (uint64_t *) create_dir_table(viraddr, addr);
 
+    uint64_t *pde = ((uint64_t *) get_viraddr((uint64_t)pde_phy));
     uint64_t *res = create_pde(viraddr, pde);
     // FIXME: to give permissions or not?
     *res = phyaddr | 7;
@@ -96,7 +99,7 @@ uint64_t *create_pde(uint64_t viraddr, uint64_t *pde_addr) {
       *(addr) = newPhyAddr | 7;
       addr_val = (uint64_t) *(addr);
   }
-  uint64_t *pte = ScaleDown((uint64_t *) addr_val);
+  uint64_t *pte = (uint64_t *) get_viraddr((uint64_t) ScaleDown((uint64_t *) addr_val));
   return pte + page_offset;
 }
 
