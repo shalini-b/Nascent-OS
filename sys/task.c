@@ -2,6 +2,7 @@
 //reference os dev
 
 #include <sys/task.h>
+#include <sys/gdt.h>
 #include <sys/page.h>
 #include <sys/kprintf.h>
 #include <sys/types.h>
@@ -68,7 +69,6 @@ void user_mode_test()
     kprintf("inside user mode\n");
     while(1)
     {
-
     }
 }
 
@@ -100,7 +100,7 @@ createTask(Task *task, void (*main)(), uint64_t flags, uint64_t *pagedir)
     task->regs.rip = (uint64_t) main;;
     task->regs.flags = flags;
     task->regs.cr3 = (uint64_t) pagedir;
-    task->regs.rsp = (uint64_t) page_alloc() + (0x1000);
+    task->regs.rsp = ((uint64_t) page_alloc()) + (0x1000);
     task->next = 0;
 }
 
@@ -118,5 +118,8 @@ yield_0_3()
 {
     Task *last = runningTask;
     runningTask = runningTask->next;
+    // FIXME: Set TSS properly
+    uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000) - 8;
+    set_tss_rsp((void*)rsp);
     ring_0_3_switch(&last->regs, &runningTask->regs);
 }
