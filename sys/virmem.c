@@ -181,7 +181,7 @@ struct page* fetch_free_page() {
     struct page* tmp = free_page_head;
     struct page* free_pg = (struct page *) getPA(tmp);
     //FIXME: Is it correct to do this here?
-    struct page *free_pntr = (struct page *) convertVA(tmp);
+    struct page *free_pntr = (struct page *) get_viraddr((uint64_t) tmp);
     free_pntr->ref_count = 1;
 
     free_page_head = free_pntr->next;
