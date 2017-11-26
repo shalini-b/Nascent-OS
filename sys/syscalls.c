@@ -1,7 +1,13 @@
 #include <sys/syscall.h>
 #include <sys/kprintf.h>
 
-void syscall_handler(Registers * regs) {
+
+void syscall_handler() {
+   kprintf("In write syscall handler");
+}
+
+
+/*void syscall_handler(Registers * regs) {
     int syscall_num = regs->rax;
 
     switch(syscall_num) {
@@ -13,4 +19,4 @@ void syscall_handler(Registers * regs) {
             break;
         }
     }
-}
+}*/

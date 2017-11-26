@@ -1,10 +1,13 @@
 #include <sys/idt.h>
 #include <sys/defs.h>
 #include <sys/pic.h>
+#include <sys/kprintf.h>
 
 extern void sys_int();
-void timer();
-void  keyboard();
+extern void timer();
+extern void  keyboard();
+extern void dummy();
+
 uint8_t inb(uint16_t port) {
     uint8_t ret;
     __asm__ __volatile__ ( "inb %1, %0"
@@ -57,13 +60,26 @@ void add_idt(uint64_t func_base, int offset) {
   id->zero1 = 0;
 }
 
+void dummy_int() {
+    kprintf("In dummy handler");
+    outb(0x20, 0x20);
+}
+
 void init_idt() {
   // Fill up IDT here
-  PIC_remap();
-  add_idt((uint64_t)timer, 32);
+    PIC_remap();
+    for (int i = 0; i < 32; i++) {
+        add_idt((uint64_t) dummy, i);
+    }
+
+    add_idt((uint64_t)timer, 32);
     add_idt((uint64_t)sys_int, 128);
-  add_idt((uint64_t)keyboard,33);
-  // Call LIDT
-  load_idt(&idtr);
+    add_idt((uint64_t)keyboard,33);
+
+    for (int j = 34; j < 40; j++) {
+        add_idt((uint64_t) dummy, j);
+    }
+    // Call LIDT
+    load_idt(&idtr);
 }
 

@@ -2,6 +2,7 @@
 .global keyboard
 
 keyboard:
+    cli
     pushq %rax
     pushq %rbx
     pushq %rcx
@@ -17,4 +18,5 @@ keyboard:
     popq %rsi
     popq %rdi
     popq %rbp
+    sti
     iretq

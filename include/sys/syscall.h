@@ -4,7 +4,8 @@
 #include <sys/task.h>
 
 void transfer_to_ring3();
-void syscall_handler(Registers * regs);
+//void syscall_handler(Registers * regs);
+void syscall_handler();
 
 #define SYS_open        2
 #define SYS_write       1

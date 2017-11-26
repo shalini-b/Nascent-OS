@@ -2,6 +2,7 @@
 .global timer
 
 timer:
+    cli
     pushq %rax
     pushq %rbx
     pushq %rcx
@@ -17,4 +18,5 @@ timer:
     popq %rsi
     popq %rdi
     popq %rbp
+    sti
     iretq
