@@ -33,5 +33,6 @@ uint64_t *ScaleUp(uint64_t *phyaddr);
 void test_mapping(uint64_t *pml_addr);
 struct page *page_alloc();
 uint64_t *kmalloc(int size);
+uint64_t read_cr2();
 
 #endif

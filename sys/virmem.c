@@ -3,6 +3,7 @@
 #include <sys/virmem.h>
 #include <sys/kprintf.h>
 #include <sys/memset.h>
+uint64_t *kpml_addr;
 
 void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
 
@@ -13,26 +14,26 @@ void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
    create_page_list(physfree, modulep, mem_end);
    struct page *page1 = page_alloc();
    
-   uint64_t *pml_addr = (uint64_t *) page1; 
-   create_vir_phy_mapping(pml_addr);
+   uint64_t *kpml_addr = (uint64_t *) page1; 
+   create_vir_phy_mapping(kpml_addr);
 
-   // test_mapping(pml_addr);
+   // test_mapping(kpml_addr);
    
-   LOAD_CR3((uint64_t *) get_phyaddr((uint64_t) pml_addr));
+   LOAD_CR3((uint64_t *) get_phyaddr((uint64_t) kpml_addr));
 }
 
-void test_mapping (uint64_t *pml_addr) {
-   get_mapping(pml_addr, (uint64_t) KERNBASE);
-   get_mapping(pml_addr, (uint64_t) KERNBASE+PHYSBASE);
-   get_mapping(pml_addr, (uint64_t) KERNBASE+0xb8000);
+void test_mapping (uint64_t *kpml_addr) {
+   get_mapping(kpml_addr, (uint64_t) KERNBASE);
+   get_mapping(kpml_addr, (uint64_t) KERNBASE+PHYSBASE);
+   get_mapping(kpml_addr, (uint64_t) KERNBASE+0xb8000);
 }
 
-void create_vir_phy_mapping(uint64_t *pml_addr) {
+void create_vir_phy_mapping(uint64_t *kpml_addr) {
     uint64_t cnt = 0;
     while (cnt < page_count) {
         uint64_t viraddr = KERNBASE + cnt * PAGE_SIZE;
         // PML and PDPTE table
-        uint64_t *addr = pml_addr + ((viraddr >> 39) & 0x1FF);
+        uint64_t *addr = kpml_addr + ((viraddr >> 39) & 0x1FF);
         uint64_t *pdpte = (uint64_t *) create_dir_table(viraddr, addr);
         // PDT table
         
@@ -49,9 +50,9 @@ void create_vir_phy_mapping(uint64_t *pml_addr) {
     }
 }
 
-void get_mapping(uint64_t *pml_addr, uint64_t viraddr) {
+void get_mapping(uint64_t *kpml_addr, uint64_t viraddr) {
         // First PML table
-        uint64_t *addr = pml_addr + ((viraddr >> 39) & 0x1FF);
+        uint64_t *addr = kpml_addr + ((viraddr >> 39) & 0x1FF);
         uint64_t *pdpte = (uint64_t *) create_dir_table(viraddr, addr);
         // PDPTE table
         addr = pdpte + ((viraddr >> 30) & 0x1FF);
@@ -62,9 +63,9 @@ void get_mapping(uint64_t *pml_addr, uint64_t viraddr) {
         kprintf("Mapping for viraddr %p is %p", viraddr, *res);
 }
 
-void set_mapping(uint64_t *pml_addr, uint64_t viraddr, uint64_t phyaddr) {
+void set_mapping(uint64_t *kpml_addr, uint64_t viraddr, uint64_t phyaddr) {
     // First PML table
-    uint64_t *addr = pml_addr + ((viraddr >> 39) & 0x1FF);
+    uint64_t *addr = kpml_addr + ((viraddr >> 39) & 0x1FF);
     uint64_t *pdpte = (uint64_t *) create_dir_table(viraddr, addr);
     // PDPTE table
     addr = ((uint64_t *) get_viraddr((uint64_t)pdpte)) + ((viraddr >> 30) & 0x1FF);

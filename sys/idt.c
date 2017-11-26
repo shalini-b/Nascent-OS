@@ -2,11 +2,14 @@
 #include <sys/defs.h>
 #include <sys/pic.h>
 #include <sys/kprintf.h>
+#include <sys/page.h>
 
 extern void sys_int();
 extern void timer();
 extern void  keyboard();
 extern void dummy();
+extern void dummy2();
+extern void dummy3();
 
 uint8_t inb(uint16_t port) {
     uint8_t ret;
@@ -60,8 +63,23 @@ void add_idt(uint64_t func_base, int offset) {
   id->zero1 = 0;
 }
 
-void dummy_int() {
-    kprintf("In dummy handler");
+void dummy_int(uint64_t num) {
+    kprintf("dummy %p\n", num );
+    while(1);
+    outb(0x20, 0x20);
+}
+
+void dummy_int2(uint64_t num) {
+    kprintf("dummy 2 %p\n", num );
+    while(1);
+    outb(0x20, 0x20);
+}
+
+void dummy_int3(uint64_t num) {
+    kprintf("dummy 3 %p\n", num );
+    uint64_t faulting_addr = read_cr2();
+    kprintf("dummy 3 CR2 value %p\n", faulting_addr);
+    while(1);
     outb(0x20, 0x20);
 }
 
@@ -72,11 +90,13 @@ void init_idt() {
         add_idt((uint64_t) dummy, i);
     }
 
+    add_idt((uint64_t)dummy3, 14);
+    add_idt((uint64_t)dummy2, 13);
     add_idt((uint64_t)timer, 32);
     add_idt((uint64_t)sys_int, 128);
     add_idt((uint64_t)keyboard,33);
 
-    for (int j = 34; j < 40; j++) {
+    for (int j = 34; j < 256; j++) {
         add_idt((uint64_t) dummy, j);
     }
     // Call LIDT
