@@ -1,7 +1,7 @@
-.extern dummy_int
-.global dummy
+.extern gen_int_handler
+.global isr_handler
 
-dummy:
+isr_handler:
     cli
     pushq %rdi
     pushq %rsi
@@ -20,7 +20,7 @@ dummy:
     pushq %r15
     pushq %rsp
     movq %rsp,%rdi
-    call dummy_int
+    call gen_int_handler
     popq %rsp
     popq %r15
     popq %r14
@@ -40,10 +40,10 @@ dummy:
     sti
     iretq
 
-.extern dummy_int2
-.global dummy2
+.extern page_fault_handler
+.global pgfault
 
-dummy2:
+pgfault:
     cli
     pushq %rdi
     pushq %rsi
@@ -62,7 +62,7 @@ dummy2:
     pushq %r15
     pushq %rsp
     movq %rsp,%rdi
-    call dummy_int2
+    call page_fault_handler
     popq %rsp
     popq %r15
     popq %r14
@@ -82,10 +82,10 @@ dummy2:
     sti
     iretq
 
-.extern dummy_int3
-.global dummy3
+.extern int_handler13
+.global int13
 
-dummy3:
+int13:
     cli
     pushq %rdi
     pushq %rsi
@@ -104,7 +104,7 @@ dummy3:
     pushq %r15
     pushq %rsp
     movq %rsp,%rdi
-    call dummy_int3
+    call int_handler13
     popq %rsp
     popq %r15
     popq %r14

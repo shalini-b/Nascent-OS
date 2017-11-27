@@ -6,10 +6,10 @@
 
 extern void sys_int();
 extern void timer();
-extern void  keyboard();
-extern void dummy();
-extern void dummy2();
-extern void dummy3();
+extern void keyboard();
+extern void int13();
+extern void pgfault();
+extern void isr_handler();
 
 uint8_t inb(uint16_t port) {
     uint8_t ret;
@@ -63,23 +63,20 @@ void add_idt(uint64_t func_base, int offset) {
   id->zero1 = 0;
 }
 
-void dummy_int(uint64_t num) {
-    kprintf("dummy %p\n", num );
-    while(1);
+void gen_int_handler() {
+    kprintf("Oops! Interrupt received. O.o ");
     outb(0x20, 0x20);
 }
 
-void dummy_int2(uint64_t num) {
-    kprintf("dummy 2 %p\n", num );
-    while(1);
+void int_handler13() {
+    kprintf("Received Interrupt number 13!! Please check..");
     outb(0x20, 0x20);
 }
 
-void dummy_int3(uint64_t num) {
-    kprintf("dummy 3 %p\n", num );
+void page_fault_handler(uint64_t num) {
+    kprintf("First parameter to page fault handler %p\n", num );
     uint64_t faulting_addr = read_cr2();
-    kprintf("dummy 3 CR2 value %p\n", faulting_addr);
-    while(1);
+    kprintf("Faulting address : CR2 value %p\n", faulting_addr);
     outb(0x20, 0x20);
 }
 
@@ -87,17 +84,18 @@ void init_idt() {
   // Fill up IDT here
     PIC_remap();
     for (int i = 0; i < 32; i++) {
-        add_idt((uint64_t) dummy, i);
+        add_idt((uint64_t) isr_handler, i);
     }
 
-    add_idt((uint64_t)dummy3, 14);
-    add_idt((uint64_t)dummy2, 13);
+    add_idt((uint64_t)int13, 13);
+    add_idt((uint64_t)pgfault, 14);
     add_idt((uint64_t)timer, 32);
-    add_idt((uint64_t)sys_int, 128);
     add_idt((uint64_t)keyboard,33);
+    add_idt((uint64_t)sys_int, 128);
 
+    // FIXME: Close port for slave from 40 onwards
     for (int j = 34; j < 256; j++) {
-        add_idt((uint64_t) dummy, j);
+        add_idt((uint64_t) isr_handler, j);
     }
     // Call LIDT
     load_idt(&idtr);
