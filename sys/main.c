@@ -45,7 +45,7 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     //kernel task switch
     //init_tasks();
     //yield();
-    kprintf("Kernel PML address: %p", kpml_addr);
+    kprintf("Kernel PML address: %p\n", kpml_addr);
     //ring 0 to 3 switch
     init_tasks_0_3();
     yield();
