@@ -14,6 +14,8 @@ uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t *loader_stack;
 extern char kernmem, physbase;
 //int ring_0_3_switch();
+extern uint64_t *kpml_addr;
+
 
 void
 start(uint32_t *modulep, void *physbase, void *physfree)
@@ -39,12 +41,11 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     init_mem((uint64_t *) physfree, modulep, mem_end);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
     init_idt();
-    
     __asm__ __volatile__ ("sti");
     //kernel task switch
     //init_tasks();
     //yield();
-
+    kprintf("Kernel PML address: %p", kpml_addr);
     //ring 0 to 3 switch
     init_tasks_0_3();
     yield();
@@ -67,7 +68,6 @@ start(uint32_t *modulep, void *physbase, void *physfree)
                 kprintf("mismatch between value stored and read");
         }
     }*/
-    __asm__ __volatile__ ("sti");
     while (1);
 }
 

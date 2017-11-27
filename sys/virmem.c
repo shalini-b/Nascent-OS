@@ -14,7 +14,7 @@ void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end) {
    create_page_list(physfree, modulep, mem_end);
    struct page *page1 = page_alloc();
    
-   uint64_t *kpml_addr = (uint64_t *) page1; 
+   kpml_addr = (uint64_t *) page1; 
    create_vir_phy_mapping(kpml_addr);
 
    // test_mapping(kpml_addr);
