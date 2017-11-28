@@ -2,6 +2,7 @@
 //reference os dev
 #include <sys/types.h>
 #include <sys/task.h>
+#include <sys/gdt.h>
 #include <sys/page.h>
 #include <sys/kprintf.h>
 #include <sys/types.h>
@@ -95,12 +96,12 @@ init_tasks1()
     // Get flags and CR3
     __asm__ __volatile__ ("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
     __asm__ __volatile__ ("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.flags)::"%rax");
-    uint64_t virtual_address = print_elf_file("bin/cat");
-    createTask1(&otherTask1, virtual_address, mainTask.regs.flags, (uint64_t *) mainTask.regs.cr3);
+    uint64_t virtual_address = print_elf_file("bin/sbush");
+    createTask1(&otherTask1, virtual_address, mainTask.regs.flags);
 }
 
 void
-createTask1(Task *task, uint64_t virtual_address, uint64_t flags, uint64_t *pagedir)
+createTask1(Task *task, uint64_t virtual_address, uint64_t flags)
 {
     //rax,rbx,rcx,rdx,rsi,rdi,rsp,rbp,rip,flags,cr3
     task->regs.rax = 0;
@@ -111,7 +112,7 @@ createTask1(Task *task, uint64_t virtual_address, uint64_t flags, uint64_t *page
     task->regs.rdi = 0;
     task->regs.rip = virtual_address;
     task->regs.flags = flags;
-    task->regs.cr3 = (uint64_t) pagedir;
+//    task->regs.cr3 = (uint64_t) pagedir;
     task->regs.rsp = (uint64_t) page_alloc() + (0x1000);
     task->next = 0;
     long output; \
@@ -159,7 +160,7 @@ createTask(Task *task, void (*main)(), uint64_t flags, uint64_t *pagedir)
     task->regs.rip = (uint64_t) main;;
     task->regs.flags = flags;
     task->regs.cr3 = (uint64_t) pagedir;
-    task->regs.rsp = (uint64_t) page_alloc() + (0x1000);
+    task->regs.rsp = ((uint64_t) page_alloc()) + (0x1000);
     task->next = 0;
 }
 
@@ -177,5 +178,8 @@ yield_0_3()
 {
     Task *last = runningTask;
     runningTask = runningTask->next;
+    // FIXME: Set TSS properly
+    uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000) - 8;
+    set_tss_rsp((void*)rsp);
     ring_0_3_switch(&last->regs, &runningTask->regs);
 }
