@@ -44,7 +44,7 @@ ring_0_3_switch:
     movq %rsp,%rbx
     pushq $35 #push ss
     pushq %rbx #push rsp
-    pushfq #push flags
+    pushfq
     pushq $43 #push cs
     movq  64(%rsi),%rbx
     pushq  %rbx #push rip

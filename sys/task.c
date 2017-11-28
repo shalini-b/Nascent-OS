@@ -71,7 +71,6 @@ void user_mode_test()
     kprintf("inside user mode\n");
     while(1)
     {
-
     }
 }
 
