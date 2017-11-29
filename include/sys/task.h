@@ -29,7 +29,7 @@ yield_0_3();
 void
 switchTask(Registers *old, Registers *new_task); // The function which actually switches
 void
-createTask1(Task *task, uint64_t virtual_address, uint64_t flags, uint64_t *pagedir);
+createTask1(Task *task, uint64_t virtual_address, uint64_t flags);
 void
 init_tasks1();
 

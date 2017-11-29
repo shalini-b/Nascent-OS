@@ -57,7 +57,8 @@ void add_idt(uint64_t func_base, int offset) {
   id->offset_low = (func_base) & 0xFFFF;
   id->selector = 0x08;
   id->zero = 0;
-  id->type_attr = 0x8E;
+  id->type_attr = 0xEE;
+//    id->type_attr = 0x80;
   id->offset_mid = ((func_base) >> 16) & 0xFFFF;
   id->offset_high = ((func_base) >> 32) & 0xFFFFFFFF;
   id->zero1 = 0;

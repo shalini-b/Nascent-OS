@@ -71,6 +71,7 @@ void user_mode_test()
     kprintf("inside user mode\n");
     while(1)
     {
+
     }
 }
 
@@ -111,9 +112,13 @@ createTask1(Task *task, uint64_t virtual_address, uint64_t flags)
     task->regs.rdi = 0;
     task->regs.rip = virtual_address;
     task->regs.flags = flags;
+    uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000)-16;
+    kprintf("rsp value %p",rsp);
+    set_tss_rsp((void*)rsp);
 //    task->regs.cr3 = (uint64_t) pagedir;
     task->regs.rsp = (uint64_t) page_alloc() + (0x1000);
     task->next = 0;
+    __asm__ __volatile__("sti");
     long output; \
     __asm__ __volatile__(
                             "pushq $35 \n\t" \

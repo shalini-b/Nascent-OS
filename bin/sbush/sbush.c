@@ -387,6 +387,9 @@
 //}
 int main()
 {
+
+//    kprintf("in main");
+//    __asm__ __volatile__("int $80");
     while(1)
     {
 
