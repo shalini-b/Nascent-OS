@@ -7,7 +7,9 @@
 #include <sys/kprintf.h>
 #include <sys/types.h>
 #include <sys/tarfs.h>
-static Task *runningTask;
+#include<sys/page.h>
+#include <sys/memset.h>
+Task *runningTask;
 static Task mainTask;
 static Task otherTask1,otherTask2;
 void
@@ -118,7 +120,7 @@ createTask1(Task *task, uint64_t virtual_address, uint64_t flags)
 //    task->regs.cr3 = (uint64_t) pagedir;
     task->regs.rsp = (uint64_t) page_alloc() + (0x1000);
     task->next = 0;
-    __asm__ __volatile__("sti");
+//    __asm__ __volatile__("sti");
     long output; \
     __asm__ __volatile__(
                             "pushq $35 \n\t" \

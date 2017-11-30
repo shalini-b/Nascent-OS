@@ -13,10 +13,19 @@ typedef struct
 //uint64_t rbx, rbp, rdi, rsi, rsp, r12, r13, r14, r15, cr3,flags,rip;
 } Registers;
 
+typedef struct fd
+{
+    int alloted;
+    int file_sz;
+    int num_bytes_read;
+    void* file_ptr;
+}fd;
+
 typedef struct Task
 {
     Registers regs;
     struct Task *next;
+    fd fd_array[100];
 } Task;
 
 void
