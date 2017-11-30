@@ -7,5 +7,5 @@ void outb(uint16_t port, uint8_t val);
 uint8_t inb(uint16_t port);
 
 extern void init_idt();
-extern void add_idt(uint64_t func_base, int offset);
+extern void add_idt(uint64_t func_base, int offset, uint64_t type_attr);
 #endif
