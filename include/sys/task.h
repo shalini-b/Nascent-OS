@@ -16,6 +16,8 @@ typedef struct fd
     int file_sz;
     int num_bytes_read;
     void* file_ptr;
+    void* last_matched_header;
+    int is_dir;
 }fd;
 
 typedef struct Task

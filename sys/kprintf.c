@@ -249,6 +249,18 @@ void print_time(int time)
     }
 }
 
+void clear_screen()
+{
+    register char *video_address;
+    register char *base_address;
+    base_address = (char *) get_viraddr(0xb8000);
+    for(int tmp=0;tmp<160*24;tmp+=2)
+    {
+        video_address =base_address+tmp;
+        *video_address = ' ';
+    }
+}
+
 void
 print_to_console()
 {
@@ -267,11 +279,10 @@ print_to_console()
         array_pointer = 160*23;
 
         //clear last row
-        for(int tmp=160*23;tmp<160*24;tmp++)
+        for(int tmp=160*23;tmp<160*24;tmp+=2)
         {
             video_address =base_address+tmp;
             *video_address = ' ';
-            tmp += 2;
         }
     }
     //print output buffer
@@ -281,17 +292,21 @@ print_to_console()
         {
 
             row = (array_pointer) / 160;
-            array_pointer = 160*(row+1)-2;
+            array_pointer = 160*(row+1);
             final_ary_itr++;
         }
-        if (OUTPUT_BUFFER[final_ary_itr] == '\r')
+        else if (OUTPUT_BUFFER[final_ary_itr] == '\r')
         {
             row = (array_pointer) / 160;
             array_pointer = 160*(row);
             final_ary_itr++;
         }
-        video_address =base_address+array_pointer;
-        *video_address = OUTPUT_BUFFER[final_ary_itr];
-        array_pointer += 2;
+        else
+        {
+            video_address =base_address+array_pointer;
+            *video_address = OUTPUT_BUFFER[final_ary_itr];
+            array_pointer += 2;
+        }
+
     }
 }

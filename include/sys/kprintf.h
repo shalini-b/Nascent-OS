@@ -4,4 +4,5 @@
 void kprintf(const char *fmt, ...);
 void print_key(int shift_flag,char c);
 void print_time(int time);
+void clear_screen();
 #endif

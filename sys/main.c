@@ -28,6 +28,7 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     uint64_t *mem_end = NULL;
     while (modulep[0] != 0x9001)
         modulep += modulep[1] + 2;
+    clear_screen();
     for (smap = (struct smap_t *) (modulep + 2); smap < (struct smap_t *) ((char *) modulep + modulep[1] + 2 * 4);
          ++smap)
     {
@@ -49,7 +50,7 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     //ring 0 to 3 switch
 //    init_tasks1();
 //    yield();
-      tarfs_test();
+//      tarfs_test();
 
 
     /* hba_port_t* port_ptr = checkAllBuses();
