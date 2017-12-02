@@ -6,8 +6,6 @@
 #define TBL_ENTRIES 512
 
 #define PHYSBASE 0x200000
-#define PHYSFREE 0x215000
-#define PAGE_SIZE_BIN 0x1000
 #define KERNBASE 0xffffffff80000000
 
 #define LOAD_CR3(val) __asm__ __volatile__ ("movq %0, %%cr3;" :: "r"(val));
@@ -34,5 +32,6 @@ void test_mapping(uint64_t *pml_addr);
 struct page *page_alloc();
 uint64_t *kmalloc(int size);
 uint64_t read_cr2();
+void invalidate_tlb(uint64_t pml4);
 
 #endif

@@ -25,6 +25,10 @@ uint64_t read_cr2(){
  return val;
 }
 
+void invalidate_tlb(uint64_t pml4) {
+    __asm__ __volatile("invlpg (%0)" : : "r" (pml4) : "memory");
+}
+
 struct page *page_alloc() {
     // FIXME: handle no free page
     if ((free_page_head == NULL) || (free_page_head == free_page_end)) {

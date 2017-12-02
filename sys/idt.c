@@ -94,10 +94,10 @@ void init_idt() {
     add_idt((uint64_t)sys_int, 128, 0xEE);
 
     // FIXME: Close port for slave from 40 onwards
-    for (int j = 34; j < 256; j++) {
-        add_idt((uint64_t) isr_handler, j, 0x8E);
+/*    for (int j = 34; j < 256; j++) {
+        add_idt((uint64_t) isr_handler, j, 0xEE);
     }
-    // Call LIDT
+  */  // Call LIDT
     load_idt(&idtr);
 }
 
