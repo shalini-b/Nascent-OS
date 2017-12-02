@@ -48,7 +48,7 @@ static void
 otherMain3()
 {
     kprintf("reached kernal task 1!\n");
-//    print_elf_file("bin/sbush");
+    print_elf_file("bin/sbush");
     yield_0_3();
 
 }
@@ -71,7 +71,6 @@ init_tasks()
 void user_mode_test()
 {
     kprintf("inside user mode\n");
-   __asm__ __volatile__ ("int $32");
     while(1)
     {
 
@@ -190,3 +189,4 @@ yield_0_3()
     set_tss_rsp((void*)rsp);
     ring_0_3_switch(&last->regs, &runningTask->regs);
 }
+

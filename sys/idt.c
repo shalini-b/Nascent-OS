@@ -84,20 +84,24 @@ void init_idt() {
   // Fill up IDT here
     PIC_remap();
     for (int i = 0; i < 32; i++) {
-        add_idt((uint64_t) isr_handler, i, 0x80);
+        add_idt((uint64_t) isr_handler, i, 0x8E);
     }
-
+    // Overriding 13 & 14
     add_idt((uint64_t)int13, 13, 0x8E);
     add_idt((uint64_t)pgfault, 14, 0x8E);
+   
     add_idt((uint64_t)timer, 32, 0x8E);
     add_idt((uint64_t)keyboard,33, 0x8E);
-    add_idt((uint64_t)sys_int, 128, 0xEE);
 
     // FIXME: Close port for slave from 40 onwards
-/*    for (int j = 34; j < 256; j++) {
-        add_idt((uint64_t) isr_handler, j, 0xEE);
+    for (int j = 34; j < 128; j++) {
+        add_idt((uint64_t) isr_handler, j, 0x8E);
     }
-  */  // Call LIDT
+    add_idt((uint64_t)sys_int, 128, 0xEE);
+    for (int j = 129; j < 256; j++) {
+        add_idt((uint64_t) isr_handler, j, 0x8E);
+    }
+    // Call LIDT
     load_idt(&idtr);
 }
 
