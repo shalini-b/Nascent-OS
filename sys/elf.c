@@ -21,8 +21,7 @@ is_elf_format(Elf64_Ehdr *elf_header)
     }
 }
 
-void
-elf_read(struct Elf64_Ehdr *elf_header)
+void elf_read(struct Elf64_Ehdr *elf_header)
 {
     //Fixme :: fill bss
     if (is_elf_format(elf_header) == 1)
@@ -46,8 +45,8 @@ elf_read(struct Elf64_Ehdr *elf_header)
                      pres_page_base_vir += (4 * 1024))
                 {
                     uint64_t phys_addr = (uint64_t) kmalloc(1);
-                    set_mapping(pml_addr, (uint64_t)ScaleDown((uint64_t*)pres_page_base_vir), phys_addr);
-                    kprintf("virtual address of binary %p\n", pres_page_base_vir);
+                    set_mapping((uint64_t)pml_addr, (uint64_t)ScaleDown((uint64_t*)pres_page_base_vir), (uint64_t)phys_addr);
+		    kprintf("virtual address of binary %p\n", pres_page_base_vir);
 
 
                 }
@@ -58,7 +57,7 @@ elf_read(struct Elf64_Ehdr *elf_header)
                 //__asm__ __volatile__("pushq $35 ;");
                 kprintf("mapped range %x - %x\n", present_program_segment_vaddr,end_address);
                 kprintf("memcopy range %x-%x\n", present_program_segment_vaddr,present_program_segment_vaddr+present_program_header->p_filesz);
-                memcopy(present_file_segment, (void *) present_program_segment_vaddr, program_header->p_filesz);
+		memcopy(present_file_segment, (void *) present_program_segment_vaddr, program_header->p_filesz);
 //                __asm__ __volatile__ ("movq %0, %%cr3;"::"r"(((uint64_t) kpml_addr) - KERNBASE));
 //                kprintf("virtual address of binary %p\n", present_program_header->p_vaddr);
 //                kprintf("physical address of binary %p\n", present_program_header->p_paddr);

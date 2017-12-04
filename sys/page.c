@@ -1,7 +1,7 @@
 #include <sys/types.h>
 #include <sys/page.h>
 #include <sys/kprintf.h>
-
+#include <sys/memset.h>
 
 uint64_t get_viraddr(uint64_t paddr) {
    return KERNBASE + paddr;
@@ -42,6 +42,7 @@ struct page *page_alloc() {
     // return viraddr of page
     struct page* free_pg = (struct page *) convertVA(free_page_head);
     free_page_head = tmp->next;
+    memset((void *)free_pg, 0, PAGE_SIZE);
     return free_pg;
 }
 
@@ -57,6 +58,8 @@ uint64_t *kmalloc(int size) {
     tmp->ref_count = 1;
     // return phyaddr of page
     uint64_t *free_pg = (uint64_t *) getPA(free_page_head);
+    uint64_t * free_pg_vir = (uint64_t *) get_viraddr((uint64_t) free_pg);
     free_page_head = tmp->next;
+    memset((void *)free_pg_vir, 0, PAGE_SIZE);
     return free_pg;
 }

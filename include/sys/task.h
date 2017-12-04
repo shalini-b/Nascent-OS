@@ -18,6 +18,7 @@ typedef struct fd
     void* file_ptr;
     void* last_matched_header;
     int is_dir;
+    int ref_count;
 }fd;
 
 typedef struct Task
@@ -28,11 +29,11 @@ typedef struct Task
     fd fd_array[100];
     uint64_t *pml4;
     uint64_t *cr3;
+    struct vma *vma_pntr;
     int pid;
     int ppid;
     int is_foregrnd;
     struct Task * parent_task;
-
 } Task;
 
 void init_tasks();

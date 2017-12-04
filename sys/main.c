@@ -48,7 +48,7 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     //yield();
 //    kprintf("Kernel PML address: %p\n", kpml_addr);
     //ring 0 to 3 switch
-//    init_tasks1();
+    init_tasks1();
 //    yield();
 //      tarfs_test();
 

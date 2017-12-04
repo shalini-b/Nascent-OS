@@ -7,6 +7,7 @@
 
 #define PHYSBASE 0x200000
 #define KERNBASE 0xffffffff80000000
+#define USTACK 0xffffffff7fffe000
 
 #define LOAD_CR3(val) __asm__ __volatile__ ("movq %0, %%cr3;" :: "r"(val));
 
