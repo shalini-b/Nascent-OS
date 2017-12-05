@@ -70,8 +70,16 @@ uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[])
         if (str_compare(tarfs_iterator->name, binary_name) == 0)
         {
             struct Elf64_Ehdr *elf_header = (struct Elf64_Ehdr *) ((uint64_t) tarfs_iterator + 512);
-            elf_read(elf_header, cur_pcb, binary_name, argv);
-            return (uint64_t) elf_header->e_entry;
+            if (elf_read(elf_header, cur_pcb, binary_name, argv) == 0)
+            {
+//                kprintf("elf read done");
+                return (uint64_t) elf_header->e_entry;
+            }
+
+            else
+            {
+                return -1;
+            }
         }
         tarfs_iterator = get_next_tar_header(tarfs_iterator);
     }
@@ -287,28 +295,27 @@ tarfs_test()
 
 
     //TEST 1 : FILE CALLS TEST
-    int SIZE=100;
+    int SIZE = 100;
     char buff[SIZE];
     runningTask = (Task *) page_alloc();
     int fd;
     //FIXME:: should be done inside task
     initialise_fds();
     fd = open("test1/abc.txt");
-    memset((void *) buff, '\0', SIZE+10);
-    while (read(fd, buff, SIZE)!=0)
+    memset((void *) buff, '\0', SIZE + 10);
+    while (read(fd, buff, SIZE) != 0)
     {
         kprintf("%s", buff);
-        memset((void *) buff, '\0', SIZE+10);
+        memset((void *) buff, '\0', SIZE + 10);
     }
     close(fd);
 
-
     fd = open("test1/abc.tx");
-    memset((void *) buff, '\0', SIZE+10);
-    while (read(fd, buff, SIZE)!=0)
+    memset((void *) buff, '\0', SIZE + 10);
+    while (read(fd, buff, SIZE) != 0)
     {
         kprintf("%s", buff);
-        memset((void *) buff, '\0', SIZE+10);
+        memset((void *) buff, '\0', SIZE + 10);
     }
     close(fd);
     //*************************************************************************

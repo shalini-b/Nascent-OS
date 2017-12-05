@@ -64,7 +64,7 @@ uint64_t get_mapping(uint64_t pml_addr, uint64_t viraddr)
     uint64_t page_addr = tmp[pte_id];
 
     uint64_t phy_addr = SCLDN(page_addr) + offset ;
-    kprintf("phys addr %p",phy_addr);
+    kprintf("phys addr %p\n",phy_addr);
     return phy_addr;
 }
 

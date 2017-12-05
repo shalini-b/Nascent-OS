@@ -50,11 +50,16 @@ struct mm_struct {
     uint64_t argv_start, argv_end;
 };
 
-typedef struct rgs
+typedef struct
 {
-    uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp, rip, flags, cr3;
+    uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp, rip, flags, cr3,r12, r13, r14, r15;
     // What about r12, r13, r14, r15??
 } Registers;
+
+typedef struct
+{
+    uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp, rip, r12, r13, r14, r15;
+}Registers1;
 
 typedef enum {
     STD_FD = 1

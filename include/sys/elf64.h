@@ -40,6 +40,6 @@ typedef struct Elf64_Phdr {
   Elf64_Xword   p_align;
 } Elf64_Phdr;
 
-void elf_read(Elf64_Ehdr* elf_header);
+int elf_read(Elf64_Ehdr* elf_header);
 int is_elf_format(Elf64_Ehdr* elf_header);
 #endif

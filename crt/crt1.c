@@ -41,6 +41,6 @@ void _start(void) {
 //  char** c=(char**)(a*8+8+resp+16);
 //  cache_env(c);
   //main(a,b,c);
-    main();
-  exit(0); 
+  int exit_code =  main();
+  exit(exit_code);
 }

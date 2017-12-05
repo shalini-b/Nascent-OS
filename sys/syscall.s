@@ -6,40 +6,34 @@
 sys_int:
     cli
    pushq $128
+   #
+
+    pushq %r15
+    pushq %r14
+    pushq %r13
+    pushq %r12
+    pushq %rbp
+    pushq %rsp
     pushq %rdi
     pushq %rsi
-    pushq %rax
-    pushq %rbx
-    pushq %rcx
     pushq %rdx
-    pushq %rbp
-    pushq %r8
-    pushq %r9
-    pushq %r10
-    pushq %r11
-    pushq %r12
-    pushq %r13
-    pushq %r14
-    pushq %r15
-    pushq %rsp
+    pushq %rcx
+    pushq %rbx
+    pushq %rax
     movq %rsp, %rdi
     callq syscall_handler
-    popq %rsp
-    popq %r15
-    popq %r14
-    popq %r13
-    popq %r12
-    popq %r11
-    popq %r10
-    popq %r9
-    popq %r8
-    popq %rbp
-    popq %rdx
-    popq %rcx
-    popq %rbx
     popq %rax
+    popq %rbx
+    popq %rcx
+    popq %rdx
     popq %rsi
     popq %rdi
+    popq %rsp
+    popq %rbp
+    popq %r12
+    popq %r13
+    popq %r14
+    popq %r15
     add $0x08, %rsp
     sti
     iretq

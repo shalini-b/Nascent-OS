@@ -385,14 +385,22 @@
 //    return 0;
 //
 //}
-int main()
+#include <stdio.h>
+
+int
+main()
 {
 
-//    kprintf("in main");
-//    __asm__ __volatile__("int $80");
+    int a=1;
+    printf("\n This is a char %c\n",'a');
+    printf("\n This is a number %d\n",1234);
+    printf("\n This is a string %s\n","abcd");
+    printf("\n This is a hex number %x\n",1134);
+    printf("\n This is a pointer %p\n",&a);
+    printf("\n This is a mix %p %d %s value\n",&a,12345,"abcdefg");
     while(1)
     {
 
     }
-    return  0;
+    return 0;
 }

@@ -19,7 +19,7 @@ type name() \
 { \
     long output; \
     __asm__ __volatile__(	"movq %1, %%rax \n\t" \
-                            "syscall \n\t" \
+                            "int $0x80 \n\t" \
                             "movq  %%rax, %0 \n\t" \
                              :"=r" (output) \
                              :"r" ((long)(__NR_##name)) \
@@ -33,7 +33,7 @@ type name(type1 arg1) \
     long output; \
     __asm__ __volatile__(	"movq %1, %%rax \n\t" \
                             "movq %2, %%rdi \n\t"\
-                            "syscall \n\t" \
+                            "int $0x80\n\t" \
                             "movq  %%rax, %0 \n\t"\
                              :"=r" (output) \
                              :"r" ((long)(__NR_##name)), \
@@ -49,7 +49,7 @@ type name(type1 arg1, type2 arg2) \
     __asm__ __volatile__(	"movq %1, %%rax \n\t" \
                             "movq %2, %%rdi \n\t" \
                             "movq %3, %%rsi \n\t" \
-                            "syscall \n\t" \
+                            "int $0x80 \n\t" \
                             "movq  %%rax, %0 \n\t" \
                              :"=r" (output) \
                              :"r" ((long) (__NR_##name)), \
@@ -67,7 +67,7 @@ type name(type1 arg1, type2 arg2, type3 arg3) \
                             "movq %2, %%rdi \n\t" \
                             "movq %3, %%rsi \n\t" \
                             "movq %4, %%rdx \n\t" \
-                            "syscall \n\t" \
+                            "int $0x80\n\t" \
                             "movq  %%rax, %0 \n\t" \
                              :"=r" (output) \
                              :"r" ((long) (__NR_##name)), \
@@ -87,7 +87,7 @@ type name(type1 arg1, type2 arg2, type3 arg3, type4 arg4) \
                             "movq %3, %%rsi\n\t" \
                             "movq %4, %%rdx\n\t" \
                             "movq %5, %%r10\n\t" \
-                            "syscall\n\t" \
+                            "int $0x80\n\t" \
                             "movq  %%rax, %0 \n\t" \
                              :"=r" (output) \
                              :"r" ((long)(__NR_##name)), \
@@ -109,7 +109,7 @@ type name(type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5) \
                             "movq %4, %%rdx \n\t" \
                             "movq %5, %%r10 \n\t" \
                             "movq %6, %%r8 \n\t" \
-                            "syscall \n\t" \
+                            "int $0x80\n\t" \
                             "movq %%rax, %0 \n\t" \
                              :"=r" (output) \
                              :"r" ((long)(__NR_##name)), \
@@ -133,7 +133,7 @@ type name(type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6
                             "movq %5, %%r10 \n\t" \
                             "movq %6, %%r8 \n\t" \
                             "movq %7, %%r9 \n\t" \
-                            "syscall\n\t" \
+                            "int $0x80\n\t" \
                             "movq %%rax, %0 \n\t" \
                              :"=r" (output) \
                              :"r" ((long)(__NR_##name)), \

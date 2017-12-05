@@ -23,7 +23,7 @@ int is_elf_format(Elf64_Ehdr *elf_header)
 }
 
 // FIXME: change return type
-void elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char *argv[])
+int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char *argv[])
 {
     if (is_elf_format(elf_header) == 1)
     {
@@ -33,7 +33,7 @@ void elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char
         READ_CR3(prev_pml_addr);
         strcpy(filename, new_pcb->filename);
 
-        int n_ph = elf_header->e_phnum;
+        volatile int n_ph = elf_header->e_phnum;
         uint64_t start_viraddr;
         Elf64_Phdr *program_header = (struct Elf64_Phdr *) ((uint64_t) elf_header + elf_header->e_phoff);
         Elf64_Phdr *present_program_header;
@@ -69,6 +69,7 @@ void elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char
                     set_mapping((uint64_t)pml_addr, (uint64_t)ScaleDown((uint64_t*)pres_page_base_vir), (uint64_t)phys_addr);
 //                    kprintf("virtual address of binary %p\n", pres_page_base_vir);
                 }
+//                kprintf("mapping %d program heder",program_headers_count);
                 void *present_file_segment =
                     (void *) ((uint64_t) elf_header + (uint64_t) present_program_header->p_offset);
 
@@ -133,10 +134,13 @@ void elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char
         }
         copy_arg_to_stack(new_pcb, argc);
         // FIXME: continue
+	return 0;
     }
     else
     {
+
         kprintf("not elf file");
+        return -1;
     }
 }
 
