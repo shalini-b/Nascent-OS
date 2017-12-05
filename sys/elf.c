@@ -21,12 +21,11 @@ is_elf_format(Elf64_Ehdr *elf_header)
     }
 }
 
-void elf_read(struct Elf64_Ehdr *elf_header)
+int elf_read(struct Elf64_Ehdr *elf_header)
 {
-    //Fixme :: fill bss
     if (is_elf_format(elf_header) == 1)
     {
-        int n_ph = elf_header->e_phnum;
+        volatile int n_ph = elf_header->e_phnum;
         uint64_t present_program_segment_vaddr;
         //kernel mapping
         pml_addr = (uint64_t *) page_alloc();
@@ -50,13 +49,18 @@ void elf_read(struct Elf64_Ehdr *elf_header)
 
 
                 }
+//                kprintf("mapping %d program heder",program_headers_count);
                 void *present_file_segment =
                     (void *) ((uint64_t) elf_header + (uint64_t) present_program_header->p_offset);
                 //__asm__ __volatile__("pushq $35 ;");
                 __asm__ __volatile__ ("movq %0, %%cr3;"::"r"(((uint64_t) pml_addr) - KERNBASE));
                 //__asm__ __volatile__("pushq $35 ;");
 //                kprintf("mapped range %x - %x\n", present_program_segment_vaddr,end_address);
-//                kprintf("memcopy range %x-%x\n", present_program_segment_vaddr,present_program_segment_vaddr+present_program_header->p_filesz);
+//                get_mapping((uint64_t) pml_addr, present_program_segment_vaddr);
+//                get_mapping((uint64_t) pml_addr, end_address);
+//                kprintf("memcopy range %p-%p\n", present_program_segment_vaddr,present_program_segment_vaddr+present_program_header->p_filesz);
+
+
                 memcopy((void *)present_file_segment, (void *) present_program_segment_vaddr, (uint64_t)program_header->p_filesz);
                 int bss_size = (present_program_header->p_memsz)-(program_header->p_filesz);
                 memset((void*)((present_program_segment_vaddr+program_header->p_filesz)), 0, bss_size);
@@ -69,12 +73,16 @@ void elf_read(struct Elf64_Ehdr *elf_header)
             present_program_header +=1;
             //((uint64_t) present_program_header + elf_header->e_phentsize);
 
+
         }
+        return 0;
 
     }
     else
     {
+
         kprintf("not elf file");
+        return -1;
     }
 
 

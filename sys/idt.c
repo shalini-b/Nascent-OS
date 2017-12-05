@@ -64,13 +64,16 @@ void add_idt(uint64_t func_base, int offset, uint64_t type_attr) {
 }
 
 void gen_int_handler() {
+    kprintf("in genneric");
     kprintf("Oops! Interrupt received. O.o ");
     outb(0x20, 0x20);
 }
 
 void int_handler13() {
     kprintf("Received Interrupt number 13!! Please check..");
+    kprintf("in 13");
     outb(0x20, 0x20);
+
 }
 
 void page_fault_handler(uint64_t num) {

@@ -385,14 +385,21 @@
 //    return 0;
 //
 //}
-int main()
-{
+#include <syscalls.h>
 
-//    kprintf("in main");
-//    __asm__ __volatile__("int $80");
+int
+main()
+{
+//    while(1)
+//    {
+//
+//    }
+    char* b="abc";
+    write(1,b,1);
     while(1)
     {
-
+        
     }
-    return  0;
+//    //printf("ret value is %d",59);
+    return 0;
 }
