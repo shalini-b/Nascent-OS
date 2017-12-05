@@ -118,7 +118,7 @@ createTask1(Task *task, uint64_t virtual_address, uint64_t flags)
     kprintf("rsp value %p",rsp);
     set_tss_rsp((void*)rsp);
 //    task->regs.cr3 = (uint64_t) pagedir;
-    task->regs.rsp = (uint64_t) page_alloc() + (0x1000);
+    task->regs.rsp = USTACK;
     task->next = 0;
 //    __asm__ __volatile__("sti");
     long output; \

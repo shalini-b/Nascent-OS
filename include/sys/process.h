@@ -5,6 +5,7 @@
 
 #define num_vmas 100
 #define num_pcbs 1000
+#define MAX_FDS 100
 
 struct vma {
     uint64_t start_addr;
@@ -19,9 +20,11 @@ struct mm_struct {
 };
 
 void initialise_vma();
-struct vma * fetch_vma();
+struct vma * fetch_free_vma();
 void create_pcb_list();
 struct Task * fetch_free_pcb();
 int fork_process();
+int create_pid();
+//void create_process();
 
 #endif

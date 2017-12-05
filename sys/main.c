@@ -15,7 +15,7 @@ uint32_t *loader_stack;
 extern char kernmem, physbase;
 //int ring_0_3_switch();
 extern uint64_t *kpml_addr;
-
+int num_proc = -1;
 
 void
 start(uint32_t *modulep, void *physbase, void *physfree)

@@ -9,9 +9,9 @@
 #include<sys/task.h>
 #include<sys/page.h>
 #include <sys/virmem.h>
+#include <sys/process.h>
 #define MIN(a, b)  (a<b)? a : b
 Task *runningTask;
-int MAX_FDS = 100;
 char pwd[200];
 
 int

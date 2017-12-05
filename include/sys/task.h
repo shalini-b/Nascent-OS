@@ -2,7 +2,7 @@
 #define __TASK1_H__
 //FIXME :: change naming
 #include <sys/types.h>
-
+#include <sys/process.h>
 
 typedef struct
 {
