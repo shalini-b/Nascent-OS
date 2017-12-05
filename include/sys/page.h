@@ -8,8 +8,14 @@
 #define PHYSBASE 0x200000
 #define KERNBASE 0xffffffff80000000
 #define USTACK 0xffffffff7fffe000
+#define USTACK_SIZE 0x10000
 
 #define LOAD_CR3(val) __asm__ __volatile__ ("movq %0, %%cr3;" :: "r"(val));
+#define READ_CR3(val) __asm__ __volatile__ ("movq %%cr3, %0;" : "=r"(val));
+
+#define RW_KERNEL (1UL | 2UL)
+#define RX_USER (1UL | 4UL)
+#define RW_USER (1UL | 4UL | 2UL)
 
 struct page {
    struct page *next;
