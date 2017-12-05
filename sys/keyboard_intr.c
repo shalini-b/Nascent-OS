@@ -2,6 +2,7 @@
 
 #include<sys/idt.h>
 #include <sys/kprintf.h>
+#include <sys/terminal.h>
 void
 keyboard_intr()
 {
@@ -69,6 +70,7 @@ keyboard_intr()
             {0, 0},
             {' ', ' '},
         };
+//    kprintf("%d\n",keyboard_value);
     if(keyboard_value == 29)//cntrl
     {
         control_flag = 1;
@@ -85,12 +87,14 @@ keyboard_intr()
             {
                 c = asciicodes[keyboard_value][1];
                 shift_flag = 0;
+                terminal_handler(c);
                 print_key(control_flag,c);
                 control_flag = 0;
             }
             else
             {
                 c = asciicodes[keyboard_value][0];
+                terminal_handler(c);
                 print_key(control_flag,c);
                 control_flag = 0;
             }

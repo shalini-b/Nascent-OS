@@ -215,6 +215,17 @@ void print_key(int shift_flag,char c)
 
     if(shift_flag)
     {
+        if(c=='h')
+        {
+            if(array_pointer>0)
+            {
+                array_pointer-=2;
+                *(base_address+array_pointer)=' ';
+                array_pointer-=2;
+                *(base_address+array_pointer)=' ';
+            }
+
+        }
         *(base_address+24*160+80+28) = '^';
         *(base_address+24*160+82+28) = c;
     }
