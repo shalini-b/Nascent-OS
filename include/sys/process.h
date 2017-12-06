@@ -4,55 +4,56 @@
 #include <sys/types.h>
 //FIXME :: change naming
 
-#define NUM_VMA 100
+// FIXME: vma sufficient??
+#define NUM_VMA 5000
 #define NUM_PCB 1000
 #define MAX_FDS 10
 #define KSTACK_SIZE 512
 
 extern Task* RunningTask;
 
-// FIXME: remove what is not needed
-typedef enum vmatype {
+enum vmatype {
     TEXT,
     DATA,
     HEAP,
     STACK,
     ANON,
-    FILETYPE,
     NONE
-} VMA_TYPES;
+};
 
-typedef enum vmaflag {
+enum vmaflag {
     NONE,  //no permission
-    X,     //execute only
-    W,     //write only
-    WX,    //write execute
-    R,     //read only
-    RX,    //read execute
-    RW,    //read write
+    X,
+    W,
+    WX,
+    R,
+    RX,
+    RW,
     RWX
-} VM_FLAGS;
+};
 
 struct vma {
     uint64_t start_addr;
     uint64_t end_addr;
     struct vma * next;
-    struct mm_struct *proc_mm;
-    VM_FLAGS vm_flags;
-    VMA_TYPES vmtype;
+    // used to build global array
+    struct vma * prev;
+    // struct mm_struct *proc_mm;
+    uint64_t vm_flags;
+    uint64_t vmtype;
 };
 
 struct mm_struct {
     struct vma *vma_head;
     int count;
-    uint64_t *pml4;
+    // uint64_t *pml4;
     uint64_t begin_stack;
     uint64_t argv_start, argv_end;
 };
 
 typedef struct
 {
-    uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp, rip, flags, cr3,r12, r13, r14, r15;
+    uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp, rip, flags, cr3, r12, r13, r14, r15;
     // What about r12, r13, r14, r15??
 } Registers;
 
@@ -82,22 +83,19 @@ typedef struct fd
 
 typedef struct Task
 {
-    Registers regs; // how to assign kstack?
+    Registers regs;
     char filename[75];
     struct mm_struct * task_mm;
-    uint64_t rip;
-    uint64_t rsp;
     uint64_t kstack[KSTACK_SIZE];
     struct Task *next;
     struct Task *prev;
     fd fd_array[MAX_FDS];
-    uint64_t *cr3;
     int pid;
     int ppid;
     struct Task * parent_task;
-    struct Task * childnode;
-    struct Task * sib;
-    int num_child;
+    //struct Task * childnode;
+    //struct Task * sib;
+    // int num_child;
     TASK_STATES task_state;
 } Task;
 
@@ -116,6 +114,6 @@ void create_pcb_list();
 struct Task * fetch_free_pcb();
 int fork_process();
 int create_pid();
-//void create_process();
+
 
 #endif

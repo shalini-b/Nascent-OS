@@ -36,10 +36,46 @@ void create_vir_phy_mapping(uint64_t *pml_addr)
     {
         uint64_t viraddr = KERNBASE + cnt * PAGE_SIZE;
         uint64_t phyaddr = (0x00 + cnt * PAGE_SIZE);
-        set_mapping((uint64_t)pml_addr,(uint64_t) viraddr, phyaddr);
+        // FIXME: to give user permissions or not? or override it later
+        set_mapping((uint64_t)pml_addr,(uint64_t) viraddr, phyaddr, 7);
         cnt++;
     }
 }
+
+int get_pte_entry(uint64_t pml_addr, uint64_t viraddr, uint64_t * phy_addr) {
+    #define SCLDN(vaddr) (((vaddr >> 12)) << 12)
+
+    int pml4_id = (viraddr >> 39) & 0x1FF;
+    int pdpte_id = (viraddr >> 30) & 0x1FF;
+    int pde_id = (viraddr >> 21) & 0x1FF;
+    int pte_id = (viraddr >> 12) & 0x1FF;
+
+    uint64_t* tmp = (uint64_t*)SCLDN(pml_addr);
+    if (!(*(tmp + pml4_id) & 1)) {
+        return 0;
+    }
+    uint64_t pdpte = tmp[pml4_id] + KERNBASE;
+
+    tmp = (uint64_t*)SCLDN(pdpte);
+    if (!(*(tmp + pdpte_id) & 1)) {
+        return 0;
+    }
+    uint64_t pde = tmp[pdpte_id] + KERNBASE;
+
+    tmp = (uint64_t*)SCLDN(pde);
+    if (!(*(tmp + pde_id) & 1)) {
+        return 0;
+    }
+    uint64_t pte = tmp[pde_id] + KERNBASE;
+
+    tmp = (uint64_t*)SCLDN(pte);
+    if (!(*(tmp + pte_id) & 1)) {
+        return 0;
+    }
+    phy_addr = tmp + pte_id;
+    return 1;
+}
+
 
 uint64_t get_mapping(uint64_t pml_addr, uint64_t viraddr)
 {
@@ -64,13 +100,12 @@ uint64_t get_mapping(uint64_t pml_addr, uint64_t viraddr)
     uint64_t page_addr = tmp[pte_id];
 
     uint64_t phy_addr = SCLDN(page_addr) + offset ;
-    kprintf("phys addr %p\n",phy_addr);
+    // kprintf("phys addr %p\n",phy_addr);
     return phy_addr;
 }
 
-void set_mapping(uint64_t pml4_addr, uint64_t viraddr, uint64_t phyaddr)
+void set_mapping(uint64_t pml4_addr, uint64_t viraddr, uint64_t phyaddr, uint64_t flags)
 {
-
     //pml4 offset
     uint64_t pml4_offset = (viraddr >> 39) & 0x1FF;
     //pdpte offset
@@ -90,16 +125,14 @@ void set_mapping(uint64_t pml4_addr, uint64_t viraddr, uint64_t phyaddr)
     uint64_t pde_phy = create_dir_table(pdpte_offset_addr);
 
     //pde table
-    uint64_t pde_v_addr = pde_phy+KERNBASE;
+    uint64_t pde_v_addr = pde_phy + KERNBASE;
     uint64_t pde_offset_addr = (uint64_t)(((uint64_t*)pde_v_addr) +pde_offset);
     uint64_t pte_phy = create_dir_table(pde_offset_addr);
 
     //pte table
-    uint64_t pte_v_addr=pte_phy+KERNBASE;
+    uint64_t pte_v_addr=pte_phy + KERNBASE;
     uint64_t pte_offset_addr = (uint64_t)(((uint64_t*)pte_v_addr) +pte_offset);
-    *((uint64_t*)pte_offset_addr) = phyaddr | 7;
-    // FIXME: to give permissions or not?
-
+    *((uint64_t*)pte_offset_addr) = phyaddr | flags;
 }
 
 uint64_t create_dir_table(uint64_t vir_addr)
@@ -207,8 +240,8 @@ struct page *fetch_free_page()
 
     struct page *tmp = free_page_head;
     struct page *free_pg = (struct page *) getPA(tmp);
-    //FIXME: Is it correct to do this here?
     struct page *free_pntr = (struct page *) get_viraddr((uint64_t) tmp);
+    //FIXME: Is it correct to do this here?
     free_pntr->ref_count = 1;
     free_page_head = free_pntr->next;
     uint64_t *free_pg_vir = (uint64_t *) get_viraddr((uint64_t) free_pg);

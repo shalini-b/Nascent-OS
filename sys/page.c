@@ -19,6 +19,11 @@ uint64_t get_phyaddr(uint64_t vir_addr) {
     return vir_addr - KERNBASE;
 }
 
+struct page * get_page_from_PA(uint64_t * phyaddr) {
+    int offset = ((uint64_t)ScaleDown(phyaddr)) / PAGE_SIZE;
+    return &pages[offset];
+}
+
 uint64_t read_cr2(){
  uint64_t val;
  __asm__ __volatile__ ("movq %%cr2, %0;" : "=r"(val));
@@ -46,7 +51,7 @@ struct page *page_alloc() {
     return free_pg;
 }
 
-uint64_t *kmalloc(int size) {
+uint64_t *kmalloc() {
     // FIXME: handle no free page
     if ((free_page_head == NULL) || (free_page_head == free_page_end)) {
         // return NULL;
