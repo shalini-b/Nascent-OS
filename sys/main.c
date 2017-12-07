@@ -42,6 +42,8 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     init_mem((uint64_t *) physfree, modulep, mem_end);
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
     init_idt();
+    create_pcb_list();
+    initialise_vma();
     __asm__ __volatile__ ("sti");
     //kernel task switch
     //init_tasks();

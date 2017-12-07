@@ -3,6 +3,10 @@
 #include <sys/kprintf.h>
 #include <sys/page.h>
 #include <sys/virmem.h>
+#include <sys/memset.h>
+#include <sys/tarfs.h>
+// FIXME: get corresponding sys file
+#include <strings.h>
 
 struct vma * free_vma_head = NULL;
 struct vma vma_arr[NUM_VMA];
@@ -77,7 +81,8 @@ void create_pcb_list() {
 
 uint64_t * create_new_pml_table() {
     // FIXME: is it enough??
-    uint64_t * pml_addr = page_alloc();
+    uint64_t * pml_addr = (uint64_t *) page_alloc();
+    kprintf("In create proc %p", pml_addr);
     pml_addr[511] = kpml_addr[511];
     return pml_addr;
 }
@@ -90,12 +95,10 @@ struct Task * fetch_free_pcb() {
     struct Task * free_pcb = free_pcb_head;
     free_pcb_head = free_pcb_head->next;
     // Initiating new MM struct
-    struct mm * proc_mm = (struct mm_struct *) kmalloc(sizeof(struct mm_struct));
-    // FIXME!! CAUTION: PML address is a virtual address
+    struct mm_struct * proc_mm = (struct mm_struct *) page_alloc();
     // proc_mm->pml4 = create_new_pml_table();
     proc_mm->vma_head = NULL;
-    proc_mm->count = NULL;
-    proc_mm->total_vma_size = 0;
+    proc_mm->count = 0;
 
     // Initiating process vars
     free_pcb->task_mm = proc_mm;
@@ -119,19 +122,14 @@ struct Task * fetch_free_pcb() {
     // memset((void*)free_pcb->fd_array, 0, MAX_FDS * sizeof(fd));
 
     // initiate 0, 1, 2 fd for each pcb
-    for (int i = 0; i < MAX_FDS; i++) {
-        if (i==0 | i==1 | i==2) {
-            free_pcb->fd_array->fdtype = STD_FD;
-            free_pcb->fd_array->alloted= 1;
-            free_pcb->fd_array->file_ptr = NULL;
-            free_pcb->fd_array->file_sz = 0;
-            free_pcb->fd_array->num_bytes_read = 0;
-            free_pcb->fd_array->is_dir = 0;
-            free_pcb->fd_array->last_matched_header = NULL;
-        }
-        else {
-            free_pcb->fd_array[i] = NULL;
-        }
+    for (int i = 0; i < 3; i++) {
+        free_pcb->fd_array->fdtype = STD_FD;
+        free_pcb->fd_array->alloted= 1;
+        free_pcb->fd_array->file_ptr = NULL;
+        free_pcb->fd_array->file_sz = 0;
+        free_pcb->fd_array->num_bytes_read = 0;
+        free_pcb->fd_array->is_dir = 0;
+        free_pcb->fd_array->last_matched_header = NULL;
     }
 
     return free_pcb;
@@ -146,12 +144,10 @@ int fork_process(Task * parent_pcb) {
 
     // copying file desc
     for (int i = 0; i < MAX_FDS; i++) {
-        if (parent_pcb->fd_array[i] != NULL) {
-            // FIXME: check if copy works properly
-            child_pcb->fd_array[i] = parent_pcb->fd_array[i];
-            // FIXME: increment fd for parent if child is pointing to it??
-            // parent_pcb->fd_array[i].alloted++;
-        }
+        // FIXME: check if copy works properly
+        child_pcb->fd_array[i] = parent_pcb->fd_array[i];
+        // FIXME: increment fd for parent if child is pointing to it??
+        // parent_pcb->fd_array[i].alloted++;
     }
 
     // Backup CR3 values
@@ -191,7 +187,7 @@ int fork_process(Task * parent_pcb) {
         int cnt = (end - start) / PAGE_SIZE;
 
         for (int i = 0; i < cnt; i++) {
-            uint64_t *page_phyaddr;
+            uint64_t *page_phyaddr = NULL;
             // check if parent page tables have a mapping for given viraddr
             // CAUTION: check if we have to align or not
             int present = get_pte_entry(ppml4, start + i * PAGE_SIZE, page_phyaddr);
@@ -222,6 +218,7 @@ int fork_process(Task * parent_pcb) {
 
 void copy_arg_to_stack(uint64_t *user_stack, int argc)
 {
+    // order is 0, envp, 0, argv, argv pointers, argc
     uint64_t *argv[10];
     // Mark beginning of stack, leave first entry or mark it as 0
     user_stack = user_stack - 0x8;
@@ -244,8 +241,9 @@ void copy_arg_to_stack(uint64_t *user_stack, int argc)
     *user_stack = (uint64_t) argc;
 }
 
-uint64_t sys_execvpe(char *file, char *argv[], char *envp[])
+void sys_execvpe(char *filename, char *argv[], char *envp[])
 {
+    // FIXME: use kmalloc or page_alloc
     uint64_t * stack_start = (uint64_t *)page_alloc() + PAGE_SIZE;
     // reorganise arguments
     int argc = 1;
@@ -263,57 +261,65 @@ uint64_t sys_execvpe(char *file, char *argv[], char *envp[])
     clean_task_for_exec(RunningTask);
 
     // FIXME: handle envp
-    load_elf(RunningTask, file, argv);
+    uint64_t bin_viradd = load_elf(RunningTask, filename, argv);
 
-    // FIXME: copy new stack to RunningTask's stack vma??
+    // copy new stack to RunningTask's stack vma
+    start_viraddr = (uint64_t) USTACK;
+    end_address = (uint64_t) (USTACK - USTACK_SIZE);
+    struct vma* tmp = RunningTask->task_mm->vma_head;
+    while(tmp->next != NULL) {
+        tmp = tmp->next;
+    }
+    tmp->next = fetch_free_vma(start_viraddr, end_address, RW, STACK);
+    RunningTask->task_mm->count++;
+
+    // FIXME: Map all addresses from USTACK till USTACK_SIZE
+    // set mapping for stack to USTACK in pcb's PML
+    uint64_t proc_pml4 = (uint64_t) (RunningTask->regs.cr3 - KERNBASE);
+    uint64_t stack_phyaddr = (uint64_t) ((stack_start - PAGE_SIZE) - KERNBASE);
+    set_mapping(proc_pml4, USTACK, stack_phyaddr, 7);
 
 
     // Enable interrupt for scheduling next process
-    __asm__ __volatile__ ("int $32");
+    // FIXME: set rip, rsp of pcb for new process and then iretq
 
-    report_error("EXECVPE terminated incorrectly");
 }
 
 
-void clean_task_for_exec(Task *task) {
+void clean_task_for_exec(Task *cur_task) {
     // reset task vars
-    task->next        = NULL;
-    task->prev        = NULL;
-    task->parent_task      = NULL;
-    task->task_state = READY;
+    cur_task->next        = NULL;
+    cur_task->prev        = NULL;
+    cur_task->parent_task      = NULL;
+    cur_task->task_state = READY;
     // FIXME: memset filename??
 
-    // task->child_nodehead   = NULL;
-    // task->sib    = NULL;
-    // task->num_child = 0;
+    // cur_task->child_nodehead   = NULL;
+    // cur_task->sib    = NULL;
+    // cur_task->num_child = 0;
 
     // FIXME: clean regs??
 
     // clean mm struct
-    task->mm_struct->vma_head = NULL;
-    task->mm_struct->count = 0;
-    task->mm_struct->begin_stack = 0;
+    cur_task->task_mm->vma_head = NULL;
+    cur_task->task_mm->count = 0;
+    cur_task->task_mm->begin_stack = 0;
     // CAUTION - initiate others
 
     // clean * initiate the std fds
-    memset((void*)task->fd_array, 0, sizeof(fd)*MAX_FDS);
+    memset((void*)cur_task->fd_array, 0, sizeof(fd)*MAX_FDS);
     // initiate 0, 1, 2 fd for each pcb
-    for (int i = 0; i < MAX_FDS; i++) {
-        if (i==0 | i==1 | i==2) {
-            task->fd_array->fdtype = STD_FD;
-            task->fd_array->alloted= 1;
-            task->fd_array->file_ptr = NULL;
-            task->fd_array->file_sz = 0;
-            task->fd_array->num_bytes_read = 0;
-            task->fd_array->is_dir = 0;
-            task->fd_array->last_matched_header = NULL;
-        }
-        else {
-            task->fd_array[i] = NULL;
-        }
+    for (int i = 0; i < 3; i++) {
+        cur_task->fd_array->fdtype = STD_FD;
+        cur_task->fd_array->alloted= 1;
+        cur_task->fd_array->file_ptr = NULL;
+        cur_task->fd_array->file_sz = 0;
+        cur_task->fd_array->num_bytes_read = 0;
+        cur_task->fd_array->is_dir = 0;
+        cur_task->fd_array->last_matched_header = NULL;
     }
     // clean kstack
-    memset((void*)task->kstack, 0, KSTACK_SIZE);
+    memset((void*)cur_task->kstack, 0, KSTACK_SIZE);
 }
 
 

@@ -41,7 +41,7 @@ uint64_t *ScaleDown(uint64_t *phyaddr);
 uint64_t *ScaleUp(uint64_t *phyaddr);
 void test_mapping(uint64_t *pml_addr);
 struct page *page_alloc();
-uint64_t *kmalloc();
+void *kmalloc();
 uint64_t read_cr2();
 void invalidate_tlb(uint64_t pml4);
 struct page * get_page_from_PA(uint64_t * phyaddr);

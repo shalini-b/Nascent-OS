@@ -32,10 +32,12 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
     {
         //Save current pml address
         uint64_t * prev_pml_addr;
-        uint64_t * pml_addr = new_pcb->regs.cr3;
+        // FIXME: check this
+        uint64_t * pml_addr = (uint64_t *) (new_pcb->regs.cr3 + KERNBASE);
+        kprintf("In load elf %p", pml_addr);
         READ_CR3(prev_pml_addr);
         // Copy file name
-        strcpy(filename, new_pcb->filename);
+        str_copy(filename, new_pcb->filename);
 
         // initiate headers
         uint64_t start_viraddr;
@@ -76,7 +78,7 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
                      pres_page_base_vir += (4 * 1024))
                 {
                     uint64_t phys_addr = (uint64_t) kmalloc();
-                    set_mapping((uint64_t)pml_addr, (uint64_t)ScaleDown((uint64_t*)pres_page_base_vir), (uint64_t)phys_addr);
+                    set_mapping((uint64_t)pml_addr, (uint64_t)ScaleDown((uint64_t*)pres_page_base_vir), (uint64_t)phys_addr, 7);
                     //  kprintf("virtual address of binary %p\n", pres_page_base_vir);
                 }
 
@@ -127,7 +129,7 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
         }
         // increment the address by 10, safe side
         start_viraddr = ((((max_addr - 1) >> 12) + 10) << 12);
-        end_address = ((((max_addr - 1) >> 12) + 10) << 12);
+        uint64_t end_address = ((((max_addr - 1) >> 12) + 10) << 12);
         // create HEAP VMA and increment count
         tmp->next = fetch_free_vma(start_viraddr, end_address, RW, HEAP);
         new_pcb->task_mm->count++;

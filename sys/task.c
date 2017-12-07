@@ -9,7 +9,7 @@
 #include <sys/tarfs.h>
 #include<sys/page.h>
 #include <sys/memset.h>
-Task *runningTask;
+extern Task *runningTask;
 static Task mainTask;
 static Task otherTask1,otherTask2;
 void
@@ -48,7 +48,7 @@ static void
 otherMain3()
 {
     kprintf("reached kernal task 1!\n");
-    print_elf_file("bin/sbush");
+    //print_elf_file("bin/sbush");
     yield_0_3();
 
 }
@@ -98,8 +98,26 @@ init_tasks1()
     // Get flags and CR3
     __asm__ __volatile__ ("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
     __asm__ __volatile__ ("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.flags)::"%rax");
-    uint64_t virtual_address = print_elf_file("bin/sbush");
-    createTask1(&otherTask1, virtual_address, mainTask.regs.flags);
+    Task * cur_pcb = fetch_free_pcb();
+    kprintf("PID of new process %d", cur_pcb->pid);
+    char *tmp[] = {"bin/sbush", "3"};
+    uint64_t virtual_address = load_elf(cur_pcb, "bin/sbush", tmp);
+    uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000)-16;
+    // kprintf("rsp value %p",rsp);
+    set_tss_rsp((void*)rsp);
+    cur_pcb->regs.rip = virtual_address;
+    cur_pcb->regs.rsp = ((uint64_t) page_alloc()) + (0x1000);
+    long output; \
+    __asm__ __volatile__(
+                            "pushq $35 \n\t" \
+                            "pushq %2 \n\t" \
+                            "pushfq \n\t"\
+                             "pushq $43\n\t"\
+                            "pushq %1 \n\t" \
+                            "iretq\n\t"
+    :"=r" (output)  :"r"((uint64_t) (cur_pcb->regs.rip )) ,"r"( (uint64_t) (cur_pcb->regs.rsp)));\
+    //createTask1(&otherTask1, virtual_address, mainTask.regs.flags);
+
 }
 
 void

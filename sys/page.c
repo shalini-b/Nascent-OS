@@ -34,6 +34,7 @@ void invalidate_tlb(uint64_t pml4) {
     __asm__ __volatile("invlpg (%0)" : : "r" (pml4) : "memory");
 }
 
+// Use this for fetching virtual address of free page
 struct page *page_alloc() {
     // FIXME: handle no free page
     if ((free_page_head == NULL) || (free_page_head == free_page_end)) {
@@ -51,7 +52,8 @@ struct page *page_alloc() {
     return free_pg;
 }
 
-uint64_t *kmalloc() {
+// Use this for fetching physical address of free page
+void *kmalloc() {
     // FIXME: handle no free page
     if ((free_page_head == NULL) || (free_page_head == free_page_end)) {
         // return NULL;

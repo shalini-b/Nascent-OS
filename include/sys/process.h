@@ -2,6 +2,7 @@
 #define __PROCESS_H__
 
 #include <sys/types.h>
+
 //FIXME :: change naming
 
 // FIXME: vma sufficient??
@@ -10,15 +11,13 @@
 #define MAX_FDS 10
 #define KSTACK_SIZE 512
 
-extern Task* RunningTask;
-
+// FIXME: set these properly
 enum vmatype {
     TEXT,
     DATA,
     HEAP,
     STACK,
-    ANON,
-    NONE
+    ANON
 };
 
 enum vmaflag {
@@ -99,6 +98,8 @@ typedef struct Task
     TASK_STATES task_state;
 } Task;
 
+Task* RunningTask;
+
 void init_tasks();
 void init_tasks_0_3();
 void createTask(Task *, void(*)(), uint64_t, uint64_t *);
@@ -114,6 +115,9 @@ void create_pcb_list();
 struct Task * fetch_free_pcb();
 int fork_process();
 int create_pid();
+void report_error(char* msg);
+void clean_task_for_exec(Task *cur_task);
+void sys_execvpe(char *file, char *argv[], char *envp[]);
 
 
 #endif

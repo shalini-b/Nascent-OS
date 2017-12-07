@@ -1,12 +1,12 @@
 /* required functionality : open, read, close, opendir, readdir, closedir */
 #include <sys/types.h>
-#include<sys/tarfs.h>
+#include <sys/tarfs.h>
 #include <sys/kprintf.h>
 #include <strings.h>
-#include<sys/elf64.h>
+#include <sys/elf64.h>
 #include <sys/memset.h>
 #include <strings.h>
-#include<sys/page.h>
+#include <sys/page.h>
 #include <sys/virmem.h>
 #include <sys/process.h>
 #define MIN(a, b)  (a<b)? a : b
