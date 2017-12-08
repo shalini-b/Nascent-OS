@@ -14,8 +14,8 @@
 #define READ_CR3(val) __asm__ __volatile__ ("movq %%cr3, %0;" : "=r"(val));
 
 #define BIT_COW 0x100
-#define UNSET_WRITE(entry) *entry = *entry & 0xFFFFFFFFFFFFFFFD
-#define SET_COW(entry) *entry = *entry | BIT_COW
+#define UNSET_WRITE(entry) entry = entry & 0xFFFFFFFFFFFFFFFD
+#define SET_COW(entry) entry = entry | BIT_COW
 
 #define RW_KERNEL (1UL | 2UL)
 #define RX_USER (1UL | 4UL)
@@ -44,6 +44,6 @@ struct page *page_alloc();
 void *kmalloc();
 uint64_t read_cr2();
 void invalidate_tlb(uint64_t pml4);
-struct page * get_page_from_PA(uint64_t * phyaddr);
+struct page * get_page_from_PA(uint64_t phyaddr);
 
 #endif

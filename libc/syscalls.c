@@ -13,6 +13,8 @@
 #define __NR_getcwd 79
 #define __NR_wait4 61
 #define __NR_access 21
+#define __NR_getpid  39
+#define __NR_getppid 110
 
 #define syscall0(type, name) \
 type name() \
@@ -157,6 +159,8 @@ syscall1(int, chdir, const char*, fileName);
 syscall1(int, pipe, int *, filedes); 
 syscall3(size_t, execve, const char *, fileName, char *const*, argv, char *const*, envp);
 syscall0(pid_t, fork);
+syscall0(int, getpid);
+syscall0(int, getppid);
 syscall2(char *, getcwd, char *, buf, unsigned long, size);
 syscall2(int, dup2, int, oldfd, int, newfd);
 //TODO: add rusage struct for wait4

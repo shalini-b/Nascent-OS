@@ -42,7 +42,7 @@ void create_vir_phy_mapping(uint64_t *pml_addr)
     }
 }
 
-int get_pte_entry(uint64_t pml_addr, uint64_t viraddr, uint64_t * phy_addr) {
+int get_pte_entry(uint64_t pml_addr, uint64_t viraddr, uint64_t *phy_addr) {
     #define SCLDN(vaddr) (((vaddr >> 12)) << 12)
 
     int pml4_id = (viraddr >> 39) & 0x1FF;
@@ -72,7 +72,7 @@ int get_pte_entry(uint64_t pml_addr, uint64_t viraddr, uint64_t * phy_addr) {
     if (!(*(tmp + pte_id) & 1)) {
         return 0;
     }
-    phy_addr = tmp + pte_id;
+    *phy_addr = tmp[pte_id];
     return 1;
 }
 

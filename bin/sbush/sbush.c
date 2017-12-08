@@ -386,6 +386,7 @@
 //
 //}
 #include <stdio.h>
+#include <unistd.h>
 
 int
 main()
@@ -398,6 +399,7 @@ main()
     printf("\n This is a hex number %x\n",1134);
     printf("\n This is a pointer %p\n",&a);
     printf("\n This is a mix %p %d %s value\n",&a,12345,"abcdefg");
+    fork();
     while(1)
     {
 

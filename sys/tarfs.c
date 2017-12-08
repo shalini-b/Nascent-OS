@@ -84,7 +84,6 @@ uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[])
         tarfs_iterator = get_next_tar_header(tarfs_iterator);
     }
     return 0;
-
 }
 
 int

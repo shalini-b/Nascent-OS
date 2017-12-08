@@ -12,5 +12,8 @@ write_to_console(uint64_t fd, char *buffer, uint64_t count);
 
 #define SYS_open        2
 #define SYS_write       1
+#define SYS_fork        57
+#define SYS_getpid      39
+#define SYS_getppid     110
 
 #endif

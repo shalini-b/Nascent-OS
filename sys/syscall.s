@@ -5,9 +5,7 @@
 
 sys_int:
     cli
-   pushq $128
-   #
-
+    pushq $128
     pushq %r15
     pushq %r14
     pushq %r13

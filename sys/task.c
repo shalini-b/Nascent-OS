@@ -99,7 +99,6 @@ init_tasks1()
     __asm__ __volatile__ ("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
     __asm__ __volatile__ ("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.flags)::"%rax");
     Task * cur_pcb = fetch_free_pcb();
-    kprintf("PID of new process %d", cur_pcb->pid);
     char *tmp[] = {"bin/sbush", "3"};
     uint64_t virtual_address = load_elf(cur_pcb, "bin/sbush", tmp);
     uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000)-16;
@@ -107,6 +106,7 @@ init_tasks1()
     set_tss_rsp((void*)rsp);
     cur_pcb->regs.rip = virtual_address;
     cur_pcb->regs.rsp = ((uint64_t) page_alloc()) + (0x1000);
+    runningTask = cur_pcb;
     long output; \
     __asm__ __volatile__(
                             "pushq $35 \n\t" \

@@ -5,6 +5,7 @@
 #include <sys/virmem.h>
 #include <sys/memset.h>
 #include <sys/tarfs.h>
+#include <sys/gdt.h>
 // FIXME: get corresponding sys file
 #include <strings.h>
 
@@ -17,6 +18,7 @@ Task pcb_arr[NUM_PCB];
 Task * free_pcb_head = NULL;
 
 static char args[10][100];
+extern Task* RunningTask;
 
 // FIXME: call this somewhere in paging
 void initialise_vma() {
@@ -41,6 +43,8 @@ struct vma * get_free_vma() {
     }
     struct vma * free_vma = free_vma_head;
     free_vma_head = free_vma_head->next;
+    free_vma->next = NULL;
+    free_vma->prev = NULL;
     return free_vma;
 }
 
@@ -82,7 +86,7 @@ void create_pcb_list() {
 uint64_t * create_new_pml_table() {
     // FIXME: is it enough??
     uint64_t * pml_addr = (uint64_t *) page_alloc();
-    kprintf("In create proc %p", pml_addr);
+    kprintf("In create proc PML = %p\n", pml_addr);
     pml_addr[511] = kpml_addr[511];
     return pml_addr;
 }
@@ -112,7 +116,8 @@ struct Task * fetch_free_pcb() {
     //free_pcb->num_child = 0;
 
     // FIXME: check this value for errors
-    free_pcb->pid = (free_pcb - pcb_arr)/ sizeof(Task);
+    free_pcb->pid = ((uint64_t) free_pcb - (uint64_t) &pcb_arr[0])/ sizeof(Task);
+    kprintf("PID of new process: %d\n", free_pcb->pid);
     free_pcb->ppid = 0;
     free_pcb->task_state = READY;
 
@@ -139,7 +144,7 @@ int fork_process(Task * parent_pcb) {
     Task * child_pcb = fetch_free_pcb();
     child_pcb->parent_task = parent_pcb;
     child_pcb->ppid = parent_pcb->pid;
-    // FIXME: check if copy works
+    // FIXME: filename followed by zeros, guess it is not a problem
     str_copy(child_pcb->filename, parent_pcb->filename);
 
     // copying file desc
@@ -151,8 +156,8 @@ int fork_process(Task * parent_pcb) {
     }
 
     // Backup CR3 values
-    uint64_t ppml4 = parent_pcb->regs.cr3;
-    uint64_t cpml4 = child_pcb->regs.cr3;
+    uint64_t ppml4 = parent_pcb->regs.cr3 + KERNBASE;
+    uint64_t cpml4 = child_pcb->regs.cr3 + KERNBASE;
 
     // Copy mm struct except for vma_list
     memcopy((void*)parent_pcb->task_mm, (void*)child_pcb->task_mm, sizeof(struct mm_struct));
@@ -165,7 +170,7 @@ int fork_process(Task * parent_pcb) {
     parent_pcb->num_child++;
      */
 
-    // Copy VMA structs
+    // Deep Copy VMA structs
     struct vma * child_vmas = NULL;
     struct vma * parent_vma = parent_pcb->task_mm->vma_head;
     while (parent_vma) {
@@ -180,17 +185,16 @@ int fork_process(Task * parent_pcb) {
             child_vmas = child_vmas->next;
         }
 
-        // copy page table entries
-        // Caution - these may not be required
+        // deep copy page table entries
         uint64_t end = (uint64_t) ScaleUp((uint64_t *) parent_vma->end_addr);
         uint64_t start = (uint64_t) ScaleDown((uint64_t *) parent_vma->start_addr);
         int cnt = (end - start) / PAGE_SIZE;
 
         for (int i = 0; i < cnt; i++) {
-            uint64_t *page_phyaddr = NULL;
+            uint64_t page_phyaddr = 0;
             // check if parent page tables have a mapping for given viraddr
-            // CAUTION: check if we have to align or not
-            int present = get_pte_entry(ppml4, start + i * PAGE_SIZE, page_phyaddr);
+            // CAUTION: check if we have to align viraddr or not
+            int present = get_pte_entry(ppml4, start + i * PAGE_SIZE, &page_phyaddr);
             // if any of the intermediary table values are not present, then just skip the viraddr
             if (present == 1) {
                 // Used to increment page ref count
@@ -201,7 +205,7 @@ int fork_process(Task * parent_pcb) {
                 SET_COW(page_phyaddr);
                 // CAUTION: check flags again & check if we have to align or not
                 // the flags are already set, so just pass the value to be set in child page table
-                set_mapping(cpml4, start + i * PAGE_SIZE, *page_phyaddr, 0);
+                set_mapping(cpml4, start + i * PAGE_SIZE, page_phyaddr, 0);
                 page_addr->ref_count++;
             }
         }
@@ -209,8 +213,13 @@ int fork_process(Task * parent_pcb) {
         parent_vma = parent_vma->next;
     }
     invalidate_tlb((uint64_t) ppml4);
+    
+    // copy all contents of kstack to child
+    memcopy((void*)parent_pcb->kstack, (void*)child_pcb->kstack, KSTACK_SIZE);
+    // Keep a magic number at the 511th entry of child kstack to recognise child in syscall handler
+    child_pcb->kstack[511] = 123456;
+    // TODO: update child kernel stack for RIP & RSP registers
 
-    // TODO: update kernel stack values
 
     // parent returns this
     return child_pcb->pid;
@@ -218,7 +227,7 @@ int fork_process(Task * parent_pcb) {
 
 void copy_arg_to_stack(uint64_t *user_stack, int argc)
 {
-    // order is 0, envp, 0, argv, argv pointers, argc
+    // FIXME: order is 0, envp, envp_pntrs, 0, argv, argv pointers, argc
     uint64_t *argv[10];
     // Mark beginning of stack, leave first entry or mark it as 0
     user_stack = user_stack - 0x8;
@@ -243,7 +252,7 @@ void copy_arg_to_stack(uint64_t *user_stack, int argc)
 
 void sys_execvpe(char *filename, char *argv[], char *envp[])
 {
-    // FIXME: use kmalloc or page_alloc
+    // FIXME: use kmalloc or page_alloc??
     uint64_t * stack_start = (uint64_t *)page_alloc() + PAGE_SIZE;
     // reorganise arguments
     int argc = 1;
@@ -264,8 +273,8 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
     uint64_t bin_viradd = load_elf(RunningTask, filename, argv);
 
     // copy new stack to RunningTask's stack vma
-    start_viraddr = (uint64_t) USTACK;
-    end_address = (uint64_t) (USTACK - USTACK_SIZE);
+    uint64_t start_viraddr = (uint64_t) USTACK;
+    uint64_t end_address = (uint64_t) (USTACK - USTACK_SIZE);
     struct vma* tmp = RunningTask->task_mm->vma_head;
     while(tmp->next != NULL) {
         tmp = tmp->next;
@@ -279,10 +288,25 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
     uint64_t stack_phyaddr = (uint64_t) ((stack_start - PAGE_SIZE) - KERNBASE);
     set_mapping(proc_pml4, USTACK, stack_phyaddr, 7);
 
-
     // Enable interrupt for scheduling next process
-    // FIXME: set rip, rsp of pcb for new process and then iretq
-
+    // set rip, rsp of pcb for new process and then iretq
+    // FIXME: can we use PCB kstack for this?
+    uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000)-16;
+    set_tss_rsp((void*)rsp);
+    RunningTask->regs.rip = bin_viradd;
+    // FIXME: What to assign here? ustack physical address?
+    RunningTask->regs.rsp = ((uint64_t) page_alloc()) + (0x1000);
+    long output; \
+    __asm__ __volatile__(
+        "pushq $35 \n\t" \
+        "pushq %2 \n\t" \
+        "pushfq \n\t"\
+        "pushq $43 \n\t"\
+        "pushq %1 \n\t" \
+        "iretq \n\t"
+    :"=r" (output)
+    :"r"((uint64_t) (RunningTask->regs.rip )),
+    "r" ((uint64_t) (RunningTask->regs.rsp)));\
 }
 
 
