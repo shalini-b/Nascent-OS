@@ -45,29 +45,30 @@ struct vma {
 struct mm_struct {
     struct vma *vma_head;
     int count;
-    // uint64_t *pml4;
+    // FIXME: keep the brk fields here to support mmap?
     uint64_t begin_stack;
     uint64_t argv_start, argv_end;
 };
 
-typedef struct
-{
+typedef struct {
     uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp, rip, flags, cr3, r12, r13, r14, r15;
     // What about r12, r13, r14, r15??
 } Registers;
 
-typedef struct
-{
+typedef struct {
     uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp, rip, r12, r13, r14, r15;
 }Registers1;
+
 
 typedef enum {
     STD_FD = 1
 } FD_TYPE;
 
+
 typedef enum {
     READY = 0
 }TASK_STATES;
+
 
 typedef struct fd
 {
@@ -100,6 +101,7 @@ typedef struct Task
 
 Task* RunningTask;
 
+// FIXME: refactor these calls
 void init_tasks();
 void init_tasks_0_3();
 void createTask(Task *, void(*)(), uint64_t, uint64_t *);
@@ -109,10 +111,7 @@ void switchTask(Registers *old, Registers *new_task); // The function which actu
 void createTask1(Task *task, uint64_t virtual_address, uint64_t flags);
 void init_tasks1();
 
-void initialise_vma();
-struct vma * fetch_free_vma();
-void create_pcb_list();
-struct Task * fetch_free_pcb();
+
 int fork_process(Task * parent_pcb);
 void copy_arg_to_stack(uint64_t *user_stack, int argc);
 void report_error(char* msg);
