@@ -49,7 +49,7 @@ static void
 otherMain3()
 {
     kprintf("reached kernal task 1!\n");
-    print_elf_file("bin/sbush");
+//    print_elf_file("bin/sbush");
     yield_0_3();
 
 }
