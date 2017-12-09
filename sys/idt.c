@@ -81,6 +81,7 @@ void page_fault_handler(uint64_t num) {
     uint64_t faulting_addr = read_cr2();
     kprintf("Faulting address : CR2 value %p\n", faulting_addr);
     outb(0x20, 0x20);
+    // FIXME: Remove this!!! HACK!!
     while(1);
 }
 

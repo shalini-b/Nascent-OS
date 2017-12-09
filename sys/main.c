@@ -18,7 +18,6 @@ extern char kernmem, physbase;
 //int ring_0_3_switch();
 extern uint64_t *kpml_addr;
 int is_first_proc = 1;
-extern Task* RunningTask;
 
 void
 start(uint32_t *modulep, void *physbase, void *physfree)
@@ -46,6 +45,7 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     // Initiating paging
     kprintf("physfree %p\n", (uint64_t) physfree);
     init_mem((uint64_t *) physfree, modulep, mem_end);
+//    kprintf("Kernel PML address: %p\n", kpml_addr);
 
     // Initiating interrupts
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
@@ -67,16 +67,8 @@ start(uint32_t *modulep, void *physbase, void *physfree)
         sys_execvpe("bin/sbush", NULL, NULL);
     }
 
-    //init_tasks1();
-
-    //kernel task switch
-    //init_tasks();
-    //yield();
-//    kprintf("Kernel PML address: %p\n", kpml_addr);
-    //ring 0 to 3 switch
-//    yield();
-//      tarfs_test();
-
+    // init_tasks1();
+    // tarfs_test();
 
     /* hba_port_t* port_ptr = checkAllBuses();
     intitialise(port_ptr);

@@ -6,12 +6,11 @@
 uint64_t
 syscall_handler(Registers1 *regs)
 {
-    // CAUTION - Do not use any variables here!!
-    // Only use regs
-    // FIXME: Can i mess with r15 here? if not, create a temp syscall_num in registers
+    // CAUTION - use of variables here might alter the functionality of child!
+
 /*    __asm__ __volatile__(
     "movq %%rax, %0 \n\t"
-    :"=r" (regs->r15)::);
+    :"=r" (regs->rax)::);
 */
     switch (regs->rax)
     {
@@ -33,7 +32,7 @@ syscall_handler(Registers1 *regs)
             else {
                 return child_pid;
             }
-            break;
+            // break;
         }
         case SYS_getpid:
         {

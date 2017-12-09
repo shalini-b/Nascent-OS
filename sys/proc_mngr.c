@@ -17,7 +17,6 @@ extern uint64_t *kpml_addr;
 
 Task pcb_arr[NUM_PCB];
 Task * free_pcb_head = NULL;
-extern Task* RunningTask;
 
 // FIXME: call this somewhere in main??
 void initialise_vma() {

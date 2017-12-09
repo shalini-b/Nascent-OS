@@ -12,7 +12,6 @@
 
 void contextswitch(Registers *, Registers *);
 static char args[10][100];
-extern Task* RunningTask;
 extern int is_first_proc;
 
 

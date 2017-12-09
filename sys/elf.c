@@ -32,9 +32,7 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
     {
         //Save current pml address
         uint64_t * prev_pml_addr;
-        // FIXME: check this
         uint64_t * pml_addr = (uint64_t *) (new_pcb->regs.cr3 + KERNBASE);
-        // kprintf("In load elf %p", pml_addr);
         READ_CR3(prev_pml_addr);
         // Copy file name
         str_copy(filename, new_pcb->filename);
@@ -99,7 +97,6 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
                     (void *) ((uint64_t) elf_header + (uint64_t) present_program_header->p_offset);
 
                 // Get into the new process space
-                // __asm__ __volatile__ ("movq %0, %%cr3;"::"r"(((uint64_t) kpml_addr) - KERNBASE));
                 // FIXME: Remove this after page fault handler is implemented!!
                 LOAD_CR3(new_pcb->regs.cr3);
 
@@ -136,7 +133,7 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
         tmp->next = fetch_free_vma(start_viraddr, end_address, RW, HEAP);
         new_pcb->task_mm->count++;
 
-        // FIXME: add new process to running queue???
+        // FIXME: add new process to running queue??? CAUTION!!
         return 0;
     }
     else
