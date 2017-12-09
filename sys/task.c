@@ -10,7 +10,7 @@
 #include <sys/memset.h>
 #include <sys/proc_mngr.h>
 
-extern Task *runningTask;
+extern Task* RunningTask;
 static Task mainTask;
 static Task otherTask1,otherTask2;
 void
@@ -66,7 +66,7 @@ init_tasks()
     otherTask1.next = &otherTask2;
     otherTask2.next = &otherTask1;
     mainTask.next = &otherTask1;
-    runningTask = &mainTask;
+    RunningTask = &mainTask;
 }
 
 void user_mode_test()
@@ -90,7 +90,7 @@ init_tasks_0_3()
     otherTask1.next = &otherTask2;
     otherTask2.next = &otherTask1;
     mainTask.next = &otherTask1;
-    runningTask = &mainTask;
+    RunningTask = &mainTask;
 }
 
 void
@@ -102,12 +102,14 @@ init_tasks1()
     Task * cur_pcb = fetch_free_pcb();
     char *tmp[] = {"bin/sbush", "3"};
     uint64_t virtual_address = load_elf(cur_pcb, "bin/sbush", tmp);
-    uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000)-16;
+    // uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000)-16;
     // kprintf("rsp value %p",rsp);
-    set_tss_rsp((void*)rsp);
+    // set_tss_rsp((void*)rsp);
+    set_tss_rsp((void*)&cur_pcb->kstack[509]);
+    cur_pcb->regs.krsp = (uint64_t)&cur_pcb->kstack[509];
     cur_pcb->regs.rip = virtual_address;
     cur_pcb->regs.rsp = ((uint64_t) page_alloc()) + (0x1000);
-    runningTask = cur_pcb;
+    RunningTask = cur_pcb;
     long output; \
     __asm__ __volatile__(
                             "pushq $35 \n\t" \
@@ -192,20 +194,20 @@ createTask(Task *task, void (*main)(), uint64_t flags, uint64_t *pagedir)
 void
 yield()
 {
-    Task *last = runningTask;
-    runningTask = runningTask->next;
-    contextswitch(&last->regs, &runningTask->regs);
+    Task *last = RunningTask;
+    RunningTask = RunningTask->next;
+    contextswitch(&last->regs, &RunningTask->regs);
 }
 
 
 void
 yield_0_3()
 {
-    Task *last = runningTask;
-    runningTask = runningTask->next;
+    Task *last = RunningTask;
+    RunningTask = RunningTask->next;
     // FIXME: Set TSS properly
     uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000) - 8;
     set_tss_rsp((void*)rsp);
-    ring_0_3_switch(&last->regs, &runningTask->regs);
+    ring_0_3_switch(&last->regs, &RunningTask->regs);
 }
 

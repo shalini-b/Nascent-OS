@@ -37,7 +37,7 @@ isr_handler:
     popq %rax
     popq %rsi
     popq %rdi
-    sti
+    // sti
     iretq
 
 .extern page_fault_handler
@@ -79,7 +79,7 @@ pgfault:
     popq %rax
     popq %rsi
     popq %rdi
-    sti
+    //sti
     iretq
 
 .extern int_handler13
@@ -121,6 +121,6 @@ int13:
     popq %rax
     popq %rsi
     popq %rdi
-    sti
+    //sti
     iretq
 

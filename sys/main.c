@@ -9,13 +9,16 @@
 #include <sys/page.h>
 #include <sys/test.h>
 #include <sys/proc_mngr.h>
+#include <sys/process.h>
+
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t *loader_stack;
 extern char kernmem, physbase;
 //int ring_0_3_switch();
 extern uint64_t *kpml_addr;
-int num_proc = -1;
+int is_first_proc = 1;
+extern Task* RunningTask;
 
 void
 start(uint32_t *modulep, void *physbase, void *physfree)
@@ -25,9 +28,11 @@ start(uint32_t *modulep, void *physbase, void *physfree)
         uint64_t base, length;
         uint32_t type;
     }__attribute__((packed)) *smap;
+
     uint64_t *mem_end = NULL;
     while (modulep[0] != 0x9001)
         modulep += modulep[1] + 2;
+
     clear_screen();
     for (smap = (struct smap_t *) (modulep + 2); smap < (struct smap_t *) ((char *) modulep + modulep[1] + 2 * 4);
          ++smap)
@@ -38,19 +43,37 @@ start(uint32_t *modulep, void *physbase, void *physfree)
             mem_end = (uint64_t *)(smap->base + smap->length);
         }
     }
+    // Initiating paging
     kprintf("physfree %p\n", (uint64_t) physfree);
     init_mem((uint64_t *) physfree, modulep, mem_end);
+
+    // Initiating interrupts
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
     init_idt();
+
+    // Initialise global structures
     create_pcb_list();
     initialise_vma();
+
+    // enable interrupts
     __asm__ __volatile__ ("sti");
+
+    // Call exec but do not clean up the previous task
+    if (is_first_proc == 1) {
+        // FIXME: create a dummy task first
+        RunningTask = fetch_free_pcb();
+        add_to_task_list(RunningTask);
+        RunningTask->task_state = RUNNING;
+        sys_execvpe("bin/sbush", NULL, NULL);
+    }
+
+    //init_tasks1();
+
     //kernel task switch
     //init_tasks();
     //yield();
 //    kprintf("Kernel PML address: %p\n", kpml_addr);
     //ring 0 to 3 switch
-    init_tasks1();
 //    yield();
 //      tarfs_test();
 

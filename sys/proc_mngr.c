@@ -17,7 +17,7 @@ extern uint64_t *kpml_addr;
 
 Task pcb_arr[NUM_PCB];
 Task * free_pcb_head = NULL;
-
+extern Task* RunningTask;
 
 // FIXME: call this somewhere in main??
 void initialise_vma() {
@@ -137,4 +137,103 @@ struct Task * fetch_free_pcb() {
     }
 
     return free_pcb;
+}
+
+// ********** Process scheduling helper methods ********
+
+void idle_process() {
+    kprintf("entered the idle process");
+    while(1);
+}
+
+void create_idle_process() {
+    // CAUTION - This is a kernel process
+    IDLE_TASK = fetch_free_pcb();
+    IDLE_TASK->task_state = IDLE;
+    str_copy("Idle", IDLE_TASK->filename);
+    // FIXME: add process to list here
+}
+
+void append_in_free_list(Task * task) {
+    // Append the given PCB at the end of free list
+    // maintaining the pcb position still because of array
+    // if free list is empty
+    if (free_pcb_head == NULL) {
+        free_pcb_head = task;
+        task->next = NULL;
+        return;
+    }
+
+    // Iterate to the last and append
+    Task *temp = free_pcb_head;
+    while (temp->next!= NULL) {
+        temp = temp->next;
+    }
+    // Maintain the next and prev pointers
+    temp->next = task;
+    task->next = NULL;
+    task->prev = temp;
+
+    return;
+
+}
+
+void add_to_task_list(Task* task) {
+    // If idle process, dont add
+    if (task->task_state == IDLE) {
+        return;
+    }
+    // FIXME: Clean and put it at the end??
+    if (task->task_state == EXIT) {
+        append_in_free_list(task);
+        return;
+    }
+    // Mark a running task as ready if it was running
+    if (task->task_state == RUNNING) {
+        task->task_state = READY;
+    }
+    // empty list case
+    if (overall_task_list == NULL) {
+        overall_task_list = task;
+    }
+    else {
+        // Move to the last & append it
+        Task* temp = overall_task_list;
+        while(temp->next != NULL) {
+            temp = temp->next;
+        }
+        temp->next = task;
+        task->next = NULL;
+    }
+}
+
+Task * fetch_ready_task() {
+    Task * next_task = overall_task_list;
+
+    Task * prev = NULL;
+    while(next_task != NULL) {
+        if (next_task->task_state == READY) {
+            next_task->task_state = RUNNING;
+            break;
+        }
+        prev = next_task;
+        next_task = next_task->next;
+    }
+
+    if (next_task == NULL) {
+        // FIXME: Change this back. HACK!!!
+        next_task = RunningTask;
+        // next_task = IDLE_TASK;
+    }
+    else {
+        if (prev == NULL) {
+            overall_task_list = overall_task_list->next;
+        }
+        else {
+            prev->next = next_task->next;
+            next_task->next = NULL;
+        }
+    }
+
+    return next_task;
 }

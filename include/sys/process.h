@@ -51,7 +51,8 @@ struct mm_struct {
 };
 
 typedef struct {
-    uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp, rip, flags, cr3, r12, r13, r14, r15;
+    // NOTE: rsp is user rsp, krsp is for kernel stack
+    uint64_t rax, rbx, rcx, rdx, rsi, rdi, rsp, rbp, rip, flags, cr3, r12, r13, r14, r15, krsp;
     // What about r12, r13, r14, r15??
 } Registers;
 
@@ -66,7 +67,13 @@ typedef enum {
 
 
 typedef enum {
-    READY = 0
+    RUNNING,
+    READY,
+    SLEEP,
+    WAIT,
+    IDLE,
+    EXIT,
+    ZOMBIE
 }TASK_STATES;
 
 
@@ -112,11 +119,13 @@ void createTask1(Task *task, uint64_t virtual_address, uint64_t flags);
 void init_tasks1();
 
 
-int fork_process(Task * parent_pcb);
-void copy_arg_to_stack(uint64_t *user_stack, int argc);
+int fork_process();
+void copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[]);
 void report_error(char* msg);
 void clean_task_for_exec(Task *cur_task);
 void sys_execvpe(char *file, char *argv[], char *envp[]);
+void schedule();
+void return_to_user();
 
 
 #endif

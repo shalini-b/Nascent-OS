@@ -10,11 +10,14 @@
 #include <strings.h>
 #include <sys/proc_mngr.h>
 
+void contextswitch(Registers *, Registers *);
 static char args[10][100];
 extern Task* RunningTask;
+extern int is_first_proc;
 
 
-int fork_process(Task * parent_pcb) {
+int fork_process() {
+    Task * parent_pcb = RunningTask;
     Task * child_pcb = fetch_free_pcb();
     child_pcb->parent_task = parent_pcb;
     child_pcb->ppid = parent_pcb->pid;
@@ -89,32 +92,75 @@ int fork_process(Task * parent_pcb) {
     invalidate_tlb((uint64_t) ppml4);
     
     // copy all contents of kstack to child
-    memcopy((void*)parent_pcb->kstack, (void*)child_pcb->kstack, KSTACK_SIZE);
+    memcpy_uint(&parent_pcb->kstack[0], &child_pcb->kstack[0], KSTACK_SIZE);
     // Keep a magic number at the 511th entry of child kstack to recognise child in syscall handler
-    child_pcb->kstack[511] = 123456;
+    child_pcb->kstack[511] = 10101;
+    uint64_t cur_rsp;
+    __asm__ __volatile__ (
+        "movq %%rsp, %0 \n\t"
+        :"=r" (cur_rsp)
+        ::);
     // TODO: update child kernel stack for RIP & RSP registers
+    child_pcb->regs.rip = *((uint64_t *)cur_rsp + 15);
+    child_pcb->regs.krsp = (uint64_t) ((&child_pcb->kstack[509]) - 20);
 
+    // Add child to task list
+    add_to_task_list(child_pcb);
 
     // parent returns this
     return child_pcb->pid;
 }
 
-void copy_arg_to_stack(uint64_t *user_stack, int argc)
+void copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[])
 {
-    // FIXME: order is 0, envp, envp_pntrs, 0, argv, argv pointers, argc
-    uint64_t *argv[10];
+    // FIXME: order is envp, argv, 0, envp pointers, 0, argv pointers, argc
+    uint64_t *argv[10], *argv1[10];
     // Mark beginning of stack, leave first entry or mark it as 0
+    // memset this stack - done in page_alloc
     user_stack = user_stack - 0x8;
+
+    // Count the envp variables
+    int num_envp = 0;
+    if (envp) {
+        while (envp[num_envp]) {
+            num_envp++;
+        }
+    }
+
+    // Store the envp values
+    if (envp) {
+        for (int i = num_envp - 1; i >= 0; i--) {
+            int arg_len = len(envp[i]) + 1;
+            user_stack = (uint64_t * )((void *) user_stack - arg_len);
+            memcopy((void *)envp[i], (void *) user_stack, arg_len);
+            argv1[i] = user_stack;
+        }
+    }
+
     // Store the argument values
-    for (int i = argc-1; i >= 0; i--) {
+    for (int i = argc - 1; i >= 0; i--) {
         int arg_len = len(args[i]) + 1;
-        user_stack = (uint64_t *) ((void *) user_stack - arg_len);
-        memcopy(args[i], (char*)user_stack, arg_len);
+        user_stack = (uint64_t * )((void *) user_stack - arg_len);
+        memcopy((void *)args[i], (void *) user_stack, arg_len);
         argv[i] = user_stack;
     }
 
+    // place a 0
+    user_stack = user_stack - 0x8;
+
+    // Store envp pointers
+    if (envp) {
+        for (int i = num_envp - 1; i >= 0; i--) {
+            user_stack--;
+            *user_stack = (uint64_t) argv1[i];
+        }
+    }
+
+    // place a 0
+    user_stack = user_stack - 0x8;
+
     // Store the argument pointers
-    for (int i = argc-1; i >= 0; i--) {
+    for (int i = argc - 1; i >= 0; i--) {
         user_stack--;
         *user_stack = (uint64_t) argv[i];
     }
@@ -128,7 +174,7 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
 {
     // FIXME: use kmalloc or page_alloc??
     uint64_t * stack_start = (uint64_t *)page_alloc() + PAGE_SIZE;
-    // FIXME: memset pages given to stack & heap??
+    // NOTE - memset pages given to stack & heap
     // reorganise arguments
     int argc = 1;
     str_copy(filename, args[0]);
@@ -139,13 +185,24 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
         }
     }
     // copy args to stack
-    copy_arg_to_stack(stack_start, argc);
-    // Anything else to be retained? fd_array??
-    // Exit from the current process
-    clean_task_for_exec(RunningTask);
+    copy_arg_to_stack(stack_start, argc, envp);
+
+    if (is_first_proc != 1) {
+        // Anything else to be retained? fd_array??
+        // Exit from the current process
+        clean_task_for_exec(RunningTask);
+    }
+    else if (is_first_proc == 1) {
+        is_first_proc = 0;
+    }
 
     // FIXME: handle envp
     uint64_t bin_viradd = load_elf(RunningTask, filename, argv);
+
+    // Set RIP & RSP for new process
+    RunningTask->regs.rip = bin_viradd;
+    // CAUTION - assign stack address which points to argc
+    RunningTask->regs.rsp = (uint64_t) stack_start;
 
     // copy new stack to RunningTask's stack vma
     uint64_t start_viraddr = (uint64_t) USTACK;
@@ -157,33 +214,30 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
     tmp->next = fetch_free_vma(start_viraddr, end_address, RW, STACK);
     RunningTask->task_mm->count++;
 
-    // FIXME: Map all addresses from USTACK till USTACK_SIZE
     // set mapping for stack to USTACK in pcb's PML
-    uint64_t proc_pml4 = (uint64_t) (RunningTask->regs.cr3 - KERNBASE);
+    // All other pages will be given to USTACK on the fly
+    uint64_t proc_pml4 = (uint64_t) (RunningTask->regs.cr3 + KERNBASE);
     uint64_t stack_phyaddr = (uint64_t) ((stack_start - PAGE_SIZE) - KERNBASE);
     set_mapping(proc_pml4, USTACK, stack_phyaddr, 7);
 
-    // Enable interrupt for scheduling next process
-    // set rip, rsp of pcb for new process and then iretq
-    // FIXME: can we use PCB kstack for this?
-    uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000)-16;
-    set_tss_rsp((void*)rsp);
-    RunningTask->regs.rip = bin_viradd;
-    // FIXME: What to assign here? ustack physical address?
-    RunningTask->regs.rsp = (uint64_t) stack_start;
-    long output; \
-    __asm__ __volatile__(
-        "pushq $35 \n\t" \
-        "pushq %2 \n\t" \
-        "pushfq \n\t"\
-        "pushq $43 \n\t"\
-        "pushq %1 \n\t" \
-        "iretq \n\t"
-    :"=r" (output)
-    :"r"((uint64_t) (RunningTask->regs.rip )),
-    "r" ((uint64_t) (RunningTask->regs.rsp)));\
+    // iretq to user mode
+    return_to_user();
 }
 
+void return_to_user() {
+    // set rip, rsp of pcb for new process and then iretq
+    set_tss_rsp((void*)&RunningTask->kstack[509]);
+    RunningTask->regs.krsp = (uint64_t) &RunningTask->kstack[509];
+    __asm__ __volatile__(
+        "pushq $35 \n\t" \
+        "pushq %1 \n\t" \
+        "pushfq \n\t"\
+        "pushq $43 \n\t"\
+        "pushq %0 \n\t" \
+        "iretq \n\t"
+    ::"r"((uint64_t) (RunningTask->regs.rip )),
+    "r" ((uint64_t) (RunningTask->regs.rsp)));\
+}
 
 void clean_task_for_exec(Task *cur_task) {
     // reset task vars
@@ -206,7 +260,7 @@ void clean_task_for_exec(Task *cur_task) {
     // CAUTION - initiate others
 
     // clean * initiate the std fds
-    memset((void*)cur_task->fd_array, 0, sizeof(fd)*MAX_FDS);
+    memset((void*)cur_task->fd_array, 0, sizeof(fd) * MAX_FDS);
     // initiate 0, 1, 2 fd for each pcb
     for (int i = 0; i < 3; i++) {
         cur_task->fd_array->fdtype = STD_FD;
@@ -221,10 +275,21 @@ void clean_task_for_exec(Task *cur_task) {
     memset((void*)cur_task->kstack, 0, KSTACK_SIZE);
 }
 
-
 void report_error(char* msg)
 {
     kprintf("\n[FAULT]: %s!", msg);
     while(1);
+}
+
+void schedule() {
+    // take backup
+    Task *last = RunningTask;
+    // get the next ready task
+    // incoming task state marked as running
+    // Existing task state marked to ready
+    RunningTask = fetch_ready_task();
+    // FIXME: uncomment this later
+    // add_to_task_list(last);
+    contextswitch(&last->regs, &RunningTask->regs);
 }
 
