@@ -1,6 +1,7 @@
 #ifndef _ELF64_H
 #define _ELF64_H
 
+#include <sys/process.h>
 #define EI_NIDENT 16
 
 typedef uint64_t Elf64_Addr;
@@ -40,6 +41,6 @@ typedef struct Elf64_Phdr {
   Elf64_Xword   p_align;
 } Elf64_Phdr;
 
-int elf_read(Elf64_Ehdr* elf_header);
+int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char *argv[]);
 int is_elf_format(Elf64_Ehdr* elf_header);
 #endif

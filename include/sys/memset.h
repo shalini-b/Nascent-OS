@@ -4,4 +4,6 @@ void *
 memset(void *string_to_memset, int char_to_memset_with, int length_to_memset);
 void
 memcopy(void *source, void *destination, uint64_t size);
+void memcpy_uint(uint64_t *source,uint64_t *destination,uint64_t size);
+
 #endif

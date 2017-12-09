@@ -1,17 +1,16 @@
 /* required functionality : open, read, close, opendir, readdir, closedir */
 #include <sys/types.h>
-#include<sys/tarfs.h>
+#include <sys/tarfs.h>
 #include <sys/kprintf.h>
 #include <strings.h>
-#include<sys/elf64.h>
+#include <sys/elf64.h>
 #include <sys/memset.h>
 #include <strings.h>
-#include<sys/task.h>
-#include<sys/page.h>
+#include <sys/page.h>
 #include <sys/virmem.h>
+#include <sys/process.h>
 #define MIN(a, b)  (a<b)? a : b
 Task *runningTask;
-int MAX_FDS = 100;
 char pwd[200];
 
 int
@@ -62,8 +61,8 @@ file_exists(char *f_name)
 
 }
 
-uint64_t
-print_elf_file(char *binary_name)
+// FIXME: change return type
+uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[])
 {
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
@@ -71,7 +70,7 @@ print_elf_file(char *binary_name)
         if (str_compare(tarfs_iterator->name, binary_name) == 0)
         {
             struct Elf64_Ehdr *elf_header = (struct Elf64_Ehdr *) ((uint64_t) tarfs_iterator + 512);
-            if (elf_read(elf_header) == 0)
+            if (elf_read(elf_header, cur_pcb, binary_name, argv) == 0)
             {
 //                kprintf("elf read done");
                 return (uint64_t) elf_header->e_entry;
@@ -85,7 +84,6 @@ print_elf_file(char *binary_name)
         tarfs_iterator = get_next_tar_header(tarfs_iterator);
     }
     return 0;
-
 }
 
 int

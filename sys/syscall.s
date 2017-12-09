@@ -5,9 +5,7 @@
 
 sys_int:
     cli
-   pushq $128
-   #
-
+    pushq $128
     pushq %r15
     pushq %r14
     pushq %r13
@@ -22,7 +20,7 @@ sys_int:
     pushq %rax
     movq %rsp, %rdi
     callq syscall_handler
-    popq %rax
+    popq %rbx
     popq %rbx
     popq %rcx
     popq %rdx
@@ -35,5 +33,5 @@ sys_int:
     popq %r14
     popq %r15
     add $0x08, %rsp
-    sti
+    // sti
     iretq

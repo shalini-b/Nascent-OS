@@ -34,3 +34,11 @@ void memcopy(void *source,void *destination,uint64_t size)
     }
 
 }
+
+void memcpy_uint(uint64_t *source,uint64_t *destination,uint64_t size)
+{
+    for(uint64_t i=0;i<size;i++)
+    {
+        destination[i]=source[i];
+    }
+}

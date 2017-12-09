@@ -1,15 +1,16 @@
 //FIX ME :: change this code
 //reference os dev
 #include <sys/types.h>
-#include <sys/task.h>
 #include <sys/gdt.h>
 #include <sys/page.h>
 #include <sys/kprintf.h>
 #include <sys/types.h>
 #include <sys/tarfs.h>
-#include<sys/page.h>
+#include <sys/page.h>
 #include <sys/memset.h>
-Task *runningTask;
+#include <sys/proc_mngr.h>
+#include <sys/process.h>
+
 static Task mainTask;
 static Task otherTask1,otherTask2;
 void
@@ -48,7 +49,7 @@ static void
 otherMain3()
 {
     kprintf("reached kernal task 1!\n");
-    print_elf_file("bin/sbush");
+//    print_elf_file("bin/sbush");
     yield_0_3();
 
 }
@@ -65,16 +66,13 @@ init_tasks()
     otherTask1.next = &otherTask2;
     otherTask2.next = &otherTask1;
     mainTask.next = &otherTask1;
-    runningTask = &mainTask;
+    RunningTask = &mainTask;
 }
 
 void user_mode_test()
 {
     kprintf("inside user mode\n");
-    while(1)
-    {
-
-    }
+    while(1);
 }
 
 void
@@ -89,7 +87,7 @@ init_tasks_0_3()
     otherTask1.next = &otherTask2;
     otherTask2.next = &otherTask1;
     mainTask.next = &otherTask1;
-    runningTask = &mainTask;
+    RunningTask = &mainTask;
 }
 
 void
@@ -98,8 +96,23 @@ init_tasks1()
     // Get flags and CR3
     __asm__ __volatile__ ("movq %%cr3, %%rax; movq %%rax, %0;":"=m"(mainTask.regs.cr3)::"%rax");
     __asm__ __volatile__ ("pushfq; movq (%%rsp), %%rax; movq %%rax, %0; popfq;":"=m"(mainTask.regs.flags)::"%rax");
-    uint64_t virtual_address = print_elf_file("bin/sbush");
-    createTask1(&otherTask1, virtual_address, mainTask.regs.flags);
+    Task * cur_pcb = fetch_free_pcb();
+    char *tmp[] = {"bin/sbush", "3"};
+    uint64_t virtual_address = load_elf(cur_pcb, "bin/sbush", tmp);
+    set_tss_rsp((void*)&cur_pcb->kstack[509]);
+    cur_pcb->regs.krsp = (uint64_t)&cur_pcb->kstack[509];
+    cur_pcb->regs.rip = virtual_address;
+    cur_pcb->regs.rsp = ((uint64_t) page_alloc()) + (0x1000);
+    RunningTask = cur_pcb;
+    long output; \
+    __asm__ __volatile__(
+                            "pushq $35 \n\t" \
+                            "pushq %2 \n\t" \
+                            "pushfq \n\t"\
+                             "pushq $43\n\t"\
+                            "pushq %1 \n\t" \
+                            "iretq\n\t"
+    :"=r" (output)  :"r"((uint64_t) (cur_pcb->regs.rip )) ,"r"( (uint64_t) (cur_pcb->regs.rsp)));\
 }
 
 void
@@ -173,20 +186,20 @@ createTask(Task *task, void (*main)(), uint64_t flags, uint64_t *pagedir)
 void
 yield()
 {
-    Task *last = runningTask;
-    runningTask = runningTask->next;
-    contextswitch(&last->regs, &runningTask->regs);
+    Task *last = RunningTask;
+    RunningTask = RunningTask->next;
+    contextswitch(&last->regs, &RunningTask->regs);
 }
 
 
 void
 yield_0_3()
 {
-    Task *last = runningTask;
-    runningTask = runningTask->next;
+    Task *last = RunningTask;
+    RunningTask = RunningTask->next;
     // FIXME: Set TSS properly
     uint64_t rsp = ((uint64_t) page_alloc()) + (0x1000) - 8;
     set_tss_rsp((void*)rsp);
-    ring_0_3_switch(&last->regs, &runningTask->regs);
+    ring_0_3_switch(&last->regs, &RunningTask->regs);
 }
 

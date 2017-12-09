@@ -2,8 +2,8 @@
 .section .text
 .global ring_0_3_switch
 ring_0_3_switch:
-    #rax,rbx,rcx,rdx,rsi,rdi,rsp,rbp,rip,flags,cr3;
-    #0    8   16  24  32  40  48  56  64  72    80
+    #rax,rbx,rcx,rdx,rsi,rdi,rsp,rbp,rip,flags,cr3,r12, r13, r14, r15, krsp;
+    #0    8   16  24  32  40  48  56  64  72    80  88   96  104  112  120
     #old function
     #backup rbx
     /*
@@ -25,20 +25,20 @@ ring_0_3_switch:
     popq %rbx
     movq %rbx, 72(%rdi)
     #cr3
-    #movq %cr3,%rbx
-    movq %rbx,80(%rdi)*/
+    #movq %cr3,%rbx*/
+    movq %rsp,120(%rdi)
 
 
      #rax,rbx,rcx,rdx,rsi,rdi,rsp,rbp,rip,flags,cr3;
      #0    8   16  24  32  40  48  56  64  72    80
     #new function
     #load registers
-    movq    (%rsi),%rax
+   /* movq    (%rsi),%rax
     movq  8(%rsi),%rbx
     movq  16(%rsi),%rcx
     movq  24(%rsi),%rdx
     movq  48(%rsi),%rsp
-    movq  56(%rsi),%rbp
+    movq  56(%rsi),%rbp*/
 
     #actual switching logic
     movq %rsp,%rbx
