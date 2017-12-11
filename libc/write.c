@@ -1,6 +1,6 @@
 #include <sys/syscall.h>
 #include <unistd.h>
-
+/*
 int write() {
     int res;
     __asm__ __volatile__(
@@ -9,4 +9,4 @@ int write() {
     : "0"(SYS_write)
     );
     return res;
-}
+}*/

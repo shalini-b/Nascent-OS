@@ -15,6 +15,10 @@
 #define __NR_access 21
 #define __NR_getpid  39
 #define __NR_getppid 110
+#define __NR_open_dir 70
+#define __NR_read_dir 71
+#define __NR_close_dir 72
+
 
 #define syscall0(type, name) \
 type name() \
@@ -25,7 +29,7 @@ type name() \
                             "movq  %%rax, %0 \n\t" \
                              :"=r" (output) \
                              :"r" ((long)(__NR_##name)) \
-                             :"%rax"); \
+                             :"%rax", "memory"); \
     return (type) output; \
 }
 
@@ -40,7 +44,7 @@ type name(type1 arg1) \
                              :"=r" (output) \
                              :"r" ((long)(__NR_##name)), \
                              "r" ((uint64_t)(arg1)) \
-                             :"%rax", "%rdi"); \
+                             :"%rax", "%rdi", "memory"); \
     return (type) output; \
 }
 
@@ -57,7 +61,7 @@ type name(type1 arg1, type2 arg2) \
                              :"r" ((long) (__NR_##name)), \
                              "r" ((uint64_t)(arg1)), \
                              "r" ((uint64_t)(arg2)) \
-                             :"%rax", "%rdi", "%rsi"); \
+                             :"%rax", "%rdi", "%rsi", "memory"); \
     return (type) output; \
 }
 
@@ -76,7 +80,7 @@ type name(type1 arg1, type2 arg2, type3 arg3) \
                              "r" ((uint64_t)(arg1)), \
                              "r" ((uint64_t)(arg2)), \
                              "r" ((uint64_t)(arg3)) \
-                             :"%rax", "%rdi", "%rsi", "%rdx"); \
+                             :"%rax", "%rdi", "%rsi", "%rdx", "memory"); \
     return (type) output; \
 }
 
@@ -97,7 +101,7 @@ type name(type1 arg1, type2 arg2, type3 arg3, type4 arg4) \
                              "r" ((uint64_t)(arg2)), \
                              "r" ((uint64_t)(arg3)), \
                              "r" ((uint64_t)(arg4)) \
-                             :"%rax", "%rdi", "%rsi", "%rdx", "%r10"); \
+                             :"%rax", "%rdi", "%rsi", "%rdx", "%r10", "memory"); \
     return (type) output; \
 }
 
@@ -120,7 +124,7 @@ type name(type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5) \
                              "r" ((uint64_t)(arg3)), \
                              "r" ((uint64_t)(arg4)), \
                              "r" ((uint64_t)(arg5))) \
-                             :"%rax", "%rdi", "%rsi", "%rdx", "%r10", "%r8"); \
+                             :"%rax", "%rdi", "%rsi", "%rdx", "%r10", "%r8", "memory"); \
     return (type) output; \
 }
 
@@ -145,10 +149,14 @@ type name(type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6
                              "r" ((uint64_t)(arg4)), \
                              "r" ((uint64_t)(arg5)), \
                              "r" ((uint64_t)(arg6)) \
-                             :"%rax", "%rdi", "%rsi", "%rdx", "%r10", "%r8", "%r9"); \
+                             :"%rax", "%rdi", "%rsi", "%rdx", "%r10", "%r8", "%r9", "memory"); \
     return (type) output; \
 }
 
+//directory
+syscall1(int, open_dir, char*,name);
+syscall2(int, read_dir, int,fd,char*,name);
+syscall1(int, close_dir, int,fd);
 
 syscall3(ssize_t, write, int, fd, const void *, buf, size_t, count);
 syscall3(ssize_t, read, int, fd, void *, buf, size_t, count);

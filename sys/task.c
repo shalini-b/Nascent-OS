@@ -10,6 +10,7 @@
 #include <sys/memset.h>
 #include <sys/proc_mngr.h>
 #include <sys/process.h>
+#include<sys/tarfs.h>
 
 static Task mainTask;
 static Task otherTask1,otherTask2;
@@ -119,6 +120,8 @@ void
 createTask1(Task *task, uint64_t virtual_address, uint64_t flags)
 {
     //rax,rbx,rcx,rdx,rsi,rdi,rsp,rbp,rip,flags,cr3
+    runningTask = task;
+    initialise_fds();
     task->regs.rax = 0;
     task->regs.rbx = 0;
     task->regs.rcx = 0;
@@ -134,15 +137,14 @@ createTask1(Task *task, uint64_t virtual_address, uint64_t flags)
     task->regs.rsp = (uint64_t) page_alloc() + (0x1000);
     task->next = 0;
 //    __asm__ __volatile__("sti");
-    long output; \
     __asm__ __volatile__(
-                            "pushq $35 \n\t" \
-                            "pushq %2 \n\t" \
-                            "pushfq \n\t"\
-                             "pushq $43\n\t"\
-                            "pushq %1 \n\t" \
+                            "pushq $35 \n\t"
+                            "pushq %1 \n\t"
+                            "pushfq \n\t"
+                             "pushq $43\n\t"
+                            "pushq %0 \n\t"
                             "iretq\n\t"
-                             :"=r" (output)  :"r"((uint64_t) (task->regs.rip )) ,"r"( (uint64_t)(task->regs.rsp)));\
+                             :  :"r"((uint64_t) (task->regs.rip )) ,"r"( (uint64_t)(task->regs.rsp)));
 /*//    \
 //    long output; \
 //    __asm__ __volatile__(	"movq %1, %%rax \n\t" \

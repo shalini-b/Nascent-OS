@@ -2,6 +2,7 @@
 #include <sys/defs.h>
 #include <sys/pic.h>
 #include <sys/kprintf.h>
+#include <sys/pagefault.h>
 #include <sys/page.h>
 
 extern void sys_int();
@@ -73,9 +74,11 @@ void int_handler13() {
     kprintf("Received Interrupt number 13!! Please check..");
     kprintf("in 13");
     outb(0x20, 0x20);
-
+    // FIXME: Remove this!!! HACK!!
+    while (1);
 }
 
+/*
 void page_fault_handler(uint64_t num) {
     kprintf("First parameter to page fault handler %p\n", num );
     uint64_t faulting_addr = read_cr2();
@@ -84,6 +87,8 @@ void page_fault_handler(uint64_t num) {
     // FIXME: Remove this!!! HACK!!
     while(1);
 }
+*/
+
 
 void init_idt() {
   // Fill up IDT here

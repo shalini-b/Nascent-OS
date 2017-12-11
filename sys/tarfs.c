@@ -10,7 +10,7 @@
 #include <sys/virmem.h>
 #include <sys/process.h>
 #define MIN(a, b)  (a<b)? a : b
-Task *runningTask;
+
 char pwd[200];
 
 int
@@ -115,7 +115,7 @@ initialise_fds()
     }
 }
 int
-open(char *d_path)
+open_s(char *d_path,int flags)
 {
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     int fd;
@@ -146,7 +146,7 @@ open(char *d_path)
 }
 
 int
-read(int fd, char *buffer, int num_bytes)
+read_s(int fd, char *buffer, int num_bytes)
 {
     if (file_des_validator(fd) != 0)
     {
@@ -172,12 +172,13 @@ read(int fd, char *buffer, int num_bytes)
     }
 }
 
-void
-close(int fd)
+int
+close_s(int fd)
 {
     runningTask->fd_array[fd].alloted = 0;
     runningTask->fd_array[fd].file_sz = 0;
     runningTask->fd_array[fd].num_bytes_read = 0;
+    return 0;
 }
 
 int
@@ -257,6 +258,7 @@ read_dir(int fd, char *buffer)
             {
                 runningTask->fd_array[fd].last_matched_header = (void *) tarfs_iterator;
                 string_sub(tarfs_iterator->name, dir_name, buffer, '/');
+//                kprintf("buffer value is %s",buffer);
                 return 0;
             }
 
@@ -267,12 +269,13 @@ read_dir(int fd, char *buffer)
 
 }
 
-void
+int
 close_dir(int fd)
 {
     runningTask->fd_array[fd].alloted = 0;
     runningTask->fd_array[fd].file_sz = 0;
     runningTask->fd_array[fd].num_bytes_read = 0;
+    return 0;
 }
 
 void
@@ -300,23 +303,23 @@ tarfs_test()
     int fd;
     //FIXME:: should be done inside task
     initialise_fds();
-    fd = open("test1/abc.txt");
+    fd = open_s("test1/abc.txt",1);
     memset((void *) buff, '\0', SIZE + 10);
-    while (read(fd, buff, SIZE) != 0)
+    while (read_s(fd, buff, SIZE) != 0)
     {
         kprintf("%s", buff);
         memset((void *) buff, '\0', SIZE + 10);
     }
-    close(fd);
+    close_s(fd);
 
-    fd = open("test1/abc.tx");
+    fd = open_s("test1/abc.tx",1);
     memset((void *) buff, '\0', SIZE + 10);
-    while (read(fd, buff, SIZE) != 0)
+    while (read_s(fd, buff, SIZE) != 0)
     {
         kprintf("%s", buff);
         memset((void *) buff, '\0', SIZE + 10);
     }
-    close(fd);
+    close_s(fd);
     //*************************************************************************
     //TEST 2 : DIR CALLS TEST
     runningTask = (Task *) page_alloc();

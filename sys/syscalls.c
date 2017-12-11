@@ -1,6 +1,8 @@
 #include <sys/syscall.h>
 #include <sys/kprintf.h>
 #include <sys/process.h>
+#include<sys/tarfs.h>
+#include<sys/types.h>
 
 
 uint64_t
@@ -16,7 +18,7 @@ syscall_handler(Registers1 *regs)
     {
         case SYS_write:
         {
-            regs->rax = write_to_console((uint64_t)regs->rdi, (char*)regs->rsi, (int)regs->rdx);
+            regs->rax = (uint64_t)write_to_console((uint64_t)regs->rdi,(char*)regs->rsi,(int)regs->rdx);
             break;
         }
         case SYS_fork:
@@ -44,11 +46,40 @@ syscall_handler(Registers1 *regs)
             regs->rax = RunningTask->ppid;
             break;
         }
-        default:{
+        case SYS_open_dir:
+        {
+            regs->rax = open_dir((char *)regs->rdi);
+            break;
+        }
+        case SYS_read_dir:
+        {
+            regs->rax = read_dir((int)regs->rdi,(char*)regs->rsi);
+            break;
+        }
+        case SYS_close_dir:
+        {
+            regs->rax = close_dir((int)regs->rdi);
+            break;
+        }
+        case SYS_open:
+        {
+            regs->rax = open_s((char *)regs->rdi,(int)regs->rsi);
+            break;
+        }
+        case SYS_read:
+        {
+            regs->rax = read_s((int)regs->rdi,(char*)regs->rsi,(int)regs->rdx);
+            break;
+        }
+        case SYS_close:
+        {
+            regs->rax = close_s((int)regs->rdi);
+            break;
+        }
+        default: {
             // FIXME: check this
             regs->rax = 0;
         }
-
     }
     schedule();
     return regs->rax;

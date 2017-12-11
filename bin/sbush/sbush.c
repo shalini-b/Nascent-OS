@@ -1,3 +1,4 @@
+
 //
 //#define _GNU_SOURCE
 //#include <stdio.h>
@@ -385,20 +386,60 @@
 //    return 0;
 //
 //}
+
 #include <stdio.h>
+#include <dirent.h>
+#include <mem.h>
 #include <unistd.h>
 
 int
 main()
 {
 
+    //strings
     int a=1;
-    printf("\n This is a char %c\n",'a');
-    printf("\n This is a number %d\n",1234);
-    printf("\n This is a string %s\n","abcd");
-    printf("\n This is a hex number %x\n",1134);
-    printf("\n This is a pointer %p\n",&a);
-    printf("\n This is a mix %p %d %s value\n",&a,12345,"abcdefg");
+    printf("\nThis is a char %c\n",'a');
+    printf("This is a number %d\n",1234);
+    printf("This is a string %s\n","abcd");
+    printf("This is a hex number %x\n",1134);
+    printf("This is a pointer %p\n",&a);
+    printf("This is a mix %p %d %s value\n",&a,12345,"abcdefg");
+    putchar('c');
+    puts("abcd");
+    puts("pqr");
+
+   //DIR
+    volatile struct dirent *b ;
+    int DIR_SIZE = 100;
+    char dir_buff2[DIR_SIZE];
+    DIR *a1=opendir("test1/test2/abc/pqr/");
+    memset((void *) dir_buff2, '\0', DIR_SIZE);
+    while (1)
+    {
+
+        b = readdir(a1);
+        if(b==NULL)
+        {
+            break;
+        }
+        printf("%s\n", b->d_name);
+        memset((void *) dir_buff2, '\0', DIR_SIZE);
+    }
+    closedir(a1);
+
+
+    //FILES
+    int BUFF_SIZE = 100;
+    char buff[BUFF_SIZE];
+    int fd;
+    fd = open("test1/abc.txt",1);
+    memset((void *) buff, '\0',BUFF_SIZE);
+    while (read(fd, buff, BUFF_SIZE) != 0)
+    {
+        printf("%s", buff);
+        memset((void *) buff, '\0', BUFF_SIZE);
+    }
+    close(fd);
     int pid = fork();
     printf("\n PID %d\n",pid);
     while(1);
