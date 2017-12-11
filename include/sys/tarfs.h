@@ -25,11 +25,13 @@ struct posix_header_ustar {
 };
 
 int
-open(char *d_path);
+open_s(char *d_path,int flags);
 int
-read(int fd, char *buffer, int num_bytes);
+read_s(int fd, char *buffer, int num_bytes);
 int
-close(int fd);
+close_s(int fd);
+void
+initialise_fds();
 int
 open_dir(char *d_path);
 int

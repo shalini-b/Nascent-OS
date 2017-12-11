@@ -9,6 +9,7 @@
 #include <sys/tarfs.h>
 #include<sys/page.h>
 #include <sys/memset.h>
+#include<sys/tarfs.h>
 Task *runningTask;
 static Task mainTask;
 static Task otherTask1,otherTask2;
@@ -107,6 +108,7 @@ createTask1(Task *task, uint64_t virtual_address, uint64_t flags)
 {
     //rax,rbx,rcx,rdx,rsi,rdi,rsp,rbp,rip,flags,cr3
     runningTask = task;
+    initialise_fds();
     task->regs.rax = 0;
     task->regs.rbx = 0;
     task->regs.rcx = 0;

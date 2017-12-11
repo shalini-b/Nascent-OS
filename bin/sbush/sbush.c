@@ -389,6 +389,7 @@
 #include <stdio.h>
 #include<dirent.h>
 #include<mem.h>
+#include <unistd.h>
 int
 main()
 {
@@ -405,7 +406,7 @@ main()
     puts("abcd");
     puts("pqr");
 
-
+   //DIR
     volatile struct dirent *b ;
     int DIR_SIZE = 100;
     char dir_buff2[DIR_SIZE];
@@ -425,6 +426,18 @@ main()
     closedir(a1);
 
 
+    //FILES
+    int BUFF_SIZE = 100;
+    char buff[BUFF_SIZE];
+    int fd;
+    fd = open("test1/abc.txt",1);
+    memset((void *) buff, '\0',BUFF_SIZE);
+    while (read(fd, buff, BUFF_SIZE) != 0)
+    {
+        printf("%s", buff);
+        memset((void *) buff, '\0', BUFF_SIZE);
+    }
+    close(fd);
     while(1)
     {
 

@@ -55,6 +55,21 @@ syscall_handler(Registers1 *regs)
             regs->rax = close_dir((int)regs->rdi);
             break;
         }
+        case SYS_open:
+        {
+            regs->rax = open_s((char *)regs->rdi,(int)regs->rsi);
+            break;
+        }
+        case SYS_read:
+        {
+            regs->rax = read_s((int)regs->rdi,(char*)regs->rsi,(int)regs->rdx);
+            break;
+        }
+        case SYS_close:
+        {
+            regs->rax = close_s((int)regs->rdi);
+            break;
+        }
 
     }
     return 0;

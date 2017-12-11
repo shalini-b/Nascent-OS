@@ -31,6 +31,11 @@ syscall1_def(int, open_dir, char*,name);
 syscall2_def(int, read_dir, int,fd,char*,name);
 syscall1_def(int, close_dir, int,fd);
 
+
+syscall2_def(int, open_s, char*,name,int ,flags);
+syscall3_def(int, read_s, int,fd,char*,name,int, count);
+syscall1_def(int, close_s, int,fd);
+
 syscall3_def(ssize_t, write, int, fd, const void *, buf, size_t, count);
 syscall1_def(void, exit, int, value);
 syscall3_def(size_t, execve, const char *, fileName,  char *const*, argv, char *const*, envp);
