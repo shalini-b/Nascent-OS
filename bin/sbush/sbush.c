@@ -1,3 +1,4 @@
+
 //
 //#define _GNU_SOURCE
 //#include <stdio.h>
@@ -386,18 +387,44 @@
 //
 //}
 #include <stdio.h>
-
+#include<dirent.h>
+#include<mem.h>
 int
 main()
 {
 
+    //strings
     int a=1;
-    printf("\n This is a char %c\n",'a');
-    printf("\n This is a number %d\n",1234);
-    printf("\n This is a string %s\n","abcd");
-    printf("\n This is a hex number %x\n",1134);
-    printf("\n This is a pointer %p\n",&a);
-    printf("\n This is a mix %p %d %s value\n",&a,12345,"abcdefg");
+    printf("\nThis is a char %c\n",'a');
+    printf("This is a number %d\n",1234);
+    printf("This is a string %s\n","abcd");
+    printf("This is a hex number %x\n",1134);
+    printf("This is a pointer %p\n",&a);
+    printf("This is a mix %p %d %s value\n",&a,12345,"abcdefg");
+    putchar('c');
+    puts("abcd");
+    puts("pqr");
+
+
+    volatile struct dirent *b ;
+    int DIR_SIZE = 100;
+    char dir_buff2[DIR_SIZE];
+    DIR *a1=opendir("test1/test2/abc/pqr/");
+    memset((void *) dir_buff2, '\0', DIR_SIZE);
+    while (1)
+    {
+
+        b = readdir(a1);
+        if(b==NULL)
+        {
+            break;
+        }
+        printf("%s\n", b->d_name);
+        memset((void *) dir_buff2, '\0', DIR_SIZE);
+    }
+    closedir(a1);
+
+
     while(1)
     {
 

@@ -12,5 +12,8 @@ write_to_console(uint64_t fd, char *buffer, uint64_t count);
 
 #define SYS_open        2
 #define SYS_write       1
+#define SYS_open_dir    70
+#define SYS_read_dir    71
+#define SYS_close_dir    72
 
 #endif

@@ -24,6 +24,18 @@ struct posix_header_ustar {
   char pad[12];
 };
 
+int
+open(char *d_path);
+int
+read(int fd, char *buffer, int num_bytes);
+int
+close(int fd);
+int
+open_dir(char *d_path);
+int
+read_dir(int fd, char *buffer);
+int
+close_dir(int fd);
 int convert_oct_int(char *oct_string);
 struct posix_header_ustar* get_next_tar_header(struct posix_header_ustar* present_header);
 int file_exists(char* f_name);

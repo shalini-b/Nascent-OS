@@ -1,7 +1,7 @@
 
 .extern syscall_handler
 .global sys_int
-
+#TODO :: all registers backup
 
 sys_int:
     cli
@@ -35,5 +35,6 @@ sys_int:
     popq %r14
     popq %r15
     add $0x08, %rsp
-    sti
+ //   sti
     iretq
+

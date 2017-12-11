@@ -10,8 +10,8 @@
 #include<sys/page.h>
 #include <sys/virmem.h>
 #define MIN(a, b)  (a<b)? a : b
-Task *runningTask;
-int MAX_FDS = 100;
+extern Task *runningTask;
+int MAX_FDS = 20;
 char pwd[200];
 
 int
@@ -174,12 +174,13 @@ read(int fd, char *buffer, int num_bytes)
     }
 }
 
-void
+int
 close(int fd)
 {
     runningTask->fd_array[fd].alloted = 0;
     runningTask->fd_array[fd].file_sz = 0;
     runningTask->fd_array[fd].num_bytes_read = 0;
+    return 0;
 }
 
 int
@@ -259,6 +260,7 @@ read_dir(int fd, char *buffer)
             {
                 runningTask->fd_array[fd].last_matched_header = (void *) tarfs_iterator;
                 string_sub(tarfs_iterator->name, dir_name, buffer, '/');
+//                kprintf("buffer value is %s",buffer);
                 return 0;
             }
 
@@ -269,12 +271,13 @@ read_dir(int fd, char *buffer)
 
 }
 
-void
+int
 close_dir(int fd)
 {
     runningTask->fd_array[fd].alloted = 0;
     runningTask->fd_array[fd].file_sz = 0;
     runningTask->fd_array[fd].num_bytes_read = 0;
+    return 0;
 }
 
 void
