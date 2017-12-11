@@ -91,11 +91,11 @@ get_free_fd(void *file_ptr)
 {
     for (int i = 0; i < MAX_FDS; i++)
     {
-        if (runningTask->fd_array[i].alloted == 0)
+        if (RunningTask->fd_array[i].alloted == 0)
         {
-            runningTask->fd_array[i].alloted = 1;
-            runningTask->fd_array[i].file_ptr = file_ptr;
-            runningTask->fd_array[i].last_matched_header = file_ptr;
+            RunningTask->fd_array[i].alloted = 1;
+            RunningTask->fd_array[i].file_ptr = file_ptr;
+            RunningTask->fd_array[i].last_matched_header = file_ptr;
             return i;
         }
     }
@@ -107,11 +107,11 @@ initialise_fds()
 {
     for (int i = 0; i < MAX_FDS; i++)
     {
-        runningTask->fd_array[i].alloted = 0;
-        runningTask->fd_array[i].file_sz = 0;
-        runningTask->fd_array[i].num_bytes_read = 0;
-        runningTask->fd_array[i].is_dir = 0;
-        runningTask->fd_array[i].last_matched_header = 0;
+        RunningTask->fd_array[i].alloted = 0;
+        RunningTask->fd_array[i].file_sz = 0;
+        RunningTask->fd_array[i].num_bytes_read = 0;
+        RunningTask->fd_array[i].is_dir = 0;
+        RunningTask->fd_array[i].last_matched_header = 0;
     }
 }
 int
@@ -131,7 +131,7 @@ open_s(char *d_path,int flags)
                     kprintf("out of file descriptors\n");
                     return 0;
                 }
-                runningTask->fd_array[fd].file_sz = convert_oct_int(tarfs_iterator->size);
+                RunningTask->fd_array[fd].file_sz = convert_oct_int(tarfs_iterator->size);
                 return fd;
             }
             tarfs_iterator = get_next_tar_header(tarfs_iterator);
@@ -153,17 +153,17 @@ read_s(int fd, char *buffer, int num_bytes)
         kprintf("Invalid fd\n");
         return 0;
     }
-    int file_sz = runningTask->fd_array[fd].file_sz;
-    int num_bytes_read = runningTask->fd_array[fd].num_bytes_read;
+    int file_sz = RunningTask->fd_array[fd].file_sz;
+    int num_bytes_read = RunningTask->fd_array[fd].num_bytes_read;
     int num_bytes_remaining = file_sz - num_bytes_read;
-    void *file_ptr = runningTask->fd_array[fd].file_ptr;
+    void *file_ptr = RunningTask->fd_array[fd].file_ptr;
     if (num_bytes_read < file_sz)
     {
         memcopy(file_ptr, buffer, MIN(num_bytes, num_bytes_remaining));
-        char *temp_fp = (char *) runningTask->fd_array[fd].file_ptr;
+        char *temp_fp = (char *) RunningTask->fd_array[fd].file_ptr;
         temp_fp += num_bytes;
-        runningTask->fd_array[fd].file_ptr = (void *) temp_fp;
-        runningTask->fd_array[fd].num_bytes_read += num_bytes;
+        RunningTask->fd_array[fd].file_ptr = (void *) temp_fp;
+        RunningTask->fd_array[fd].num_bytes_read += num_bytes;
         return MIN(num_bytes, num_bytes_remaining);
     }
     else
@@ -175,9 +175,9 @@ read_s(int fd, char *buffer, int num_bytes)
 int
 close_s(int fd)
 {
-    runningTask->fd_array[fd].alloted = 0;
-    runningTask->fd_array[fd].file_sz = 0;
-    runningTask->fd_array[fd].num_bytes_read = 0;
+    RunningTask->fd_array[fd].alloted = 0;
+    RunningTask->fd_array[fd].file_sz = 0;
+    RunningTask->fd_array[fd].num_bytes_read = 0;
     return 0;
 }
 
@@ -202,7 +202,7 @@ open_dir(char *d_path)
                     kprintf("out of file descriptors\n");
                     return 0;
                 }
-                runningTask->fd_array[fd].last_matched_header = (void *) (tarfs_iterator);
+                RunningTask->fd_array[fd].last_matched_header = (void *) (tarfs_iterator);
                 return fd;
             }
             tarfs_iterator = get_next_tar_header(tarfs_iterator);
@@ -222,7 +222,7 @@ file_des_validator(int fd)
 
     if (fd < MAX_FDS)
     {
-        if (runningTask->fd_array[fd].alloted == 1)
+        if (RunningTask->fd_array[fd].alloted == 1)
         {
             return 0;
         }
@@ -244,9 +244,9 @@ read_dir(int fd, char *buffer)
         return 1;
     }
     struct posix_header_ustar
-        *tarfs_iterator = (struct posix_header_ustar *) runningTask->fd_array[fd].last_matched_header;
-    char *dir_name = ((struct posix_header_ustar *) runningTask->fd_array[fd].file_ptr)->name;
-    char *last_matched_name = ((struct posix_header_ustar *) runningTask->fd_array[fd].last_matched_header)->name;
+        *tarfs_iterator = (struct posix_header_ustar *) RunningTask->fd_array[fd].last_matched_header;
+    char *dir_name = ((struct posix_header_ustar *) RunningTask->fd_array[fd].file_ptr)->name;
+    char *last_matched_name = ((struct posix_header_ustar *) RunningTask->fd_array[fd].last_matched_header)->name;
     while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
     {
         if (is_sub_string(dir_name, tarfs_iterator->name) == 0
@@ -256,7 +256,7 @@ read_dir(int fd, char *buffer)
             if (str_compare1(dir_name, last_matched_name) == 0 ||
                 is_sub_string(last_matched_name, tarfs_iterator->name) != 0)
             {
-                runningTask->fd_array[fd].last_matched_header = (void *) tarfs_iterator;
+                RunningTask->fd_array[fd].last_matched_header = (void *) tarfs_iterator;
                 string_sub(tarfs_iterator->name, dir_name, buffer, '/');
 //                kprintf("buffer value is %s",buffer);
                 return 0;
@@ -272,9 +272,9 @@ read_dir(int fd, char *buffer)
 int
 close_dir(int fd)
 {
-    runningTask->fd_array[fd].alloted = 0;
-    runningTask->fd_array[fd].file_sz = 0;
-    runningTask->fd_array[fd].num_bytes_read = 0;
+    RunningTask->fd_array[fd].alloted = 0;
+    RunningTask->fd_array[fd].file_sz = 0;
+    RunningTask->fd_array[fd].num_bytes_read = 0;
     return 0;
 }
 
@@ -299,7 +299,7 @@ tarfs_test()
     //TEST 1 : FILE CALLS TEST
     int SIZE = 100;
     char buff[SIZE];
-    runningTask = (Task *) page_alloc();
+    RunningTask = (Task *) page_alloc();
     int fd;
     //FIXME:: should be done inside task
     initialise_fds();
@@ -322,7 +322,7 @@ tarfs_test()
     close_s(fd);
     //*************************************************************************
     //TEST 2 : DIR CALLS TEST
-    runningTask = (Task *) page_alloc();
+    RunningTask = (Task *) page_alloc();
     int DIR_SIZE = 100;
     //FIXME:: should be done inside task
     char dir_buff[DIR_SIZE];

@@ -120,7 +120,7 @@ void
 createTask1(Task *task, uint64_t virtual_address, uint64_t flags)
 {
     //rax,rbx,rcx,rdx,rsi,rdi,rsp,rbp,rip,flags,cr3
-    runningTask = task;
+    RunningTask = task;
     initialise_fds();
     task->regs.rax = 0;
     task->regs.rbx = 0;
