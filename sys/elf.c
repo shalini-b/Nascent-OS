@@ -8,7 +8,7 @@
 #include <sys/memset.h>
 
 // FIXME: get corresponding sys file
-#include <strings.h>
+#include <sys/strings.h>
 
 extern uint64_t *kpml_addr;
 

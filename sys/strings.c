@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <syscalls.h>
-#include <strings.h>
+#include <sys/strings.h>
 #include <sys/kprintf.h>
 
 //Length of string

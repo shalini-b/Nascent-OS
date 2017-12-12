@@ -3,23 +3,33 @@
 #include<sys/kprintf.h>
 #include<sys/process.h>
 
-void
-page_fault_handler(uint64_t num);
-void
-print_status(uint64_t virtual_address);
-void
-check_vma(uint64_t v_addr);
 
 void
-page_fault_handler(uint64_t num)
+page_fault_handler(uint64_t* num)
 {
     kprintf("in 14");
-    kprintf("First parameter to page fault handler %p\n", num);
+    uint64_t error_code = *num;
+    kprintf("Error code to page fault handler %d\n", error_code);
     uint64_t faulting_addr = read_cr2();
     kprintf("Faulting address : CR2 value %p\n", faulting_addr);
+//    print_status(error_code);
+//    if (check_vma(faulting_addr))
+//    {
+//        if(error_code==7)
+//        {
+//
+//        }
+//    }
+//    else
+//    {
+//        kprintf("Segmentation Fault");
+//    }
 //    outb(0x20, 0x20);
 }
-//
+
+
+
+
 //void
 //print_status(uint64_t virtual_address)
 //{
