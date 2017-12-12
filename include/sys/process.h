@@ -40,6 +40,8 @@ struct vma {
     // struct mm_struct *proc_mm;
     uint64_t vm_flags;
     uint64_t vmtype;
+    uint64_t p_filesz;
+    uint64_t tarfs_base;
 };
 
 struct mm_struct {

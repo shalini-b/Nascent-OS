@@ -61,7 +61,7 @@ pgfault:
     pushq %r14
     pushq %r15
     pushq %rsp
-    movq %rsp,%rdi
+    movq 0x80(%rsp), %rdi
     call page_fault_handler
     popq %rsp
     popq %r15
@@ -79,6 +79,7 @@ pgfault:
     popq %rax
     popq %rsi
     popq %rdi
+    add $8, %rsp
     //sti
     iretq
 

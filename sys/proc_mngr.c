@@ -46,7 +46,7 @@ struct vma * get_free_vma() {
     return free_vma;
 }
 
-struct vma * fetch_free_vma(uint64_t start_addr, uint64_t end_addr, uint64_t vm_flags, uint64_t vmtype) {
+struct vma * fetch_free_vma(uint64_t start_addr, uint64_t end_addr, uint64_t vm_flags, uint64_t vmtype,uint64_t fsz,uint64_t base) {
     if (free_vma_head==NULL) {
         kprintf("Caution! Out of VMA's..");
         return NULL;
@@ -60,6 +60,8 @@ struct vma * fetch_free_vma(uint64_t start_addr, uint64_t end_addr, uint64_t vm_
     free_vma->end_addr = end_addr;
     free_vma->vm_flags = vm_flags;
     free_vma->vmtype = vmtype;
+    free_vma->p_filesz=fsz;
+    free_vma->tarfs_base=base;
 
     return free_vma;
 }

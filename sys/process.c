@@ -210,7 +210,7 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
     while(tmp->next != NULL) {
         tmp = tmp->next;
     }
-    tmp->next = fetch_free_vma(start_viraddr, end_address, RW, STACK);
+    tmp->next = fetch_free_vma(start_viraddr, end_address, RW, STACK,0,0);
     RunningTask->task_mm->count++;
 
     // set mapping for stack to USTACK in pcb's PML
