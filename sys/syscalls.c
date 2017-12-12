@@ -1,43 +1,49 @@
 #include <sys/syscall.h>
 #include <sys/kprintf.h>
-#include<sys/task.h>
+#include <sys/process.h>
 #include<sys/tarfs.h>
 #include<sys/types.h>
-
-
-//void syscall_handler() {
-//   kprintf("In write syscall handler");
-//}
-
-//
-//void syscall_handler(Registers1 * regs) {
-//    int syscall_num = regs->rax;
-//
-//    switch(syscall_num) {
-//
-//        case SYS_write: {
-//            kprintf("\n In write syscall handle\n");
-//            int res = 1;
-//            regs->rax = res;
-//            break;
-//        }
-//    }
-//}
-
 
 
 uint64_t
 syscall_handler(Registers1 *regs)
 {
-    int syscall_num = regs->rax;
+    // CAUTION - use of variables here might alter the functionality of child!
 
-    switch (syscall_num)
+/*    __asm__ __volatile__(
+    "movq %%rax, %0 \n\t"
+    :"=r" (regs->rax)::);
+*/
+    switch (regs->rax)
     {
-
         case SYS_write:
         {
-//            kprintf("hello");
             regs->rax = (uint64_t)write_to_console((uint64_t)regs->rdi,(char*)regs->rsi,(int)regs->rdx);
+            break;
+        }
+        case SYS_fork:
+        {
+            // CAUTION - Schedule is not called for fork.
+            // It will return back to the same process
+            int child_pid = (uint64_t) fork_process();
+
+            if (RunningTask->kstack[511] == 10101) {
+                RunningTask->kstack[511] = 0;
+                 return 0;
+            }
+            else {
+                return child_pid;
+            }
+            // break;
+        }
+        case SYS_getpid:
+        {
+            regs->rax = RunningTask->pid;
+            break;
+        }
+        case SYS_getppid:
+        {
+            regs->rax = RunningTask->ppid;
             break;
         }
         case SYS_open_dir:
@@ -70,9 +76,13 @@ syscall_handler(Registers1 *regs)
             regs->rax = close_s((int)regs->rdi);
             break;
         }
-
+        default: {
+            // FIXME: check this
+            regs->rax = 0;
+        }
     }
-    return 0;
+    schedule();
+    return regs->rax;
 }
 
 uint64_t

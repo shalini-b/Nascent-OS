@@ -386,10 +386,12 @@
 //    return 0;
 //
 //}
+
 #include <stdio.h>
-#include<dirent.h>
-#include<mem.h>
+#include <dirent.h>
+#include <mem.h>
 #include <unistd.h>
+
 int
 main()
 {
@@ -438,9 +440,7 @@ main()
         memset((void *) buff, '\0', BUFF_SIZE);
     }
     close(fd);
-    while(1)
-    {
-
-    }
-    return 0;
+    int pid = fork();
+    printf("\n PID %d\n",pid);
+    while(1);
 }
