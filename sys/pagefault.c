@@ -43,7 +43,10 @@ page_fault_handler(uint64_t error_code)
                 }
                 else if(s_d_a<=vma_start)
                 {
-                    memcopy((void *)(vma_v->tarfs_base), (void *) vma_start, MIN(vma_v->p_filesz,4*1024-(vma_start-s_d_a)));
+//                    kprintf("2present file segment %p",vma_v->tarfs_base);
+//                    kprintf("2present file segment %p",vma_start);
+//                    kprintf("2present file segment %d",MIN(vma_v->p_filesz,4*1024-(vma_start-s_d_a)));
+                    memcopy((void *)(vma_v->tarfs_base), (void *) vma_start, MIN(vma_v->p_filesz,4*1024-vma_start));
                 }
                     //for upper segment
                 else if ((s_d_a+(4*1024))>bss_addr)
