@@ -57,12 +57,12 @@ start(uint32_t *modulep, void *physbase, void *physfree)
 
     // enable interrupts
     __asm__ __volatile__ ("sti");
-
+    create_idle_process();
     // Call exec but do not clean up the previous task
     if (is_first_proc == 1) {
         // FIXME: create a dummy task first
         RunningTask = fetch_free_pcb();
-        add_to_task_list(RunningTask);
+//        add_to_task_list(RunningTask);
         RunningTask->task_state = RUNNING;
         sys_execvpe("bin/sbush", NULL, NULL);
     }

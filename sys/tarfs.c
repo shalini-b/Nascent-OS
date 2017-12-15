@@ -9,6 +9,7 @@
 #include <sys/page.h>
 #include <sys/virmem.h>
 #include <sys/process.h>
+#include <sys/terminal.h>
 #define MIN(a, b)  (a<b)? a : b
 
 char pwd[200];
@@ -148,6 +149,11 @@ open_s(char *d_path,int flags)
 int
 read_s(int fd, char *buffer, int num_bytes)
 {
+    if(fd==0)
+    {
+
+        schedule_terminal_task(buffer,num_bytes);
+    }
     if (file_des_validator(fd) != 0)
     {
         kprintf("Invalid fd\n");

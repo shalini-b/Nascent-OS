@@ -19,5 +19,8 @@ void create_idle_process();
 void idle_process();
 void add_to_task_list(Task* task);
 Task * fetch_ready_task();
-
+void
+wake_up_task();
+void
+idle_process();
 #endif

@@ -1,27 +1,73 @@
 #include <sys/terminal.h>
 #include <sys/kprintf.h>
 #include <sys/process.h>
+#include <sys/proc_mngr.h>
+#define MIN(a, b)  (a<b)? a : b
+#define MAX(a, b)  (a>b)? a : b
 
 char term_buff[BUFF_SIZE];
 int terminal_line_count;
-void  terminal_handler(char c)
+int r_buff_ptr = 0;
+int w_buff_ptr = 0;
+void
+terminal_handler(char c)
 {
-    if(c=='\n')
+//    kprintf("in terminal handler");
+    if (c == '\n')
     {
+//        kprintf("inside newline handling");
         terminal_line_count++;
+        wake_up_task();
     }
-    kprintf("%c",c);
-
-//    while(1)
-//    {
-//        RunningTask->task_state = WAIT;
-//        schedule();
-//    }
+    kprintf("%c", c);
+    if (w_buff_ptr > BUFF_SIZE - 2)
+    {
+        w_buff_ptr = w_buff_ptr % BUFF_SIZE;
+    }
+    term_buff[w_buff_ptr] = c;
+    w_buff_ptr++;
 
 }
 
-
-void terminal_test()
+int
+read_buffer(char *buffer, int size)
 {
+    if (terminal_line_count != 0)
+    {
+        int i = 0;
+        while (term_buff[r_buff_ptr] != '\n' && i < size - 1)
+        {
+            buffer[i] = term_buff[r_buff_ptr];
+            i++;
+            r_buff_ptr++;
+            r_buff_ptr = r_buff_ptr % BUFF_SIZE;
+        }
+        buffer[i + 1] = '\0';
+        terminal_line_count--;
+        return 0;
+    }
+    else
+    {
+        return 1;
+    }
 
 }
+
+int
+schedule_terminal_task(char *buffer,int size)
+{
+    while (1)
+    {
+        if (terminal_line_count != 0)
+        {
+            return read_buffer(buffer, size);
+        }
+        else
+        {
+            RunningTask->task_state = WAIT;
+            schedule();
+        }
+
+    }
+}
+

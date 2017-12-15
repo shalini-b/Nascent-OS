@@ -178,7 +178,7 @@ createTask(Task *task, void (*main)(), uint64_t flags, uint64_t *pagedir)
     task->regs.rdx = 0;
     task->regs.rsi = 0;
     task->regs.rdi = 0;
-    task->regs.rip = (uint64_t) main;;
+    task->regs.rip = (uint64_t) main;
     task->regs.flags = flags;
     task->regs.cr3 = (uint64_t) pagedir;
     task->regs.rsp = ((uint64_t) page_alloc()) + (0x1000);

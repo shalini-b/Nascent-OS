@@ -391,11 +391,21 @@
 #include <dirent.h>
 #include <mem.h>
 #include <unistd.h>
+#include<syscalls.h>
 
 int
 main()
 {
 
+    while (1)
+    {
+        char buff[100];
+        printf("sbush>");
+        read(0,buff,100);
+        printf("value entered > %s\n",buff);
+        memset((void *) buff, '\0', 100);
+
+    }
     //strings
     int a=1;
     printf("\nThis is a char %c\n",'a');

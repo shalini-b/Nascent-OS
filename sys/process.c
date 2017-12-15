@@ -171,8 +171,10 @@ void copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[])
 
 void sys_execvpe(char *filename, char *argv[], char *envp[])
 {
-    // FIXME: use kmalloc or page_alloc??
-    uint64_t * stack_start = (uint64_t *)page_alloc() + PAGE_SIZE;
+    // FIXME: use kmalloc or page_alloc?
+    uint64_t stack_base = (uint64_t)page_alloc();
+    uint64_t * stack_start = (uint64_t *)(stack_base + PAGE_SIZE);
+
     // NOTE - memset pages given to stack & heap
     // reorganise arguments
     int argc = 1;
@@ -200,8 +202,7 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
 
     // Set RIP & RSP for new process
     RunningTask->regs.rip = bin_viradd;
-    // CAUTION - assign stack address which points to argc
-    RunningTask->regs.rsp = (uint64_t) stack_start;
+
 
     // copy new stack to RunningTask's stack vma
     uint64_t start_viraddr = (uint64_t) USTACK;
@@ -216,9 +217,11 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
     // set mapping for stack to USTACK in pcb's PML
     // All other pages will be given to USTACK on the fly
     uint64_t proc_pml4 = (uint64_t) (RunningTask->regs.cr3 + KERNBASE);
-    uint64_t stack_phyaddr = (uint64_t) ((stack_start - PAGE_SIZE) - KERNBASE);
-    set_mapping(proc_pml4, USTACK, stack_phyaddr, 7);
+    uint64_t stack_phyaddr = stack_base - KERNBASE;
+    set_mapping(proc_pml4, USTACK-PAGE_SIZE, stack_phyaddr, 7);
 
+    // CAUTION - assign stack address which points to argc
+    RunningTask->regs.rsp = (uint64_t) USTACK -  (((uint64_t)PAGE_SIZE) - (((uint64_t)stack_start) - stack_base));
     // iretq to user mode
     return_to_user();
 }
@@ -288,7 +291,7 @@ void schedule() {
     // Existing task state marked to ready
     RunningTask = fetch_ready_task();
     // FIXME: uncomment this later
-    // add_to_task_list(last);
+     add_to_task_list(last);
     contextswitch(&last->regs, &RunningTask->regs);
 }
 

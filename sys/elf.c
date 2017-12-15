@@ -8,7 +8,7 @@
 #include <sys/memset.h>
 
 // FIXME: get corresponding sys file
-#include <sys/strings.h>
+#include <strings.h>
 
 extern uint64_t *kpml_addr;
 
@@ -32,7 +32,7 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
     {
         //Save current pml address
         uint64_t * prev_pml_addr;
-//        uint64_t * pml_addr = (uint64_t *) (new_pcb->regs.cr3 + KERNBASE);
+        uint64_t * pml_addr = (uint64_t *) (new_pcb->regs.cr3 + KERNBASE);
         READ_CR3(prev_pml_addr);
         // Copy file name
         str_copy(filename, new_pcb->filename);
@@ -63,8 +63,7 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
                 start_viraddr = (uint64_t) present_program_header->p_vaddr;
                 uint64_t end_address = start_viraddr + (uint64_t)(present_program_header->p_memsz);
                 // create new vma, assign start & end address and increase count
-                uint64_t tarfs_base = ((uint64_t) elf_header + (uint64_t) present_program_header->p_offset);
-                struct vma* prg_vma = fetch_free_vma(start_viraddr, end_address, present_program_header->p_type, vm_type,program_header->p_filesz,tarfs_base);
+                struct vma* prg_vma = fetch_free_vma(start_viraddr, end_address, present_program_header->p_type, vm_type);
                 new_pcb->task_mm->count++;
 
                 // calulate end address of process address range
@@ -72,15 +71,15 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
                     max_addr = end_address;
                 }
 
-//                // create the page tables for binary
-//                for (uint64_t pres_page_base_vir = start_viraddr; pres_page_base_vir < end_address;
-//                     pres_page_base_vir += (4 * 1024))
-//                {
-//                    // FIXME: always memset pages given to stack & heap
-//                    uint64_t phys_addr = (uint64_t) kmalloc();
-////                    set_mapping((uint64_t)pml_addr, (uint64_t)ScaleDown((uint64_t*)pres_page_base_vir), (uint64_t)phys_addr, 7);
-//                      kprintf("virtual address of binary %p\n", pres_page_base_vir);
-//                }
+                // create the page tables for binary
+                for (uint64_t pres_page_base_vir = start_viraddr; pres_page_base_vir < end_address;
+                     pres_page_base_vir += (4 * 1024))
+                {
+                    // FIXME: always memset pages given to stack & heap
+                    uint64_t phys_addr = (uint64_t) kmalloc();
+                    set_mapping((uint64_t)pml_addr, (uint64_t)ScaleDown((uint64_t*)pres_page_base_vir), (uint64_t)phys_addr, 7);
+                    //  kprintf("virtual address of binary %p\n", pres_page_base_vir);
+                }
 
                 // Place VMA at the end of process vma list
                 if (new_pcb->task_mm->vma_head == NULL) {
@@ -109,14 +108,9 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
 //                kprintf("memcopy range %x - %x\n", start_viraddr,start_viraddr+present_program_header->p_filesz);
 
                 // Copy the contents into address space
-                kprintf("memcpy");
-                kprintf("present file segment %p",present_file_segment);
-                kprintf("present file segment %p",start_viraddr);
-                kprintf("present file segment %d",program_header->p_filesz);
-//                memcopy((void *)present_file_segment, (void *) start_viraddr, (uint64_t)program_header->p_filesz);
-
-//                int bss_size = (present_program_header->p_memsz)-(program_header->p_filesz);
-//                memset((void*)((start_viraddr + program_header->p_filesz)), 0, bss_size);
+                memcopy((void *)present_file_segment, (void *) start_viraddr, (uint64_t)program_header->p_filesz);
+                int bss_size = (present_program_header->p_memsz)-(program_header->p_filesz);
+                memset((void*)((start_viraddr + program_header->p_filesz)), 0, bss_size);
 
 //                kprintf("virtual address of binary %p\n", present_program_header->p_vaddr);
 //                kprintf("physical address of binary %p\n", present_program_header->p_paddr);
@@ -136,10 +130,12 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
         uint64_t end_address = ((((max_addr - 1) >> 12) + 10) << 12);
         // create HEAP VMA and increment count
         // Assign values to start_brk in mm struct to support mmap
-        tmp->next = fetch_free_vma(start_viraddr, end_address, RW, HEAP,0,0);
+        tmp->next = fetch_free_vma(start_viraddr, end_address, RW, HEAP);
         new_pcb->task_mm->count++;
 
         // FIXME: add new process to running queue??? CAUTION!!
+//        add_to_task_list(new_pcb);
+
         return 0;
     }
     else

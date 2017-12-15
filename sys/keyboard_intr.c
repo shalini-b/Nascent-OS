@@ -71,6 +71,10 @@ keyboard_intr()
             {' ', ' '},
         };
 //    kprintf("%d\n",keyboard_value);
+    if(keyboard_value==28)
+    {
+        terminal_handler('\n');
+    }
     if(keyboard_value == 29)//cntrl
     {
         control_flag = 1;
