@@ -24,8 +24,13 @@ terminal_handler(char c)
     {
         w_buff_ptr = w_buff_ptr % BUFF_SIZE;
     }
-    term_buff[w_buff_ptr] = c;
-    w_buff_ptr++;
+
+    if(c!='\r')
+    {
+        term_buff[w_buff_ptr] = c;
+        w_buff_ptr++;
+
+    }
 
 }
 
@@ -42,6 +47,7 @@ read_buffer(char *buffer, int size)
             r_buff_ptr++;
             r_buff_ptr = r_buff_ptr % BUFF_SIZE;
         }
+        r_buff_ptr++;//read after new line next time
         buffer[i + 1] = '\0';
         terminal_line_count--;
         return 0;
