@@ -9,6 +9,7 @@
 #include <strings.h>
 #include<syscalls.h>
 #include<printf.h>
+#include<unistd.h>
 int OUTPUT_BUFFER_LENGTH = 0;
 static  char OUTPUT_BUFFER[OUTPUT_BUFFER_MAX_LENGTH];
 int putchar(int c);

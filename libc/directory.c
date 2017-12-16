@@ -7,9 +7,9 @@
 DIR dir_array[20];
 
 DIR *
-opendir(char *name)
+opendir(const char *name)
 {
-    int fd = open_dir(name);
+    int fd = open_dir((char*)name);
     dir_array[fd].fd = fd;
     return &dir_array[fd];
 
