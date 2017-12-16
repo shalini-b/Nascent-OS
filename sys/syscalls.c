@@ -3,6 +3,9 @@
 #include <sys/process.h>
 #include<sys/tarfs.h>
 #include<sys/types.h>
+#include <sys/process.h>
+#include <sys/proc_mngr.h>
+#include <sys/pit.h>
 
 
 uint64_t
@@ -74,6 +77,41 @@ syscall_handler(Registers1 *regs)
         case SYS_close:
         {
             regs->rax = close_s((int)regs->rdi);
+            break;
+        }
+        case SYS_wait_s:
+        {
+            RunningTask->task_state = WAIT;
+            schedule();
+            break;
+        }
+        case SYS_exit:
+        {
+            RunningTask->task_state = ZOMBIE;
+            Task* p_t = RunningTask->parent_task;
+            if(p_t->task_state == WAIT)
+            {
+                p_t->task_state=READY;
+                schedule();
+            }
+            break;
+        }
+        case SYS_ps:
+        {
+            Task* p = overall_task_list;
+            while(p!=NULL)
+            {
+                kprintf("%d %s %d",p->pid,p->filename,p->task_state);
+                p=p->next;
+            }
+            break;
+        }
+        case SYS_sleep_s:
+        {
+            RunningTask->sleep_sec = (int)regs->rdi ;
+            Task* p = RunningTask;
+            p->task_state = SLEEP;
+            schedule();
             break;
         }
         default: {

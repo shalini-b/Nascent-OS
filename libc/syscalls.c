@@ -11,13 +11,15 @@
 #define __NR_fork 57
 #define __NR_dup2 33
 #define __NR_getcwd 79
-#define __NR_wait4 61
+#define __NR_wait_s 61
 #define __NR_access 21
 #define __NR_getpid  39
 #define __NR_getppid 110
 #define __NR_open_dir 70
 #define __NR_read_dir 71
 #define __NR_close_dir 72
+#define __NR_sleep_s 73
+#define __NR_ps 75
 
 
 #define syscall0(type, name) \
@@ -172,5 +174,7 @@ syscall0(int, getppid);
 syscall2(char *, getcwd, char *, buf, unsigned long, size);
 syscall2(int, dup2, int, oldfd, int, newfd);
 //TODO: add rusage struct for wait4
-syscall4(pid_t, wait4, pid_t, pid, int *, status, int, options, char*, rusage); 
+syscall1(pid_t, wait_s, pid_t, pid);
+syscall0(void, ps);
 syscall2(int, access, const char *, filename, int, mode);
+syscall1(int,sleep_s, int, sec);

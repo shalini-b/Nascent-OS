@@ -102,6 +102,7 @@ typedef struct Task
     int pid;
     int ppid;
     struct Task * parent_task;
+    int sleep_sec;
     //struct Task * childnode;
     //struct Task * sib;
     // int num_child;

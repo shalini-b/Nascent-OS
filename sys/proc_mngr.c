@@ -178,6 +178,43 @@ idle_process()
     }
 }
 
+void wait1()
+{
+    RunningTask->task_state = WAIT;
+    schedule();
+    return;
+}
+
+void init_process()
+{
+//    kprintf("entered the idle process");
+    while (1)
+    {
+        wait1();
+        clean();
+    }
+}
+
+void clean()
+{
+    clean_child_pcb();
+    add_to_task_list(RunningTask);
+}
+
+void clean_child_pcb()
+{
+    int parent_id = RunningTask->pid;
+    for (int i = 0; i< NUM_PCB; i++)
+    {
+        Task child = pcb_arr[i];
+        if(child.ppid==parent_id)
+        {
+            clean_task_for_exec(&child);
+        }
+    }
+
+}
+
 void
 create_idle_process( )
 {

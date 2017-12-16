@@ -40,7 +40,8 @@ syscall3_def(ssize_t, write, int, fd, const void *, buf, size_t, count);
 syscall1_def(void, exit, int, value);
 syscall3_def(size_t, execve, const char *, fileName,  char *const*, argv, char *const*, envp);
 syscall2_def(int, dup2, int, oldfd, int, newfd);
-syscall4_def(pid_t, wait4, pid_t, pid, int *, status, int, options, char*, rusage);
+syscall1_def(int,sleep_s, int, sec);
+syscall1_def(pid_t, wait_s, pid_t, pid);
 syscall2_def(int, access, const char *, filename, int, mode);
-
+syscall0_def(void, ps);
 #endif

@@ -23,4 +23,9 @@ void
 wake_up_task();
 void
 idle_process();
+void wait1();
+void init_process();
+void clean();
+void clean_child_pcb();
+
 #endif
