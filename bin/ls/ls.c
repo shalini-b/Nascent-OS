@@ -1,23 +1,35 @@
-// Created by mohan on 6/9/17.
-//
-#include<unistd.h>
-#include<dirent.h>
+#include <types.h>
+#include <unistd.h>
+#include <dirent.h>
 #include<stdio.h>
+#include <mem.h>
 
-int main(int argc, char *argv[], char *envp[])
+void
+ls(char* path)
 {
-/*    DIR *dir;
-    char *pwd;
-    char buffer[255];
-    char cwd[1024];
-    pwd = getcwd(cwd,1024);
-    dir = opendir(pwd);
-    struct dirent  *output_struct;
-    while(output_struct!=NULL)
+
+    struct dirent *b;
+    int DIR_SIZE = 100;
+    char dir_buff2[DIR_SIZE];
+    DIR *a1 = opendir(path);
+    memset((void *) dir_buff2, '\0', DIR_SIZE);
+    while (1)
     {
-        puts(output_struct->d_name);
-        output_struct = readdir(dir);
+
+        b = readdir(a1);
+        if (b == NULL)
+        {
+            break;
+        }
+        printf("%s\n", b->d_name);
+        memset((void *) dir_buff2, '\0', DIR_SIZE);
     }
-*/
-return 0;
+    closedir(a1);
+}
+
+int
+main(int argc, char *argv[], char *envp[])
+{
+    ls(argv[1]);
+    return 0;
 }

@@ -1,5 +1,5 @@
 #include <sys/defs.h>
-
+#include <unistd.h>
 #define __NR_write 1
 #define __NR_exit 60
 #define __NR_read 0
@@ -20,6 +20,9 @@
 #define __NR_close_dir 72
 #define __NR_sleep_s 73
 #define __NR_ps 75
+#define __NR_kill_s 76
+#define __NR_chdir_s 50
+#define __NR_getcwd_s 51
 
 
 #define syscall0(type, name) \
@@ -159,22 +162,22 @@ type name(type1 arg1, type2 arg2, type3 arg3, type4 arg4, type5 arg5, type6 arg6
 syscall1(int, open_dir, char*,name);
 syscall2(int, read_dir, int,fd,char*,name);
 syscall1(int, close_dir, int,fd);
-
-syscall3(ssize_t, write, int, fd, const void *, buf, size_t, count);
 syscall3(ssize_t, read, int, fd, void *, buf, size_t, count);
 syscall1(void, exit, int, value);
 syscall2(int, open, const char *, pathname, int, flags);
 syscall1(int, close, int, fd);
-syscall1(int, chdir, const char*, fileName); 
 syscall1(int, pipe, int *, filedes); 
 syscall3(size_t, execve, const char *, fileName, char *const*, argv, char *const*, envp);
 syscall0(pid_t, fork);
-syscall0(int, getpid);
-syscall0(int, getppid);
-syscall2(char *, getcwd, char *, buf, unsigned long, size);
+syscall0(pid_t, getpid);
+syscall0(pid_t, getppid);
 syscall2(int, dup2, int, oldfd, int, newfd);
+syscall3(ssize_t, write, int, fd, const void *, buf, size_t, count);
 //TODO: add rusage struct for wait4
 syscall1(pid_t, wait_s, pid_t, pid);
 syscall0(void, ps);
 syscall2(int, access, const char *, filename, int, mode);
 syscall1(int,sleep_s, int, sec);
+syscall1(int,kill_s, int, pid);
+syscall1(int,chdir_s, char*, path);
+syscall2(char*,getcwd_s, char*, buf,size_t,size);

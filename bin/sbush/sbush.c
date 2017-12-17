@@ -52,7 +52,7 @@ run_command(char command_array[][150], int args_num){
         // Parent process
         // Wait for child only when it is not background process
         if(!background) {
-                waitpid(pid, &st, WUNTRACED);
+            waitpid(pid, &st, WUNTRACED);
         }
     }
     else{
@@ -145,7 +145,7 @@ command_handler(char command_array[][150], int args_num)
         // Set environment variable
         char split_array[2][150];
         split_and_count(command_array[1], '=', split_array);
-	if (str_compare(split_array[0], "PS1") == 0)
+        if (str_compare(split_array[0], "PS1") == 0)
         {
 
             setenv(split_array[0], split_array[1], 1);
@@ -199,7 +199,7 @@ main(int argc, char *argv[], char *envp[])
         clear_2darray(final_parsed_array);
 
         // Input command
-	    if(argc==1)
+        if(argc==1)
         {
             printf("%s", PS1);
             gets(string_buffer_array);
@@ -290,7 +290,7 @@ main(int argc, char *argv[], char *envp[])
 
     if (pid == 0) {
         printf("Hello! I am child");
-        execvp("/bin/sbush", NULL, NULL);   
+        execvp("/bin/sbush", NULL, NULL);
 	    exit(0);
     }
     else{

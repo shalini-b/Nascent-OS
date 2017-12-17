@@ -13,7 +13,7 @@ typedef struct DIR
     struct dirent name;
 }DIR;
 
-DIR *opendir( char *name);
+DIR *opendir( const  char *name);
 struct dirent *readdir(DIR *dirp);
 int closedir(DIR *dirp);
 

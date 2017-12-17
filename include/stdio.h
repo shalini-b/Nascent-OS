@@ -21,7 +21,6 @@ static const int EOF = -1;
 int putchar(int c);
 int puts(const char *s);
 int printf(const char *format, ...);
-
 char *gets(char *s);
 FILE *fopen(const char *pathname, const char *mode);
 char *fgets(char *res, int max, FILE *fp);
