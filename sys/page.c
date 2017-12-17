@@ -21,7 +21,7 @@ uint64_t get_phyaddr(uint64_t vir_addr) {
 
 struct page* get_page_from_PA(uint64_t phyaddr) {
     int offset = ((uint64_t)ScaleDown((uint64_t *)phyaddr)) / PAGE_SIZE;
-    return (struct page*)((uint64_t)pages+KERNBASE)+offset;
+    return (struct page*)((uint64_t)pages + KERNBASE) + offset;
 }
 
 uint64_t read_cr2(){
@@ -32,6 +32,7 @@ uint64_t read_cr2(){
 
 void invalidate_tlb(uint64_t pml4) {
     __asm__ __volatile("invlpg (%0)" : : "r" (pml4) : "memory");
+    __asm__ __volatile("movq %%cr3, %%rax; movq %%rax, %%cr3" : : : "rax");
 }
 
 // Use this for fetching virtual address of free page

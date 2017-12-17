@@ -16,6 +16,8 @@
 #define BIT_COW 0x100
 #define UNSET_WRITE(entry) entry = entry & 0xFFFFFFFFFFFFFFFD
 #define SET_COW(entry) entry = entry | BIT_COW
+#define UNSET_COW(entry) entry = entry & 0xFFFFFFFFFFFFFEFF
+#define SET_WRITE(entry) entry = entry | 0x10
 
 #define RW_KERNEL (1UL | 2UL)
 #define RX_USER (1UL | 4UL)

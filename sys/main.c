@@ -16,7 +16,6 @@ uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t *loader_stack;
 extern char kernmem, physbase;
 //int ring_0_3_switch();
-extern uint64_t *kpml_addr;
 int is_first_proc = 1;
 
 void
@@ -45,7 +44,6 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     // Initiating paging
     kprintf("physfree %p\n", (uint64_t) physfree);
     init_mem((uint64_t *) physfree, modulep, mem_end);
-//    kprintf("Kernel PML address: %p\n", kpml_addr);
 
     // Initiating interrupts
     kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
@@ -57,7 +55,12 @@ start(uint32_t *modulep, void *physbase, void *physfree)
 
     // enable interrupts
     __asm__ __volatile__ ("sti");
+    // Init process as pid 0
+    // create_init_process();
+
+    // Idle process as pid 1
     create_idle_process();
+    
     // Call exec but do not clean up the previous task
     if (is_first_proc == 1) {
         // FIXME: create a dummy task first
