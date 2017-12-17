@@ -107,6 +107,21 @@ syscall_handler(Registers1 *regs)
             RunningTask->task_state = SLEEP;
             break;
         }
+        case SYS_kill_s :
+        {
+
+            break;
+        }
+        case SYS_chdir_s:
+        {
+            set_cwd((char *)regs->rdi);
+            break;
+        }
+        case  SYS_getcwd_s:
+        {
+            fetch_cwd((char *)regs->rdi);
+            break;
+        }
         default: {
             // FIXME: check this
             regs->rax = 0;

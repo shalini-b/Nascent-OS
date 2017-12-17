@@ -3,6 +3,8 @@
 #define _SYSCALLS_H
 
 #include <sys/defs.h>
+#include<sys/types.h>
+
 
 #define syscall0_def(type, name) \
 type name();
@@ -44,4 +46,7 @@ syscall1_def(int,sleep_s, int, sec);
 syscall1_def(pid_t, wait_s, pid_t, pid);
 syscall2_def(int, access, const char *, filename, int, mode);
 syscall0_def(void, ps);
+syscall1_def(int,kill_s, int, pid);
+syscall1_def(int,chdir_s, char*, path);
+syscall2_def(char*,getcwd_s, char*, buf,size_t,size);
 #endif

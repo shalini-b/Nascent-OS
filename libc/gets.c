@@ -5,7 +5,7 @@ char *
 gets(char *s)
 {
 
-	read(0, s, 100);
-	return s;
+    read(0, s, 100);
+    return s;
 
 }

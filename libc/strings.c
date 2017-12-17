@@ -2,30 +2,48 @@
 #include <unistd.h>
 #include <syscalls.h>
 #include <strings.h>
-int putchar(int c) {
+int
+putchar(int c)
+{
 
     char ch = c;
     int length = write(1, &ch, 1);
-    if (length <= 0) {
+    if (length <= 0)
+    {
         return EOF;
     }
 
     return c;
 }
 
-int puts(const char *s)
+int
+puts(const char *s)
 {
-    return printf("%s \n",s);
+    return printf("%s \n", s);
 
+}
+
+int
+str_to_num(char *s)
+{
+    int r = 0;
+    int t;
+    for (int i = 0; s[i] != '\0'; i++)
+    {
+        t = s[i] - '0';
+        r = r * 10 + t;
+    }
+
+    return r;
 }
 
 //Length of string
 int
 len(char string[])
-{   
+{
     int string_length = 0;
     while (string[string_length] != '\0')
-    {   
+    {
         string_length++;
     }
     return string_length;
@@ -33,11 +51,11 @@ len(char string[])
 
 int
 str_compare1(char s1[150], char s2[150])
-{   
+{
     int str_itr = 0;
     if (len(s1) != len(s2))
         return 1;
-    
+
     while (s1[str_itr] != '\0')
     {
         if (s1[str_itr] != s2[str_itr])
@@ -69,10 +87,10 @@ str_compare(char s1[150], char s2[150])
 
 void
 str_copy(char *source_string, char *destination_string)
-{   
+{
     int str_itr = 0;
     while (source_string[str_itr] != '\0')
-    {   
+    {
         destination_string[str_itr] = source_string[str_itr];
         str_itr++;
     }
