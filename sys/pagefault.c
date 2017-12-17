@@ -21,7 +21,42 @@ page_fault_handler(uint64_t error_code)
         //elf case lazy loading
         uint64_t vma_start = vma_v->start_addr;
         uint64_t pml_addr = (uint64_t)RunningTask->regs.cr3 + KERNBASE;
-        if ((vma_v->vmtype == TEXT) || (vma_v->vmtype == DATA))
+        // cow case
+        if (error_code == 7)
+        {
+            // FIXME: do i have to make any preliminary checks?
+            uint64_t page_phyaddr = 0;
+            int present = get_pte_entry(pml_addr, faulting_addr, &page_phyaddr);
+            struct page* page_addr = get_page_from_PA(page_phyaddr);
+            if (present && (page_addr->ref_count == 1)) {
+                UNSET_COW(page_phyaddr);
+                SET_WRITE(page_phyaddr);
+                set_mapping(pml_addr, faulting_addr, page_phyaddr, 0);
+                invalidate_tlb(pml_addr);
+            }
+            else if(present && (page_addr->ref_count > 1)) {
+                void * buff_page = page_alloc();
+                memcopy((void *) ScaleDown((uint64_t *)faulting_addr), buff_page, PAGE_SIZE);
+
+                // uint64_t new_page = (uint64_t)kmalloc();
+                // FIXME: check permissions here
+                set_mapping(pml_addr, faulting_addr, ((uint64_t)buff_page - KERNBASE), 7);
+                invalidate_tlb(pml_addr);
+
+                // memcopy((void *) ScaleDown((uint64_t *)faulting_addr), buff, PAGE_SIZE);
+                // FIXME: call free here instead of decrementing ref_count
+                page_addr->ref_count--;
+            }
+            /*else if(page_addr->ref_count > 1) {
+                uint64_t new_page = (uint64_t)kmalloc();
+                // FIXME: check permissions here
+                set_mapping(pml_addr, faulting_addr, new_page, 7);
+                invalidate_tlb(pml_addr);
+                // FIXME: call free here instead of decrementing ref_count
+                page_addr->ref_count--;
+            }*/
+        }
+        else if ((vma_v->vmtype == TEXT) || (vma_v->vmtype == DATA))
         {
             uint64_t bss_addr = vma_start + vma_v->p_filesz;
             if(faulting_addr<bss_addr)
@@ -60,30 +95,6 @@ page_fault_handler(uint64_t error_code)
                 set_mapping((uint64_t)pml_addr, s_d_a, (uint64_t)phys_addr, 7);
             }
         }
-            // cow case
-        else if (error_code == 7)
-        {
-            // FIXME: do i have to make any preliminary checks?
-            struct page* page_addr = get_page_from_PA(faulting_addr - KERNBASE);
-            uint64_t page_phyaddr = 0;
-            uint64_t proc_pml4 = RunningTask->regs.cr3 + KERNBASE;
-            int present = get_pte_entry(proc_pml4, faulting_addr, &page_phyaddr);
-            if (present & (page_addr->ref_count == 1)) {
-                UNSET_COW(page_phyaddr);
-                SET_WRITE(page_phyaddr);
-                set_mapping(proc_pml4, faulting_addr, page_phyaddr, 0);
-                invalidate_tlb(proc_pml4);
-            }
-            else if(present & (page_addr->ref_count > 1)) {
-                uint64_t new_page = (uint64_t)kmalloc();
-                // FIXME: check permissions here
-                set_mapping(proc_pml4, faulting_addr, new_page, 7);
-                invalidate_tlb(proc_pml4);
-                // FIXME: call free here instead of decrementing ref_count
-                page_addr->ref_count--;
-            }
-        }
-
             //auto growing stack
         else if (vma_v->vmtype == STACK)
         {

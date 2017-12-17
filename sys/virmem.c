@@ -55,19 +55,16 @@ int get_pte_entry(uint64_t pml_addr, uint64_t viraddr, uint64_t *phy_addr) {
         return 0;
     }
     uint64_t pdpte = tmp[pml4_id] + KERNBASE;
-
     tmp = (uint64_t*)SCLDN(pdpte);
     if (!(*(tmp + pdpte_id) & 1)) {
         return 0;
     }
     uint64_t pde = tmp[pdpte_id] + KERNBASE;
-
     tmp = (uint64_t*)SCLDN(pde);
     if (!(*(tmp + pde_id) & 1)) {
         return 0;
     }
     uint64_t pte = tmp[pde_id] + KERNBASE;
-
     tmp = (uint64_t*)SCLDN(pte);
     if (!(*(tmp + pte_id) & 1)) {
         return 0;

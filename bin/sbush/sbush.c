@@ -7,9 +7,10 @@
 #include <strings.h>
 #include <mem.h>
 
+#define INPUT_STRING_BUFFER_LENGTH 100
 int a = 0;
 void dummy();
-#define INPUT_STRING_BUFFER_LENGTH 100
+
 char final_parsed_array[150][150];
 char PS1[150] = "sbush>";
 

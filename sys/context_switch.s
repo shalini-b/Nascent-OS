@@ -46,6 +46,8 @@ contextswitch:
     movq  72(%rsi),%rbx
     pushq %rbx
     popfq
+    movq 80(%rsi), %rbx
+    movq %rbx, %cr3
     #restore rbx
     movq   8(%rsi),%rbx
     ret

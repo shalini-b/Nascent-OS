@@ -2,15 +2,15 @@
 // Created by MOHANGANDHI on 04-12-2017.
 //
 
-#define OUTPUT_BUFFER_MAX_LENGTH 200
+#define OUTPUT_BUFFER_MAX_LENGTH1 200
 #include <stdarg.h>
 #include <stdio.h>
 #include <sys/page.h>
 #include <strings.h>
 #include<syscalls.h>
 #include<printf.h>
-int OUTPUT_BUFFER_LENGTH = 0;
-static  char OUTPUT_BUFFER[OUTPUT_BUFFER_MAX_LENGTH];
+int OUTPUT_BUFFER_LENGTH1 = 0;
+static  char OUTPUT_BUFFER1[OUTPUT_BUFFER_MAX_LENGTH1];
 int putchar(int c);
 int puts(const char *s);
 int printf(const char *format, ...);
@@ -26,24 +26,24 @@ printf(const char *string_to_format, ...)
 {
     va_list args;
     va_start(args, string_to_format);
-    OUTPUT_BUFFER_LENGTH = 0;
-    clear_global_array(OUTPUT_BUFFER);
+    OUTPUT_BUFFER_LENGTH1 = 0;
+    clear_global_array(OUTPUT_BUFFER1);
     for (int i = 0; string_to_format[i] != '\0'; i++)
     {
         if (string_to_format[i] == '%' && string_to_format[i + 1] == 'c')
         {
             int char_buffer;
             char_buffer = va_arg(args, int);
-            OUTPUT_BUFFER[OUTPUT_BUFFER_LENGTH] = (char) char_buffer;
-            OUTPUT_BUFFER_LENGTH++;
+            OUTPUT_BUFFER1[OUTPUT_BUFFER_LENGTH1] = (char) char_buffer;
+            OUTPUT_BUFFER_LENGTH1++;
             i++;
         }
         else if (string_to_format[i] == '%' && string_to_format[i + 1] == 'd')
         {
             int int_buffer, length_of_string;
             int_buffer = va_arg(args, int);
-            length_of_string = num(int_buffer, &OUTPUT_BUFFER[OUTPUT_BUFFER_LENGTH], 10);
-            OUTPUT_BUFFER_LENGTH += length_of_string;
+            length_of_string = num(int_buffer, &OUTPUT_BUFFER1[OUTPUT_BUFFER_LENGTH1], 10);
+            OUTPUT_BUFFER_LENGTH1 += length_of_string;
             i++;
         }
         else if (string_to_format[i] == '%' && string_to_format[i + 1] == 'x')
@@ -52,8 +52,8 @@ printf(const char *string_to_format, ...)
             int length_of_string;
             hex_buffer = va_arg(args, unsigned
                 int);
-            length_of_string = num(hex_buffer, &OUTPUT_BUFFER[OUTPUT_BUFFER_LENGTH], 16);
-            OUTPUT_BUFFER_LENGTH += length_of_string;
+            length_of_string = num(hex_buffer, &OUTPUT_BUFFER1[OUTPUT_BUFFER_LENGTH1], 16);
+            OUTPUT_BUFFER_LENGTH1 += length_of_string;
             i++;
         }
         else if (string_to_format[i] == '%' && string_to_format[i + 1] == 's')
@@ -62,8 +62,8 @@ printf(const char *string_to_format, ...)
             int string_length;
             str_buffer = va_arg(args, char*);
             string_length = len(str_buffer);
-            str_copy(str_buffer, &OUTPUT_BUFFER[OUTPUT_BUFFER_LENGTH]);
-            OUTPUT_BUFFER_LENGTH += string_length;
+            str_copy(str_buffer, &OUTPUT_BUFFER1[OUTPUT_BUFFER_LENGTH1]);
+            OUTPUT_BUFFER_LENGTH1 += string_length;
             i++;
         }
         else if (string_to_format[i] == '%' && string_to_format[i + 1] == 'p')
@@ -72,29 +72,29 @@ printf(const char *string_to_format, ...)
             int length_of_string;
             ptr_buffer = va_arg(args, unsigned
                 long);
-            length_of_string = pointer(ptr_buffer, &OUTPUT_BUFFER[OUTPUT_BUFFER_LENGTH]);
-            OUTPUT_BUFFER_LENGTH += length_of_string;
+            length_of_string = pointer(ptr_buffer, &OUTPUT_BUFFER1[OUTPUT_BUFFER_LENGTH1]);
+            OUTPUT_BUFFER_LENGTH1 += length_of_string;
             i++;
         }
         else
         {
-            OUTPUT_BUFFER[OUTPUT_BUFFER_LENGTH] = string_to_format[i];
-            OUTPUT_BUFFER_LENGTH++;
+            OUTPUT_BUFFER1[OUTPUT_BUFFER_LENGTH1] = string_to_format[i];
+            OUTPUT_BUFFER_LENGTH1++;
         }
 
     }
-    OUTPUT_BUFFER[OUTPUT_BUFFER_LENGTH] = '\0';
+    OUTPUT_BUFFER1[OUTPUT_BUFFER_LENGTH1] = '\0';
     va_end(args);
-    write(1, OUTPUT_BUFFER, OUTPUT_BUFFER_LENGTH + 1);
+    write(1, OUTPUT_BUFFER1, OUTPUT_BUFFER_LENGTH1 + 1);
     return 0;
 }
 
 void
-clear_global_array(char *OUTPUT_BUFFER)
+clear_global_array(char *OUTPUT_BUFFER1)
 {
-    for (int i = 0; i < OUTPUT_BUFFER_MAX_LENGTH; i++)
+    for (int i = 0; i < OUTPUT_BUFFER_MAX_LENGTH1; i++)
     {
-        OUTPUT_BUFFER[i] = '\0';
+        OUTPUT_BUFFER1[i] = '\0';
     }
 }
 

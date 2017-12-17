@@ -37,9 +37,9 @@ syscall_handler(Registers1 *regs)
                 return 0;
             }
             else {
-                return child_pid;
+                regs->rax = child_pid;
             }
-            // break;
+            break;
         }
         case SYS_getpid:
         {

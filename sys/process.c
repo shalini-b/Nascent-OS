@@ -82,7 +82,7 @@ int fork_process() {
                 set_mapping(ppml4, start + i * PAGE_SIZE, page_phyaddr, 0);
                 // CAUTION: check flags again & check if we have to align or not
                 // the flags are already set, so just pass the value to be set in child page table
-                set_mapping(cpml4, start + i * PAGE_SIZE, page_phyaddr, 0);
+                set_mapping(cpml4, start + (i * PAGE_SIZE), page_phyaddr, 0);
                 page_addr->ref_count++;
             }
         }
@@ -305,7 +305,8 @@ void schedule() {
     // Existing task state marked to ready
     RunningTask = fetch_ready_task();
     // FIXME: uncomment this later
-     add_to_task_list(last);
+    add_to_task_list(last);
+    set_tss_rsp((void*)&RunningTask->kstack[509]);
     contextswitch(&last->regs, &RunningTask->regs);
     return;
 }

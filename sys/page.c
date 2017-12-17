@@ -31,8 +31,7 @@ uint64_t read_cr2(){
 }
 
 void invalidate_tlb(uint64_t pml4) {
-    __asm__ __volatile("invlpg (%0)" : : "r" (pml4) : "memory");
-    __asm__ __volatile("movq %%cr3, %%rax; movq %%rax, %%cr3" : : : "rax");
+    __asm__ __volatile("movq %%cr3, %%rax; movq %%rax, %%cr3" ::: "%rax");
 }
 
 // Use this for fetching virtual address of free page
