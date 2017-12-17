@@ -28,7 +28,7 @@ size_t _get_length(const char *str) {
   return len;
 }
 
-char *  memcopy(char *dst, const char *src, size_t len ) {
+char *  memcopy1(char *dst, const char *src, size_t len ) {
 
   for (size_t i = 0; i < len; i++) {
     dst[i] = src[i];
@@ -41,12 +41,12 @@ char *  memcopy(char *dst, const char *src, size_t len ) {
 int execvp(const char *file, char *const argv[], char *const envp[]) {
   
   if (_get_first(file, '/') != NULL) {
-     execve(file, argv, NULL);     
-return -1;
+    execve(file, argv, envp);
+    return -1;
   }
 
-  //char * path = getenv("PATH");
-  char * path = "/bin:/sbin:/home/";
+  char * path = getenv("PATH");
+  // char * path = "/bin:/sbin:/home/";
   if (path == NULL) {
     return -1;
   }
@@ -71,14 +71,14 @@ return -1;
     if (currLength == 0 || currLength > MAX_PATH) {
        continue;
     }
-    char* ptr = memcopy(buffer, curr, currLength);
+    char* ptr = memcopy1(buffer, curr, currLength);
     *ptr = '/';
-    ptr= memcopy(ptr+1, file, fileLength);
+    ptr= memcopy1(ptr+1, file, fileLength);
     *ptr = '\0';
     // call execve here
    if (access(buffer, 0) == 0) {
      found = 1;
-     execve(buffer, argv, NULL);
+     execve(buffer, argv, envp);
    }
   }
   

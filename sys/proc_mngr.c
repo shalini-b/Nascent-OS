@@ -11,11 +11,6 @@
 #include <sys/proc_mngr.h>
 
 struct vma *free_vma_head = NULL;
-struct vma vma_arr[NUM_VMA];
-
-extern uint64_t *kpml_addr;
-
-Task pcb_arr[NUM_PCB];
 Task *free_pcb_head = NULL;
 
 // FIXME: call this somewhere in main??
@@ -140,19 +135,24 @@ fetch_free_pcb()
     // FIXME: check this value for errors
     free_pcb->pid = ((uint64_t) free_pcb - (uint64_t) & pcb_arr[0]) / sizeof(Task);
     kprintf("PID of new process: %d\n", free_pcb->pid);
-    free_pcb->ppid = 0;
+    free_pcb->ppid = -1;
     free_pcb->task_state = READY;
 
     // FIXME: do we need to memset before reuse of PCB?
     // FIXME: memset regs values?
     // memset((void*)free_pcb->kstack, 0, KSTACK_SIZE);
-    // memset((void*)free_pcb->fd_array, 0, MAX_FDS * sizeof(fd));
 
-    // initiate 0, 1, 2 fd for each pcb
-    for (int i = 0; i < 3; i++)
+    // initiate all fds for each pcb
+    for (int i = 0; i < MAX_FDS; i++)
     {
-        free_pcb->fd_array->fdtype = STD_FD;
-        free_pcb->fd_array->alloted = 1;
+        if (i<3) {
+            free_pcb->fd_array->fdtype = STD_FD;
+            free_pcb->fd_array->alloted = 1;
+        }
+        else {
+            free_pcb->fd_array->fdtype = OTHER;
+            free_pcb->fd_array->alloted = 0;
+        }
         free_pcb->fd_array->file_ptr = NULL;
         free_pcb->fd_array->file_sz = 0;
         free_pcb->fd_array->num_bytes_read = 0;
@@ -168,7 +168,6 @@ fetch_free_pcb()
 void
 idle_process()
 {
-//    kprintf("entered the idle process");
     while (1)
     {
         __asm__ __volatile__("sti;");
@@ -178,7 +177,7 @@ idle_process()
     }
 }
 
-void wait1()
+void wait_for_child()
 {
     RunningTask->task_state = WAIT;
     schedule();
@@ -187,18 +186,11 @@ void wait1()
 
 void init_process()
 {
-//    kprintf("entered the idle process");
     while (1)
     {
-        wait1();
-        clean();
+        wait_for_child();
+        clean_child_pcb();
     }
-}
-
-void clean()
-{
-    clean_child_pcb();
-    add_to_task_list(RunningTask);
 }
 
 void clean_child_pcb()
@@ -207,12 +199,13 @@ void clean_child_pcb()
     for (int i = 0; i< NUM_PCB; i++)
     {
         Task child = pcb_arr[i];
-        if(child.ppid==parent_id)
+        if(child.ppid == parent_id)
         {
+            // FIXME: can this be used? It doesnt clear out fds etc
             clean_task_for_exec(&child);
+            append_in_free_list(&child);
         }
     }
-
 }
 
 void
@@ -222,10 +215,19 @@ create_idle_process( )
     IDLE_TASK = fetch_free_pcb();
     IDLE_TASK->task_state = READY;
     IDLE_TASK->regs.rip =(uint64_t)&idle_process;
-//    IDLE_TASK->regs.rsp = ((uint64_t) page_alloc()) + (0x1000);
     str_copy("Idle", IDLE_TASK->filename);
     add_to_task_list(IDLE_TASK);
-    // FIXME: add process to list here
+}
+
+void
+create_init_process( )
+{
+    // CAUTION - This is a kernel process
+    INIT_TASK = fetch_free_pcb();
+    INIT_TASK->task_state = READY;
+    INIT_TASK->regs.rip =(uint64_t)&init_process;
+    str_copy("Init", INIT_TASK->filename);
+    add_to_task_list(INIT_TASK);
 }
 
 void
@@ -259,17 +261,6 @@ append_in_free_list(Task *task)
 void
 add_to_task_list(Task *task)
 {
-    // If idle process, dont add
-    if (task->task_state == IDLE)
-    {
-        return;
-    }
-    // FIXME: Clean and put it at the end??
-    if (task->task_state == EXIT)
-    {
-        append_in_free_list(task);
-        return;
-    }
     // Mark a running task as ready if it was running
     if (task->task_state == RUNNING)
     {
@@ -306,6 +297,7 @@ wake_up_task()
         }
         task = task->next;
     }
+    return;
 }
 
 Task *
@@ -327,9 +319,7 @@ fetch_ready_task()
 
     if (next_task == NULL)
     {
-        // FIXME: Change this back. HACK!!!
-        next_task = RunningTask;
-        // next_task = IDLE_TASK;
+        next_task = IDLE_TASK;
     }
     else
     {

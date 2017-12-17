@@ -10,8 +10,6 @@
 // FIXME: get corresponding sys file
 #include <strings.h>
 
-extern uint64_t *kpml_addr;
-
 int is_elf_format(Elf64_Ehdr *elf_header)
 {
     if (elf_header->e_ident[0] == 127 && elf_header->e_ident[1] == 'E' && elf_header->e_ident[2] == 'L'

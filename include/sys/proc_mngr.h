@@ -6,8 +6,15 @@
 
 Task* overall_task_list;
 
+extern struct vma *free_vma_head;
+struct vma vma_arr[NUM_VMA];
+
+Task pcb_arr[NUM_PCB];
+extern Task *free_pcb_head;
+
 // Idle task: This will run only when there is no READY task to be run
 Task * IDLE_TASK;
+Task * INIT_TASK;
 
 void initialise_vma();
 struct vma * fetch_free_vma();
@@ -19,13 +26,11 @@ void create_idle_process();
 void idle_process();
 void add_to_task_list(Task* task);
 Task * fetch_ready_task();
-void
-wake_up_task();
-void
-idle_process();
-void wait1();
+void wake_up_task();
+void idle_process();
+void wait_for_child();
 void init_process();
-void clean();
 void clean_child_pcb();
+void create_init_process();
 
 #endif

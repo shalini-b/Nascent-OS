@@ -154,28 +154,32 @@ read_s(int fd, char *buffer, int num_bytes)
 
         schedule_terminal_task(buffer,num_bytes);
     }
-    if (file_des_validator(fd) != 0)
-    {
-        kprintf("Invalid fd\n");
-        return 0;
-    }
-    int file_sz = RunningTask->fd_array[fd].file_sz;
-    int num_bytes_read = RunningTask->fd_array[fd].num_bytes_read;
-    int num_bytes_remaining = file_sz - num_bytes_read;
-    void *file_ptr = RunningTask->fd_array[fd].file_ptr;
-    if (num_bytes_read < file_sz)
-    {
-        memcopy(file_ptr, buffer, MIN(num_bytes, num_bytes_remaining));
-        char *temp_fp = (char *) RunningTask->fd_array[fd].file_ptr;
-        temp_fp += num_bytes;
-        RunningTask->fd_array[fd].file_ptr = (void *) temp_fp;
-        RunningTask->fd_array[fd].num_bytes_read += num_bytes;
-        return MIN(num_bytes, num_bytes_remaining);
-    }
     else
     {
-        return 0;
+        if (file_des_validator(fd) != 0)
+        {
+            kprintf("Invalid fd\n");
+            return 0;
+        }
+        int file_sz = RunningTask->fd_array[fd].file_sz;
+        int num_bytes_read = RunningTask->fd_array[fd].num_bytes_read;
+        int num_bytes_remaining = file_sz - num_bytes_read;
+        void *file_ptr = RunningTask->fd_array[fd].file_ptr;
+        if (num_bytes_read < file_sz)
+        {
+            memcopy(file_ptr, buffer, MIN(num_bytes, num_bytes_remaining));
+            char *temp_fp = (char *) RunningTask->fd_array[fd].file_ptr;
+            temp_fp += num_bytes;
+            RunningTask->fd_array[fd].file_ptr = (void *) temp_fp;
+            RunningTask->fd_array[fd].num_bytes_read += num_bytes;
+            return MIN(num_bytes, num_bytes_remaining);
+        }
+        else
+        {
+            return 0;
+        }
     }
+    return 0;
 }
 
 int

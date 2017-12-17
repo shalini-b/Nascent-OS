@@ -1,9 +1,9 @@
 #include <sys/kprintf.h>
 #include <sys/idt.h>
 #include <sys/idt.h>
-#include <sys/pit.h>
 #include <sys/process.h>
 #include <sys/proc_mngr.h>
+
 void timer_int()
 {
     static int timer_count = 0;
@@ -13,23 +13,20 @@ void timer_int()
         time_from_reboot++;
         print_time(time_from_reboot);
 
-        if(RunningTask->sleep_sec !=0)
+        // Iterate over the complete running task list
+        // and decrement the sleep secs for waiting tasks
+        Task* p = overall_task_list;
+        while(p!=NULL)
         {
-            RunningTask->sleep_sec--;
-        }
-        else
-        {
-            Task* p = overall_task_list;
-            while(p!=NULL)
+            if(p->task_state == SLEEP)
             {
-                if(p->task_state==SLEEP)
+                p->sleep_sec--;
+                if (p->sleep_sec == 0)
                 {
-                    p->task_state = READY;
+                   p->task_state = READY;
                 }
-                p=p->next;
             }
-            RunningTask->sleep_sec = 0;
-
+            p = p->next;
         }
     }
     timer_count++;
