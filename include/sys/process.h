@@ -64,7 +64,8 @@ typedef struct {
 
 
 typedef enum {
-    STD_FD = 1
+    STD_FD = 1,
+    OTHER = 2
 } FD_TYPE;
 
 
@@ -123,12 +124,13 @@ void init_tasks1();
 
 
 int fork_process();
-void copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[]);
+uint64_t *copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[]);
 void report_error(char* msg);
 void clean_task_for_exec(Task *cur_task);
 void sys_execvpe(char *file, char *argv[], char *envp[]);
 void schedule();
 void return_to_user();
+void sys_exit();
 
 
 #endif

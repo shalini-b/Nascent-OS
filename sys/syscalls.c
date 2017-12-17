@@ -5,7 +5,6 @@
 #include<sys/types.h>
 #include <sys/process.h>
 #include <sys/proc_mngr.h>
-#include <sys/pit.h>
 
 
 uint64_t
@@ -32,7 +31,10 @@ syscall_handler(Registers1 *regs)
 
             if (RunningTask->kstack[511] == 10101) {
                 RunningTask->kstack[511] = 0;
-                 return 0;
+                for (int i=0; i<18; i++) {
+                    __asm__ volatile("popq %%rax":::"%rax");
+                }
+                return 0;
             }
             else {
                 return child_pid;
@@ -82,18 +84,11 @@ syscall_handler(Registers1 *regs)
         case SYS_wait_s:
         {
             RunningTask->task_state = WAIT;
-            schedule();
             break;
         }
         case SYS_exit:
         {
-            RunningTask->task_state = ZOMBIE;
-            Task* p_t = RunningTask->parent_task;
-            if(p_t->task_state == WAIT)
-            {
-                p_t->task_state=READY;
-                schedule();
-            }
+            sys_exit();
             break;
         }
         case SYS_ps:
@@ -109,9 +104,7 @@ syscall_handler(Registers1 *regs)
         case SYS_sleep_s:
         {
             RunningTask->sleep_sec = (int)regs->rdi ;
-            Task* p = RunningTask;
-            p->task_state = SLEEP;
-            schedule();
+            RunningTask->task_state = SLEEP;
             break;
         }
         default: {

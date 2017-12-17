@@ -11,7 +11,7 @@ sys_int:
     pushq %r13
     pushq %r12
     pushq %rbp
-    pushq %rsp
+    pushq %rbp
     pushq %rdi
     pushq %rsi
     pushq %rdx
@@ -26,7 +26,7 @@ sys_int:
     popq %rdx
     popq %rsi
     popq %rdi
-    popq %rsp
+    popq %rbp
     popq %rbp
     popq %r12
     popq %r13

@@ -4,6 +4,8 @@
 #include <sys/types.h>
 #include <sys/page.h>
 
+extern uint64_t *kpml_addr;
+
 void init_mem(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end);
 void create_vir_phy_mapping(uint64_t *pml_addr);
 uint64_t create_dir_table(uint64_t vir_addr);

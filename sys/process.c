@@ -79,6 +79,7 @@ int fork_process() {
                 // FIXME: only set COW for writeable pages?
                 UNSET_WRITE(page_phyaddr);
                 SET_COW(page_phyaddr);
+                set_mapping(ppml4, start + i * PAGE_SIZE, page_phyaddr, 0);
                 // CAUTION: check flags again & check if we have to align or not
                 // the flags are already set, so just pass the value to be set in child page table
                 set_mapping(cpml4, start + i * PAGE_SIZE, page_phyaddr, 0);
@@ -89,28 +90,29 @@ int fork_process() {
         parent_vma = parent_vma->next;
     }
     invalidate_tlb((uint64_t) ppml4);
+    // invalidate_tlb((uint64_t) cpml4);
     
     // copy all contents of kstack to child
-    memcpy_uint(&parent_pcb->kstack[0], &child_pcb->kstack[0], KSTACK_SIZE);
+    memcpy_uint(&(parent_pcb->kstack[0]), &(child_pcb->kstack[0]), KSTACK_SIZE);
     // Keep a magic number at the 511th entry of child kstack to recognise child in syscall handler
     child_pcb->kstack[511] = 10101;
+    add_to_task_list(child_pcb);
     uint64_t cur_rsp;
     __asm__ __volatile__ (
         "movq %%rsp, %0 \n\t"
         :"=r" (cur_rsp)
         ::);
     // TODO: update child kernel stack for RIP & RSP registers
-    child_pcb->regs.rip = *((uint64_t *)cur_rsp + 15);
-    child_pcb->regs.krsp = (uint64_t) ((&child_pcb->kstack[509]) - 20);
+    child_pcb->regs.rip = *((uint64_t *)cur_rsp + 17);
+    child_pcb->regs.krsp = (uint64_t) (((uint64_t)(&(child_pcb->kstack[509]))) - (uint64_t)(((uint64_t)&(RunningTask->kstack[509])) - cur_rsp) );
 
     // Add child to task list
-    add_to_task_list(child_pcb);
 
     // parent returns this
     return child_pcb->pid;
 }
 
-void copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[])
+uint64_t *copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[])
 {
     // FIXME: order is envp, argv, 0, envp pointers, 0, argv pointers, argc
     uint64_t *argv[10], *argv1[10];
@@ -130,7 +132,7 @@ void copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[])
     if (envp) {
         for (int i = num_envp - 1; i >= 0; i--) {
             int arg_len = len(envp[i]) + 1;
-            user_stack = (uint64_t * )((void *) user_stack - arg_len);
+            user_stack = user_stack - arg_len;
             memcopy((void *)envp[i], (void *) user_stack, arg_len);
             argv1[i] = user_stack;
         }
@@ -167,13 +169,14 @@ void copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[])
     // Store the arg count
     user_stack--;
     *user_stack = (uint64_t) argc;
+    return user_stack;
 }
 
 void sys_execvpe(char *filename, char *argv[], char *envp[])
 {
     // FIXME: use kmalloc or page_alloc?
     uint64_t stack_base = (uint64_t)page_alloc();
-    uint64_t * stack_start = (uint64_t *)(stack_base + PAGE_SIZE);
+    uint64_t stack_start = (stack_base + PAGE_SIZE);
 
     // NOTE - memset pages given to stack & heap
     // reorganise arguments
@@ -186,7 +189,7 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
         }
     }
     // copy args to stack
-    copy_arg_to_stack(stack_start, argc, envp);
+    stack_start = (uint64_t) copy_arg_to_stack((uint64_t *)stack_start, argc, envp);
 
     if (is_first_proc != 1) {
         // Anything else to be retained? fd_array??
@@ -203,10 +206,9 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
     // Set RIP & RSP for new process
     RunningTask->regs.rip = bin_viradd;
 
-
     // copy new stack to RunningTask's stack vma
-    uint64_t start_viraddr = (uint64_t) USTACK;
-    uint64_t end_address = (uint64_t) (USTACK - USTACK_SIZE);
+    uint64_t start_viraddr = (uint64_t) (USTACK - USTACK_SIZE);
+    uint64_t end_address = (uint64_t) USTACK;
     struct vma* tmp = RunningTask->task_mm->vma_head;
     while(tmp->next != NULL) {
         tmp = tmp->next;
@@ -247,11 +249,9 @@ void clean_task_for_exec(Task *cur_task) {
     cur_task->prev        = NULL;
     cur_task->parent_task      = NULL;
     cur_task->task_state = READY;
-    // FIXME: memset filename??
 
-    // cur_task->child_nodehead   = NULL;
-    // cur_task->sib    = NULL;
-    // cur_task->num_child = 0;
+    // memset filename
+    memset((void*)cur_task->filename, 0, 75);
 
     // FIXME: clean regs??
 
@@ -261,12 +261,20 @@ void clean_task_for_exec(Task *cur_task) {
     cur_task->task_mm->begin_stack = 0;
     // CAUTION - initiate others
 
-    // clean * initiate the std fds
-    memset((void*)cur_task->fd_array, 0, sizeof(fd) * MAX_FDS);
-    // initiate 0, 1, 2 fd for each pcb
-    for (int i = 0; i < 3; i++) {
-        cur_task->fd_array->fdtype = STD_FD;
-        cur_task->fd_array->alloted= 1;
+    // FIXME: clean & initiate the std fds
+    // memset((void*)cur_task->fd_array, 0, sizeof(fd) * MAX_FDS);
+
+    // re-initiate all fds for each pcb
+    for (int i = 0; i < MAX_FDS; i++)
+    {
+        if (i<3) {
+            cur_task->fd_array->fdtype = STD_FD;
+            cur_task->fd_array->alloted = 1;
+        }
+        else {
+            cur_task->fd_array->fdtype = OTHER;
+            cur_task->fd_array->alloted = 0;
+        }
         cur_task->fd_array->file_ptr = NULL;
         cur_task->fd_array->file_sz = 0;
         cur_task->fd_array->num_bytes_read = 0;
@@ -275,6 +283,12 @@ void clean_task_for_exec(Task *cur_task) {
     }
     // clean kstack
     memset((void*)cur_task->kstack, 0, KSTACK_SIZE);
+
+    // FIXME: deep clean the page tables & vma & mm structs
+    // For now, just clear out the PML table
+    uint64_t * proc_pml = (uint64_t *) (cur_task->regs.cr3 + KERNBASE);
+    memset((void*)proc_pml, 0, PAGE_SIZE);
+    proc_pml[511] = kpml_addr[511];
 }
 
 void report_error(char* msg)
@@ -293,6 +307,28 @@ void schedule() {
     // FIXME: uncomment this later
      add_to_task_list(last);
     contextswitch(&last->regs, &RunningTask->regs);
+    return;
 }
 
+void sys_exit() {
 
+    RunningTask->task_state = ZOMBIE;
+
+    // Wake up the parent of this task if it was waiting
+    Task* parent = RunningTask->parent_task;
+    if(parent->task_state == WAIT)
+    {
+        parent->task_state=READY;
+    }
+
+    // Mark init as parent for all children of this Running Task
+    // FIXME: Irrespective of their task state?
+    for (int i = 0; i < NUM_PCB; i++) {
+        Task tmp = pcb_arr[i];
+
+        if(tmp.ppid == RunningTask->pid)
+        {
+            tmp.ppid = INIT_TASK->pid;
+        }
+    }
+}

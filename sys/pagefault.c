@@ -8,26 +8,22 @@
 #include<sys/virmem.h>
 #define MIN(a, b)  (a<b)? a : b
 #define MAX(a, b)  (a>b)? a : b
+
 void
 page_fault_handler(uint64_t error_code)
 {
-//    kprintf("in 14\n");
-//    kprintf("Error code to page fault handler %p\n", error_code);
     uint64_t faulting_addr = read_cr2();
     kprintf("Faulting address : CR2 value %p\n", faulting_addr);
-//    print_status(error_code);
+
     struct vma *vma_v = check_vma(faulting_addr);
     if (vma_v != NULL)
     {
-//        kprintf("vma type is :: %d",vma_v->vmtype);
-
         //elf case lazy loading
         uint64_t vma_start = vma_v->start_addr;
         uint64_t pml_addr = (uint64_t)RunningTask->regs.cr3 + KERNBASE;
         if ((vma_v->vmtype == TEXT) || (vma_v->vmtype == DATA))
         {
-//            kprintf("page fault :: in elf vma");
-            uint64_t bss_addr = vma_start+vma_v->p_filesz;
+            uint64_t bss_addr = vma_start + vma_v->p_filesz;
             if(faulting_addr<bss_addr)
             {
                 uint64_t phys_addr = (uint64_t) kmalloc();
@@ -43,9 +39,6 @@ page_fault_handler(uint64_t error_code)
                 }
                 else if(s_d_a<=vma_start)
                 {
-//                    kprintf("2present file segment %p",vma_v->tarfs_base);
-//                    kprintf("2present file segment %p",vma_start);
-//                    kprintf("2present file segment %d",MIN(vma_v->p_filesz,4*1024-(vma_start-s_d_a)));
                     memcopy((void *)(vma_v->tarfs_base), (void *) vma_start, MIN(vma_v->p_filesz,4*1024-vma_start));
                 }
                     //for upper segment
@@ -58,7 +51,6 @@ page_fault_handler(uint64_t error_code)
                     memcopy((void *)(vma_v->tarfs_base+offset), (void *) s_d_a, 4*1024);
                 }
 //                memcopy((void *)present_file_segment, (void *) start_viraddr, (uint64_t)program_header->p_filesz);
-
             }
                 //bss case
             else
@@ -68,20 +60,28 @@ page_fault_handler(uint64_t error_code)
                 set_mapping((uint64_t)pml_addr, s_d_a, (uint64_t)phys_addr, 7);
             }
         }
-
             // cow case
         else if (error_code == 7)
         {
-            if (1)
-            {
-                kprintf("page fault :: COW");
-
+            // FIXME: do i have to make any preliminary checks?
+            struct page* page_addr = get_page_from_PA(faulting_addr - KERNBASE);
+            uint64_t page_phyaddr = 0;
+            uint64_t proc_pml4 = RunningTask->regs.cr3 + KERNBASE;
+            int present = get_pte_entry(proc_pml4, faulting_addr, &page_phyaddr);
+            if (present & (page_addr->ref_count == 1)) {
+                UNSET_COW(page_phyaddr);
+                SET_WRITE(page_phyaddr);
+                set_mapping(proc_pml4, faulting_addr, page_phyaddr, 0);
+                invalidate_tlb(proc_pml4);
             }
-            else
-            {
-                kprintf("Invalid memory access");
+            else if(present & (page_addr->ref_count > 1)) {
+                uint64_t new_page = (uint64_t)kmalloc();
+                // FIXME: check permissions here
+                set_mapping(proc_pml4, faulting_addr, new_page, 7);
+                invalidate_tlb(proc_pml4);
+                // FIXME: call free here instead of decrementing ref_count
+                page_addr->ref_count--;
             }
-
         }
 
             //auto growing stack
@@ -109,8 +109,6 @@ page_fault_handler(uint64_t error_code)
 void
 print_status(uint64_t e_c)
 {
-
-
     kprintf("in 14\n");
     kprintf("Error code to page fault handler %p\n", e_c);
     uint64_t faulting_addr = read_cr2();
