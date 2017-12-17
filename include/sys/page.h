@@ -45,7 +45,7 @@ void test_mapping(uint64_t *pml_addr);
 struct page *page_alloc();
 void *kmalloc();
 uint64_t read_cr2();
-void invalidate_tlb(uint64_t pml4);
+void invalidate_tlb();
 struct page * get_page_from_PA(uint64_t phyaddr);
 
 #endif

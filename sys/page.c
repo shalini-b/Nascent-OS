@@ -30,7 +30,7 @@ uint64_t read_cr2(){
  return val;
 }
 
-void invalidate_tlb(uint64_t pml4) {
+void invalidate_tlb() {
     __asm__ __volatile("movq %%cr3, %%rax; movq %%rax, %%cr3" ::: "%rax");
 }
 
