@@ -46,4 +46,8 @@ int file_exists(char* f_name);
 uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[]);
 void tarfs_test();
 int file_des_validator(int fd);
+void
+set_cwd(char *input_buffer);
+void
+fetch_cwd(char *output_buffer);
 #endif

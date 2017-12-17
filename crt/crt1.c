@@ -29,7 +29,7 @@ void _start(void) {
   // call main() and exit() here
 
   long resp;
-//  int a;
+  int a;
    __asm__ __volatile__(
                             "movq %%rsp, %0"
                              :"=r" (resp)
@@ -38,7 +38,7 @@ void _start(void) {
     a=*((int*)(resp+8));
     char** b=(char**)(resp+16);
     char** c=(char**)(a*8+8+resp+16);
-    cache_env(c);
+//    cache_env(c);
     int exit_code = main(a,b,c);
 //    int exit_code =  main();
     exit(exit_code);
