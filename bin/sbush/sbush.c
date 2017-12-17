@@ -44,7 +44,6 @@ run_command(char command_array[][150], int args_num){
         // Child process - Execute command
         // FIXME: do error handling
         printf("I am child\n");
-        while(1);
         execvp(args[0], args, NULL);
         //exit(0);
     }
@@ -199,7 +198,7 @@ main(int argc, char *argv[], char *envp[])
         clear_2darray(final_parsed_array);
 
         // Input command
-        if(argc==1)
+	    if(argc==1)
         {
             printf("%s", PS1);
             gets(string_buffer_array);
@@ -290,7 +289,7 @@ main(int argc, char *argv[], char *envp[])
 
     if (pid == 0) {
         printf("Hello! I am child");
-        execvp("/bin/sbush", NULL, NULL);
+        execvp("/bin/sbush", NULL, NULL);   
 	    exit(0);
     }
     else{
