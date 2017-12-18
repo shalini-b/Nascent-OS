@@ -31,30 +31,21 @@ page_fault_handler(uint64_t error_code)
             if (present && (page_addr->ref_count == 1)) {
                 UNSET_COW(page_phyaddr);
                 SET_WRITE(page_phyaddr);
-                set_mapping(pml_addr, faulting_addr, page_phyaddr, 0);
+                set_mapping(pml_addr, faulting_addr, page_phyaddr, 1);
                 invalidate_tlb(pml_addr);
             }
             else if(present && (page_addr->ref_count > 1)) {
                 void * buff_page = page_alloc();
                 memcopy((void *) ScaleDown((uint64_t *)faulting_addr), buff_page, PAGE_SIZE);
 
-                // uint64_t new_page = (uint64_t)kmalloc();
                 // FIXME: check permissions here
                 set_mapping(pml_addr, faulting_addr, ((uint64_t)buff_page - KERNBASE), 7);
                 invalidate_tlb(pml_addr);
 
-                // memcopy((void *) ScaleDown((uint64_t *)faulting_addr), buff, PAGE_SIZE);
                 // FIXME: call free here instead of decrementing ref_count
                 page_addr->ref_count--;
             }
-            /*else if(page_addr->ref_count > 1) {
-                uint64_t new_page = (uint64_t)kmalloc();
-                // FIXME: check permissions here
-                set_mapping(pml_addr, faulting_addr, new_page, 7);
-                invalidate_tlb(pml_addr);
-                // FIXME: call free here instead of decrementing ref_count
-                page_addr->ref_count--;
-            }*/
+            // FIXME: if page not present but u get page fault
         }
         else if ((vma_v->vmtype == TEXT) || (vma_v->vmtype == DATA))
         {
@@ -98,8 +89,9 @@ page_fault_handler(uint64_t error_code)
             //auto growing stack
         else if (vma_v->vmtype == STACK)
         {
-            kprintf("page fault :: stack");
-
+            uint64_t phys_addr = (uint64_t) kmalloc();
+            uint64_t s_d_a =  (uint64_t)ScaleDown((uint64_t*)faulting_addr);
+            set_mapping((uint64_t)pml_addr, s_d_a, (uint64_t)phys_addr, 7);
         }
 
         else

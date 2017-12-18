@@ -180,14 +180,15 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
 
     // NOTE - memset pages given to stack & heap
     // reorganise arguments
-    int argc = 1;
+    int argc = 0;
     str_copy(filename, args[0]);
     if (argv) {
-        while (argv[argc]) {
+        while (argv[argc] != NULL) {
             str_copy(argv[argc], args[argc+1]);
             argc++;
         }
     }
+    argc++;
     // copy args to stack
     stack_start = (uint64_t) copy_arg_to_stack((uint64_t *)stack_start, argc, envp);
 
@@ -268,18 +269,18 @@ void clean_task_for_exec(Task *cur_task) {
     for (int i = 0; i < MAX_FDS; i++)
     {
         if (i<3) {
-            cur_task->fd_array->fdtype = STD_FD;
-            cur_task->fd_array->alloted = 1;
+            cur_task->fd_array[i].fdtype = STD_FD;
+            cur_task->fd_array[i].alloted = 1;
         }
         else {
-            cur_task->fd_array->fdtype = OTHER;
-            cur_task->fd_array->alloted = 0;
+            cur_task->fd_array[i].fdtype = OTHER;
+            cur_task->fd_array[i].alloted = 0;
         }
-        cur_task->fd_array->file_ptr = NULL;
-        cur_task->fd_array->file_sz = 0;
-        cur_task->fd_array->num_bytes_read = 0;
-        cur_task->fd_array->is_dir = 0;
-        cur_task->fd_array->last_matched_header = NULL;
+        cur_task->fd_array[i].file_ptr = NULL;
+        cur_task->fd_array[i].file_sz = 0;
+        cur_task->fd_array[i].num_bytes_read = 0;
+        cur_task->fd_array[i].is_dir = 0;
+        cur_task->fd_array[i].last_matched_header = NULL;
     }
     // clean kstack
     memset((void*)cur_task->kstack, 0, KSTACK_SIZE);
@@ -287,8 +288,7 @@ void clean_task_for_exec(Task *cur_task) {
     // FIXME: deep clean the page tables & vma & mm structs
     // For now, just clear out the PML table
     uint64_t * proc_pml = (uint64_t *) (cur_task->regs.cr3 + KERNBASE);
-    memset((void*)proc_pml, 0, PAGE_SIZE);
-    proc_pml[511] = kpml_addr[511];
+    memset((void*)proc_pml, 0, 511*8);
 }
 
 void report_error(char* msg)
@@ -317,9 +317,10 @@ void sys_exit() {
 
     // Wake up the parent of this task if it was waiting
     Task* parent = RunningTask->parent_task;
-    if(parent->task_state == WAIT)
-    {
-        parent->task_state=READY;
+    if (parent != NULL) {
+        if (parent->task_state == WAIT) {
+            parent->task_state = READY;
+        }
     }
 
     // Mark init as parent for all children of this Running Task

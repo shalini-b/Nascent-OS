@@ -10,6 +10,7 @@
 #include <sys/test.h>
 #include <sys/proc_mngr.h>
 #include <sys/process.h>
+#include <sys/strings.h>
 
 #define INITIAL_STACK_SIZE 4096
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
@@ -67,7 +68,22 @@ start(uint32_t *modulep, void *physbase, void *physfree)
         RunningTask = fetch_free_pcb();
 //        add_to_task_list(RunningTask);
         RunningTask->task_state = RUNNING;
-        sys_execvpe("bin/sbush", NULL, NULL);
+        char a[50][50];
+        char *b[50];
+        for(int j =0;j<50;j++){
+            b[j] = &a[j][0];
+        }
+        b[1] = NULL;
+        str_copy("10",(char*)b[0]);
+
+//        b[0][0] = 'a';
+//        b[0][1] = 'b';
+//        b[0][2] = 'c';
+//        b[0][3] = 'd';
+//        b[0][4] = '\0';
+
+        //sys_execvpe("bin/echo", b, NULL);
+        sys_execvpe("bin/ps", NULL, NULL);
     }
 
     // init_tasks1();

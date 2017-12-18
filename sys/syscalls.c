@@ -93,12 +93,7 @@ syscall_handler(Registers1 *regs)
         }
         case SYS_ps:
         {
-            Task* p = overall_task_list;
-            while(p!=NULL)
-            {
-                kprintf("%d %s %d",p->pid,p->filename,p->task_state);
-                p=p->next;
-            }
+            sys_ps();
             break;
         }
         case SYS_sleep_s:
@@ -122,6 +117,10 @@ syscall_handler(Registers1 *regs)
             fetch_cwd((char *)regs->rdi);
             break;
         }
+        case SYS_execve: {
+            sys_execvpe((char *)regs->rdi,(char **)regs->rsi,(char **)regs->rdx);
+            break;
+        }
         default: {
             // FIXME: check this
             regs->rax = 0;
@@ -141,3 +140,14 @@ write_to_console(uint64_t fd, char *buffer, uint64_t count)
     return 0;
 }
 
+void sys_ps() {
+    Task* p = overall_task_list;
+    char *a[7] = {"RUNNING", "READY"};
+    while(p!=NULL)
+    {
+        kprintf("PID   PROCESS      MODE \n");
+        kprintf("%d     %s           %s\n",p->pid,p->filename,(char*) a[p->task_state]);
+        p=p->next;
+    }
+    kprintf("%d     %s         %s\n",RunningTask->pid,RunningTask->filename, (char*) a[RunningTask->task_state]);
+}

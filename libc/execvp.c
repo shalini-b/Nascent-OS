@@ -2,7 +2,6 @@
 #include <syscalls.h>
 #include <stdio.h>
 #include <types.h>
-#include <unistd.h>
 #include <mem.h>
 #include <strings.h>
 
@@ -56,7 +55,7 @@ execvp(const char *file, char *const argv[], char *const envp[])
 {
 
     //read file
-    int BUFF_SIZE = 30;
+    /*int BUFF_SIZE = 30;
     char buff[BUFF_SIZE];
     int fd;
     fd = open((char *) file, 1);
@@ -76,10 +75,10 @@ execvp(const char *file, char *const argv[], char *const envp[])
         }
     }
     char a[50][50];
-    str_copy("bin/sbush",a[0]);
+    str_copy("bin/sbush",a[0]); */
     if (_get_first(file, '/') != NULL)
     {
-        execve(file, (char**)a, envp);
+        execve(file, argv, envp);
         return -1;
     }
 

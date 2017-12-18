@@ -70,8 +70,8 @@ keyboard_intr()
             {0, 0},
             {' ', ' '},
         };
-//    kprintf("%d\n",keyboard_value);
-    if(keyboard_value==28)
+    //kprintf("%d\n",keyboard_value);
+    if(keyboard_value==28 || keyboard_value ==14)
     {
         terminal_handler('\n');
     }

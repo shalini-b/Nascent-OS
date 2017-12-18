@@ -23,19 +23,10 @@ cat(char *file_name)
     close(fd);
 }
 
-//int
-//main(int argc, char *argv[], char *envp[])
-//{
-////    cat(argv[1]);
-//    cat("/test1/abc.txt");
-//    return 0;
-//}
-
-
 int
-main()
+main(int argc, char *argv[], char *envp[])
 {
-//    cat(argv[1]);
-    cat("/test1/abc.txt");
+    cat(argv[1]);
     return 0;
 }
+

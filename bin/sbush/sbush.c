@@ -213,7 +213,7 @@ main(int argc, char *argv[], char *envp[])
         }*/
 
         int cnt = split_and_count(string_buffer_array, ' ', final_parsed_array);
-        command_handler(final_parsed_array, cnt);
+        command_handler(final_parsed_array, cnt+1);
     }
     return 0;
 }

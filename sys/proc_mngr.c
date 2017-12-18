@@ -146,18 +146,18 @@ fetch_free_pcb()
     for (int i = 0; i < MAX_FDS; i++)
     {
         if (i<3) {
-            free_pcb->fd_array->fdtype = STD_FD;
-            free_pcb->fd_array->alloted = 1;
+            free_pcb->fd_array[i].fdtype = STD_FD;
+            free_pcb->fd_array[i].alloted = 1;
         }
         else {
-            free_pcb->fd_array->fdtype = OTHER;
-            free_pcb->fd_array->alloted = 0;
+            free_pcb->fd_array[i].fdtype = OTHER;
+            free_pcb->fd_array[i].alloted = 0;
         }
-        free_pcb->fd_array->file_ptr = NULL;
-        free_pcb->fd_array->file_sz = 0;
-        free_pcb->fd_array->num_bytes_read = 0;
-        free_pcb->fd_array->is_dir = 0;
-        free_pcb->fd_array->last_matched_header = NULL;
+        free_pcb->fd_array[i].file_ptr = NULL;
+        free_pcb->fd_array[i].file_sz = 0;
+        free_pcb->fd_array[i].num_bytes_read = 0;
+        free_pcb->fd_array[i].is_dir = 0;
+        free_pcb->fd_array[i].last_matched_header = NULL;
     }
 
     return free_pcb;

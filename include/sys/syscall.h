@@ -11,6 +11,7 @@ uint64_t
 syscall_handler(Registers1 *regs);
 uint64_t
 write_to_console(uint64_t fd, char *buffer, uint64_t count);
+void sys_ps();
 
 #define SYS_open        2
 #define SYS_write       1
@@ -29,6 +30,7 @@ write_to_console(uint64_t fd, char *buffer, uint64_t count);
 #define SYS_kill_s 76
 #define SYS_chdir_s 50
 #define SYS_getcwd_s 51
+#define SYS_execve      59
 
 
 #endif

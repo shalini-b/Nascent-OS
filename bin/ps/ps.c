@@ -13,6 +13,6 @@ ps1()
 int
 main(int argc, char *argv[], char *envp[])
 {
-    ps1(argv[1]);
+    ps1();
     return 0;
 }
