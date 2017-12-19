@@ -4,15 +4,9 @@
 #include<stdio.h>
 #include <syscalls.h>
 
-void
-ps1()
-{
-    ps();
-}
-
 int
 main(int argc, char *argv[], char *envp[])
 {
-    ps1();
+    ps();
     return 0;
 }

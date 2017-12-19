@@ -12,10 +12,8 @@ int w_buff_ptr = 0;
 void
 terminal_handler(char c)
 {
-//    kprintf("in terminal handler");
     if (c == '\n')
     {
-//        kprintf("inside newline handling");
         terminal_line_count++;
         wake_up_task();
     }

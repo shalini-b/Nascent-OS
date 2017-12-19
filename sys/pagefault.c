@@ -13,12 +13,10 @@ void
 page_fault_handler(uint64_t error_code)
 {
     uint64_t faulting_addr = read_cr2();
-    kprintf("Faulting address : CR2 value %p\n", faulting_addr);
-
     struct vma *vma_v = check_vma(faulting_addr);
     if (vma_v != NULL)
     {
-        //elf case lazy loading
+        // FIXME: if page not present but u get page fault
         uint64_t vma_start = vma_v->start_addr;
         uint64_t pml_addr = (uint64_t)RunningTask->regs.cr3 + KERNBASE;
         // cow case
@@ -45,8 +43,8 @@ page_fault_handler(uint64_t error_code)
                 // FIXME: call free here instead of decrementing ref_count
                 page_addr->ref_count--;
             }
-            // FIXME: if page not present but u get page fault
         }
+            //elf case lazy loading
         else if ((vma_v->vmtype == TEXT) || (vma_v->vmtype == DATA))
         {
             uint64_t bss_addr = vma_start + vma_v->p_filesz;
@@ -76,7 +74,6 @@ page_fault_handler(uint64_t error_code)
                 {
                     memcopy((void *)(vma_v->tarfs_base+offset), (void *) s_d_a, 4*1024);
                 }
-//                memcopy((void *)present_file_segment, (void *) start_viraddr, (uint64_t)program_header->p_filesz);
             }
                 //bss case
             else
@@ -96,26 +93,24 @@ page_fault_handler(uint64_t error_code)
 
         else
         {
-            kprintf("None of the cases");
+            kprintf("Generic Page fault");
         }
 
     }
     else
     {
-        kprintf("Segmentation Fault");
+        kprintf("Segmentation Fault: \n");
         print_status(error_code);
-        while (1);
+        // FIXME: prevent infinitely printing this
+        // exit here?
     }
+    // FIXME: is this needed?
 //    outb(0x20, 0x20);
 }
 
 void
 print_status(uint64_t e_c)
 {
-    kprintf("in 14\n");
-    kprintf("Error code to page fault handler %p\n", e_c);
-    uint64_t faulting_addr = read_cr2();
-    kprintf("Faulting address : CR2 value %p\n", faulting_addr);
     if (e_c & PF_B_2)
     {
         kprintf("user(r3) |");
@@ -155,7 +150,6 @@ check_vma(uint64_t v_addr)
         uint64_t end_addr = itr->end_addr;
         if (v_addr >= start_addr && v_addr <= end_addr)
         {
-            kprintf("start end range %p-%p\n",start_addr,end_addr);
             return itr;
         }
         itr = itr->next;

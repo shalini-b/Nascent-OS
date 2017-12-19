@@ -25,7 +25,6 @@ readdir(DIR *dirp)
     {
         return NULL;
     }
-//    printf("directory name is %s ",name);
     str_copy((char *) name, dirp->name.d_name);
     return &dirp->name;
 }

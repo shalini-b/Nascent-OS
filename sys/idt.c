@@ -74,21 +74,7 @@ void int_handler13() {
     kprintf("Received Interrupt number 13!! Please check..");
     kprintf("in 13");
     outb(0x20, 0x20);
-    // FIXME: Remove this!!! HACK!!
-    while (1);
 }
-
-/*
-void page_fault_handler(uint64_t num) {
-    kprintf("First parameter to page fault handler %p\n", num );
-    uint64_t faulting_addr = read_cr2();
-    kprintf("Faulting address : CR2 value %p\n", faulting_addr);
-    outb(0x20, 0x20);
-    // FIXME: Remove this!!! HACK!!
-    while(1);
-}
-*/
-
 
 void init_idt() {
   // Fill up IDT here

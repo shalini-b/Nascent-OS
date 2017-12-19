@@ -1,11 +1,3 @@
-//void
-//memset(void *initial_mem, int length,int value_memset)
-//{
-//    for(int i=0;i<length;i++)
-//    {
-//        initial_mem[i] = character;
-//    }
-//}
 #include <sys/types.h>
 #include <sys/memset.h>
 #include<sys/kprintf.h>
@@ -30,7 +22,6 @@ void memcopy(void *source,void *destination,uint64_t size)
     {
 
         dest_t[i]=source_t[i];
-//        kprintf("i value %d\n",i);
     }
 
 }

@@ -76,19 +76,19 @@ execvp(const char *file, char *const argv[], char *const envp[])
     }
     char a[50][50];
     str_copy("bin/sbush",a[0]); */
-    if (_get_first(file, '/') != NULL)
-    {
+    //if (_get_first(file, '/') != NULL)
+    //{
         execve(file, argv, envp);
         return -1;
-    }
+    //}
 
     char *path = getenv("PATH");
 //    char *path = "/bin:/sbin:/home/";
-    if (path == NULL)
+    /*if (path == NULL)
     {
         return -1;
 
-    }
+    }*/
 
     const char *temp;
     size_t currLength;
@@ -124,7 +124,7 @@ execvp(const char *file, char *const argv[], char *const envp[])
         if (access(buffer, 0) == 0)
         {
             found = 1;
-            execve(buffer, argv, NULL);
+            execve(buffer, argv, envp);
         }
     }
 

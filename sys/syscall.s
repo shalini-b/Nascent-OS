@@ -1,7 +1,7 @@
 
 .extern syscall_handler
 .global sys_int
-#TODO :: all registers backup
+#FIXME :: all registers backup
 
 sys_int:
     cli
@@ -10,7 +10,7 @@ sys_int:
     pushq %r14
     pushq %r13
     pushq %r12
-    pushq %rbp
+    pushq %r11
     pushq %rbp
     pushq %rdi
     pushq %rsi
@@ -20,6 +20,7 @@ sys_int:
     pushq %rax
     movq %rsp, %rdi
     callq syscall_handler
+    // HACK to not corrupt rax
     popq %rbx
     popq %rbx
     popq %rcx
@@ -27,12 +28,11 @@ sys_int:
     popq %rsi
     popq %rdi
     popq %rbp
-    popq %rbp
+    popq %r11
     popq %r12
     popq %r13
     popq %r14
     popq %r15
     add $0x08, %rsp
-    // sti
     iretq
 

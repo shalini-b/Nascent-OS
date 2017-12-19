@@ -16,7 +16,6 @@
 uint8_t initial_stack[INITIAL_STACK_SIZE]__attribute__((aligned(16)));
 uint32_t *loader_stack;
 extern char kernmem, physbase;
-//int ring_0_3_switch();
 int is_first_proc = 1;
 
 void
@@ -56,38 +55,20 @@ start(uint32_t *modulep, void *physbase, void *physfree)
 
     // enable interrupts
     __asm__ __volatile__ ("sti");
+
     // Init process as pid 0
-    // create_init_process();
+    create_init_process();
 
     // Idle process as pid 1
     create_idle_process();
     
     // Call exec but do not clean up the previous task
     if (is_first_proc == 1) {
-        // FIXME: create a dummy task first
         RunningTask = fetch_free_pcb();
-//        add_to_task_list(RunningTask);
         RunningTask->task_state = RUNNING;
-        char a[50][50];
-        char *b[50];
-        for(int j =0;j<50;j++){
-            b[j] = &a[j][0];
-        }
-        b[1] = NULL;
-        str_copy("10",(char*)b[0]);
-
-//        b[0][0] = 'a';
-//        b[0][1] = 'b';
-//        b[0][2] = 'c';
-//        b[0][3] = 'd';
-//        b[0][4] = '\0';
-
-        //sys_execvpe("bin/echo", b, NULL);
-        sys_execvpe("bin/ps", NULL, NULL);
+        char *b[2] = {"bin/sbush", NULL};
+        sys_execvpe("bin/sbush", b, NULL);
     }
-
-    // init_tasks1();
-    // tarfs_test();
 
     /* hba_port_t* port_ptr = checkAllBuses();
     intitialise(port_ptr);

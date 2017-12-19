@@ -18,5 +18,4 @@ keyboard:
     popq %rsi
     popq %rdi
     popq %rbp
-    sti
     iretq

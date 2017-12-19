@@ -37,7 +37,6 @@ struct vma {
     struct vma * next;
     // used to build global array
     struct vma * prev;
-    // struct mm_struct *proc_mm;
     uint64_t vm_flags;
     uint64_t vmtype;
     uint64_t p_filesz;
@@ -70,13 +69,22 @@ typedef enum {
 
 
 typedef enum {
+    // process running
     RUNNING,
+    // process ready for execution
     READY,
+    // process in sleep
     SLEEP,
+    // process waiting for input
     WAIT,
+    // not used anywhere till now
     IDLE,
+    // process is exiting
     EXIT,
-    ZOMBIE
+    // child running, parent exited
+    ZOMBIE,
+    // process is waiting for child
+    SUSPENDED
 }TASK_STATES;
 
 
@@ -104,9 +112,6 @@ typedef struct Task
     int ppid;
     struct Task * parent_task;
     int sleep_sec;
-    //struct Task * childnode;
-    //struct Task * sib;
-    // int num_child;
     TASK_STATES task_state;
 } Task;
 

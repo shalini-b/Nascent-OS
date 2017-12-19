@@ -5,8 +5,7 @@
 void
 echo(char* s )
 {
-    printf("\n%s",s);
-
+    printf("%s\n",s);
 }
 
 int

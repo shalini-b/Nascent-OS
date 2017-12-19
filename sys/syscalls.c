@@ -1,8 +1,8 @@
 #include <sys/syscall.h>
 #include <sys/kprintf.h>
 #include <sys/process.h>
-#include<sys/tarfs.h>
-#include<sys/types.h>
+#include <sys/tarfs.h>
+#include <sys/types.h>
 #include <sys/process.h>
 #include <sys/proc_mngr.h>
 
@@ -12,10 +12,6 @@ syscall_handler(Registers1 *regs)
 {
     // CAUTION - use of variables here might alter the functionality of child!
 
-/*    __asm__ __volatile__(
-    "movq %%rax, %0 \n\t"
-    :"=r" (regs->rax)::);
-*/
     switch (regs->rax)
     {
         case SYS_write:
@@ -25,7 +21,6 @@ syscall_handler(Registers1 *regs)
         }
         case SYS_fork:
         {
-            // CAUTION - Schedule is not called for fork.
             // It will return back to the same process
             int child_pid = (uint64_t) fork_process();
 
@@ -34,6 +29,7 @@ syscall_handler(Registers1 *regs)
                 for (int i=0; i<18; i++) {
                     __asm__ volatile("popq %%rax":::"%rax");
                 }
+                schedule();
                 return 0;
             }
             else {
@@ -83,7 +79,7 @@ syscall_handler(Registers1 *regs)
         }
         case SYS_wait_s:
         {
-            RunningTask->task_state = WAIT;
+            RunningTask->task_state = SUSPENDED;
             break;
         }
         case SYS_exit:
@@ -104,7 +100,7 @@ syscall_handler(Registers1 *regs)
         }
         case SYS_kill_s :
         {
-
+            // FIXME: implement this
             break;
         }
         case SYS_chdir_s:
@@ -142,10 +138,11 @@ write_to_console(uint64_t fd, char *buffer, uint64_t count)
 
 void sys_ps() {
     Task* p = overall_task_list;
-    char *a[7] = {"RUNNING", "READY"};
+    // FIXME: show only selected process states
+    char *a[8] = {"RUNNING", "READY", "SLEEP", "WAIT FOR INPUT", "IDLE", "EXIT", "ZOMBIE", "WAITING"};
+    kprintf("PID   PROCESS      MODE \n");
     while(p!=NULL)
     {
-        kprintf("PID   PROCESS      MODE \n");
         kprintf("%d     %s           %s\n",p->pid,p->filename,(char*) a[p->task_state]);
         p=p->next;
     }

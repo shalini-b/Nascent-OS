@@ -1,6 +1,7 @@
 //
 // Created by mohan on 9/9/17.
 //
+// FIXME: do we need this big buffer?
 #define OUTPUT_BUFFER_MAX_LENGTH 20480
 #include <stdarg.h>
 #include <stdio.h>
@@ -172,8 +173,6 @@ reverse(char *string, int length)
         begin++;
     }
 }
-
-
 
 int
 pointer(unsigned long number, char *output_buffer)

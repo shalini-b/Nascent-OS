@@ -97,7 +97,6 @@ uint64_t get_mapping(uint64_t pml_addr, uint64_t viraddr)
     uint64_t page_addr = tmp[pte_id];
 
     uint64_t phy_addr = SCLDN(page_addr) + offset ;
-    // kprintf("phys addr %p\n",phy_addr);
     return phy_addr;
 }
 
@@ -238,7 +237,6 @@ struct page *fetch_free_page()
     struct page *tmp = free_page_head;
     struct page *free_pg = (struct page *) getPA(tmp);
     struct page *free_pntr = (struct page *) get_viraddr((uint64_t) tmp);
-    //FIXME: Is it correct to do this here?
     free_pntr->ref_count = 1;
     free_page_head = free_pntr->next;
     uint64_t *free_pg_vir = (uint64_t *) get_viraddr((uint64_t) free_pg);

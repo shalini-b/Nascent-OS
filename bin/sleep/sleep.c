@@ -1,7 +1,7 @@
 #include <types.h>
 #include <unistd.h>
 #include <dirent.h>
-#include<stdio.h>
+#include <stdio.h>
 #include <syscalls.h>
 #include <strings.h>
 

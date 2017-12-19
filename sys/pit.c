@@ -32,4 +32,5 @@ void timer_int()
     timer_count++;
 
     outb(0x20, 0x20);
+    // FIXME: call sys_yield
 }

@@ -8,8 +8,6 @@
 #include <mem.h>
 
 #define INPUT_STRING_BUFFER_LENGTH 100
-int a = 0;
-void dummy();
 
 char final_parsed_array[150][150];
 char PS1[150] = "sbush>";
@@ -18,6 +16,9 @@ char ENV_KEY[150][150];
 char ENV_VALUE[150][4096];
 int ENV_ARRAY_LENGTH;
 char ENV_BUFFER[1024];
+#define CMD_BUFF_SIZE   4096
+char cmd_buff[CMD_BUFF_SIZE];
+
 
 void
 run_command(char command_array[][150], int args_num){
@@ -37,15 +38,11 @@ run_command(char command_array[][150], int args_num){
 
     int  st;
     pid_t pid;
-    // FIXME: use clone system
     pid = fork();
-    dummy();
     if (pid == 0){
         // Child process - Execute command
         // FIXME: do error handling
-        printf("I am child\n");
         execvp(args[0], args, NULL);
-        //exit(0);
     }
     else if (pid > 0){
         // Parent process
@@ -58,11 +55,6 @@ run_command(char command_array[][150], int args_num){
         puts("ERROR: Failed to execute command.");
     }
 }
-
-void dummy() {
-    a++;
-}
-
 
 char* getenv(char* key)
 {
@@ -117,7 +109,6 @@ command_handler(char command_array[][150], int args_num)
     }
     if ((str_compare(command_array[0], "exit") == 0))
     {
-
         exit(0);
     }
     else if (str_compare(command_array[0], "cd") == 0)
@@ -188,12 +179,18 @@ main(int argc, char *argv[], char *envp[])
     {
         fp = fopen(argv[1],"r+");
     }*/
+    /*if(argc==2) {
+        int fd;
+        fd = open(argv[1], 1);
+        memset((void *) cmd_buff, '\0', CMD_BUFF_SIZE);
+        while (read(fd, cmd_buff, CMD_BUFF_SIZE) != 0) {
+            printf("%s", cmd_buff);
+            memset((void *) cmd_buff, '\0', CMD_BUFF_SIZE);
+        }
+        close(fd);
+    }*/
     while (1)
     {
-        // char buff[150];
-        // Clearup for next iterations
-        // FIXME: isnt it implicit when u re-initialize?
-
         memset((void *) string_buffer_array, '\0', 100);
         clear_2darray(final_parsed_array);
 
@@ -202,101 +199,33 @@ main(int argc, char *argv[], char *envp[])
         {
             printf("%s", PS1);
             gets(string_buffer_array);
-            printf("value entered > %s\n", string_buffer_array);
         }
         /*else
         {
-            if(fgets(string_buffer_array, INPUT_STRING_BUFFER_LENGTH, fp) == NULL)
+
+            for(int i=0;i<CMD_BUFF_SIZE;i++)
             {
-                break;
+                if(cmd_buff[i]=='\n')
+                {
+
+                }
+                else if(cmd_buff[i]==' ')
+                {
+
+                }
+                else
+                {
+
+                }
+
             }
         }*/
-
         int cnt = split_and_count(string_buffer_array, ' ', final_parsed_array);
         command_handler(final_parsed_array, cnt+1);
+
+
     }
     return 0;
 }
 
-/*
 
- #include <stdio.h>
-#include <dirent.h>
-#include <mem.h>
-#include <unistd.h>
-#include <syscalls.h>
-
-
-int
-main(int argc, char *argv[], char *envp[])
-{
-
-     while (1)
-    {
-        char buff[100];
-        printf("sbush>");
-        read(0,buff,100);
-        int a = fork();
-        if(a==0){
-            execvp("/bin/ls", NULL, NULL);
-            exit(0);
-        }
-        else{
-            int st;
-            waitpid(a, &st, 2);
-        }
-        printf("value entered > %s\n",buff);
-        memset((void *) buff, '\0', 100);
-
-    }
-
-
-   //DIR
-    volatile struct dirent *b ;
-    int DIR_SIZE = 100;
-    char dir_buff2[DIR_SIZE];
-    DIR *a1=opendir("test1/test2/abc/pqr/");
-    memset((void *) dir_buff2, '\0', DIR_SIZE);
-    while (1)
-    {
-
-        b = readdir(a1);
-        if(b==NULL)
-        {
-            break;
-        }
-        printf("%s\n", b->d_name);
-        memset((void *) dir_buff2, '\0', DIR_SIZE);
-    }
-    closedir(a1);
-
-
-    //FILES
-    int BUFF_SIZE = 100;
-    char buff[BUFF_SIZE];
-    int fd;
-    fd = open("test1/abc.txt",1);
-    memset((void *) buff, '\0',BUFF_SIZE);
-    while (read(fd, buff, BUFF_SIZE) != 0)
-    {
-        printf("%s", buff);
-        memset((void *) buff, '\0', BUFF_SIZE);
-    }
-    close(fd);
-    int pid = fork();
-    printf("\n PID %d\n",pid);
-    printf("Hello! I am parent");
-
-    if (pid == 0) {
-        printf("Hello! I am child");
-        execvp("/bin/sbush", NULL, NULL);   
-	    exit(0);
-    }
-    else{
-        int st;
-        waitpid(pid, &st, 2);
-    }
-    printf("Sbush exiting...");
-    while(1);
-}
- */

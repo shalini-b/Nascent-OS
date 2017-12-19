@@ -2,17 +2,16 @@
 #include <unistd.h>
 #include <syscalls.h>
 #include <strings.h>
+
 int
 putchar(int c)
 {
-
     char ch = c;
     int length = write(1, &ch, 1);
     if (length <= 0)
     {
         return EOF;
     }
-
     return c;
 }
 
@@ -33,7 +32,6 @@ str_to_num(char *s)
         t = s[i] - '0';
         r = r * 10 + t;
     }
-
     return r;
 }
 
@@ -110,7 +108,6 @@ split_and_count(char *string_to_split, char delimiter, char final_array[][150])
     int letter_flag = 0;
     if (!delimiter)
     {
-        // FIXME: y do this?
         final_array = NULL;
     }
     // Parse till end of input
@@ -128,7 +125,7 @@ split_and_count(char *string_to_split, char delimiter, char final_array[][150])
         }
         if (found_flag && string_to_split[string_itr] != delimiter)
         {
-            // deimiter found in prev iteration
+            // delimiter found in prev iteration
             final_array[block][fin_arr_itr] = '\0';
             fin_arr_itr = 0;
             block++;

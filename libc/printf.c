@@ -12,15 +12,11 @@
 #include<unistd.h>
 
 int OUTPUT_BUFFER_LENGTH1 = 0;
-static  char OUTPUT_BUFFER1[OUTPUT_BUFFER_MAX_LENGTH1];
+static char OUTPUT_BUFFER1[OUTPUT_BUFFER_MAX_LENGTH1];
 int putchar(int c);
 int puts(const char *s);
 int printf(const char *format, ...);
 char *gets(char *s);
-
-
-
-
 
 //Print Main Function
 int

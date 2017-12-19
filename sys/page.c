@@ -61,7 +61,6 @@ void *kmalloc() {
     }
     // Increment free_page_head and increase ref_count
     struct page* tmp = (struct page*) get_viraddr((uint64_t)free_page_head);
-    //FIXME: Is it correct to do this here?
     tmp->ref_count = 1;
     // return phyaddr of page
     uint64_t *free_pg = (uint64_t *) getPA(free_page_head);

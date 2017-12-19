@@ -71,7 +71,7 @@ keyboard_intr()
             {' ', ' '},
         };
     //kprintf("%d\n",keyboard_value);
-    if(keyboard_value==28 || keyboard_value ==14)
+    if(keyboard_value==28)
     {
         terminal_handler('\n');
     }

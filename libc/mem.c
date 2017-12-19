@@ -1,5 +1,7 @@
 #include<mem.h>
-void  *memset(void *string_to_memset, int char_to_memset_with, int length_to_memset)
+
+
+void *memset(void *string_to_memset, int char_to_memset_with, int length_to_memset)
 {
     unsigned char *temp_typecasted_string = string_to_memset;
     for(int str_itr = 0;str_itr<length_to_memset;str_itr++)
@@ -17,9 +19,7 @@ void memcopy(void *source,void *destination,uint64_t size)
     char* dest_t = (char*)destination;
     for(uint64_t i=0;i<size;i++)
     {
-
         dest_t[i]=source_t[i];
-//        kprintf("i value %d\n",i);
     }
 
 }

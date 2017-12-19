@@ -23,7 +23,6 @@ int is_elf_format(Elf64_Ehdr *elf_header)
     }
 }
 
-// FIXME: change return type
 int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char *argv[])
 {
     if (is_elf_format(elf_header) == 1)
@@ -73,10 +72,8 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
                 for (uint64_t pres_page_base_vir = start_viraddr; pres_page_base_vir < end_address;
                      pres_page_base_vir += (4 * 1024))
                 {
-                    // FIXME: always memset pages given to stack & heap
                     uint64_t phys_addr = (uint64_t) kmalloc();
                     set_mapping((uint64_t)pml_addr, (uint64_t)ScaleDown((uint64_t*)pres_page_base_vir), (uint64_t)phys_addr, 7);
-                    //  kprintf("virtual address of binary %p\n", pres_page_base_vir);
                 }
 
                 // Place VMA at the end of process vma list
@@ -102,18 +99,10 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
                 // FIXME: write mmap with start_addr, size, flags as arguments or use kmalloc?
                 // mmap(start_viraddr, present_program_header->p_memsz, vm_type == TEXT ? RX_USER : RW_USER);
 
-//                kprintf("mapped range %x - %x\n", start_viraddr,end_address);
-//                kprintf("memcopy range %x - %x\n", start_viraddr,start_viraddr+present_program_header->p_filesz);
-
                 // Copy the contents into address space
                 memcopy((void *)present_file_segment, (void *) start_viraddr, (uint64_t)program_header->p_filesz);
                 int bss_size = (present_program_header->p_memsz)-(program_header->p_filesz);
                 memset((void*)((start_viraddr + program_header->p_filesz)), 0, bss_size);
-
-//                kprintf("virtual address of binary %p\n", present_program_header->p_vaddr);
-//                kprintf("physical address of binary %p\n", present_program_header->p_paddr);
-//                kprintf("file size %d\n", present_program_header->p_filesz);
-//                kprintf("mem size %d\n", present_program_header->p_memsz);
             }
             present_program_header += 1;
         }
@@ -131,14 +120,11 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
         tmp->next = fetch_free_vma(start_viraddr, end_address, RW, HEAP);
         new_pcb->task_mm->count++;
 
-        // FIXME: add new process to running queue??? CAUTION!!
-//        add_to_task_list(new_pcb);
-
         return 0;
     }
     else
     {
-        kprintf("Not elf file");
+        kprintf("Not an ELF file");
         return -1;
     }
 }

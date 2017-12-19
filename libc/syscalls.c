@@ -173,7 +173,6 @@ syscall0(pid_t, getpid);
 syscall0(pid_t, getppid);
 syscall2(int, dup2, int, oldfd, int, newfd);
 syscall3(ssize_t, write, int, fd, const void *, buf, size_t, count);
-//TODO: add rusage struct for wait4
 syscall1(pid_t, wait_s, pid_t, pid);
 syscall0(void, ps);
 syscall2(int, access, const char *, filename, int, mode);

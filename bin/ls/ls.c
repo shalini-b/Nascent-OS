@@ -15,7 +15,6 @@ ls(char* path)
     memset((void *) dir_buff2, '\0', DIR_SIZE);
     while (1)
     {
-
         b = readdir(a1);
         if (b == NULL)
         {
@@ -30,6 +29,7 @@ ls(char* path)
 int
 main(int argc, char *argv[], char *envp[])
 {
+    // FIXME: handle no arguments to ls
     ls(argv[1]);
     return 0;
 }

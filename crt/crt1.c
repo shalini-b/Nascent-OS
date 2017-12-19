@@ -6,7 +6,7 @@ char ENV_KEY[150][150];
 char ENV_VALUE[150][4096];
 int ENV_ARRAY_LENGTH;
 
-/*void cache_env( char *env_array[])
+void cache_env( char *env_array[])
 {
     int ary_itr =0;
     while(env_array[ary_itr]!=NULL)
@@ -23,11 +23,10 @@ int ENV_ARRAY_LENGTH;
         ary_itr++;
     }
     ENV_ARRAY_LENGTH = ary_itr;
-}*/
+}
 
 void _start(void) {
   // call main() and exit() here
-
   long resp;
   int a;
    __asm__ __volatile__(
@@ -38,8 +37,8 @@ void _start(void) {
     a=*((int*)(resp+8));
     char** b=(char**)(resp+16);
     char** c=(char**)(a*8+8+resp+16);
-//    cache_env(c);
+    // FIXME: fix this to get envp
+    // cache_env(c);
     int exit_code = main(a,b,c);
-//    int exit_code =  main();
     exit(exit_code);
 }

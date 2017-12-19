@@ -6,14 +6,12 @@
 #include <sys/memset.h>
 #include <sys/tarfs.h>
 #include <sys/gdt.h>
-// FIXME: get corresponding sys file
-#include <strings.h>
+#include <sys/strings.h>
 #include <sys/proc_mngr.h>
 
 struct vma *free_vma_head = NULL;
 Task *free_pcb_head = NULL;
 
-// FIXME: call this somewhere in main??
 void
 initialise_vma()
 {
@@ -39,6 +37,7 @@ get_free_vma()
 {
     if (free_vma_head == NULL)
     {
+        // FIXME: how to handle in a better way?
         kprintf("Caution! Out of VMA's..");
         return NULL;
     }
@@ -97,9 +96,7 @@ create_pcb_list()
 uint64_t *
 create_new_pml_table()
 {
-    // FIXME: is it enough??
     uint64_t *pml_addr = (uint64_t *) page_alloc();
-    kprintf("In create proc PML = %p\n", pml_addr);
     pml_addr[511] = kpml_addr[511];
     return pml_addr;
 }
@@ -116,25 +113,18 @@ fetch_free_pcb()
     free_pcb_head = free_pcb_head->next;
     // Initiating new MM struct
     struct mm_struct *proc_mm = (struct mm_struct *) page_alloc();
-    // proc_mm->pml4 = create_new_pml_table();
     proc_mm->vma_head = NULL;
     proc_mm->count = 0;
 
     // Initiating process vars
     free_pcb->task_mm = proc_mm;
-    // CAUTION: check if it works
     free_pcb->regs.cr3 = ((uint64_t) create_new_pml_table()) - KERNBASE;
     free_pcb->regs.krsp = (uint64_t)(&free_pcb->kstack[509]);
     free_pcb->next = NULL;
     free_pcb->prev = NULL;
     free_pcb->parent_task = NULL;
-    //free_pcb->childnode = NULL;
-    //free_pcb->sib = NULL;
-    //free_pcb->num_child = 0;
 
-    // FIXME: check this value for errors
     free_pcb->pid = ((uint64_t) free_pcb - (uint64_t) & pcb_arr[0]) / sizeof(Task);
-    kprintf("PID of new process: %d\n", free_pcb->pid);
     free_pcb->ppid = -1;
     free_pcb->task_state = READY;
 
@@ -179,7 +169,7 @@ idle_process()
 
 void wait_for_child()
 {
-    RunningTask->task_state = WAIT;
+    RunningTask->task_state = SUSPENDED;
     schedule();
     return;
 }
