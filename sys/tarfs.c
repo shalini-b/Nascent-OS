@@ -12,7 +12,7 @@
 #include <sys/terminal.h>
 #define MIN(a, b)  (a<b)? a : b
 
-// char pwd[200];
+char pwd[200];
 
 int
 convert_oct_int(char *oct_string)
@@ -49,8 +49,11 @@ file_exists(char *f_name)
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
     {
+//        kprintf("address : %p\n", tarfs_iterator);
+//        kprintf("dir name : %s\n", tarfs_iterator->name);
         if (str_compare1(tarfs_iterator->name, f_name) == 0)
         {
+
             return 1;
         }
         tarfs_iterator = get_next_tar_header(tarfs_iterator);
@@ -61,6 +64,49 @@ file_exists(char *f_name)
 
 uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[])
 {
+    char buff[100];
+    memset((void *) buff, '\0', 100);
+    path_sanitize(binary_name,buff);
+    return load_elf1(cur_pcb,buff,argv);
+}
+
+void path_sanitize(char* binary_name,char* buff)
+{
+    if(str_compare(binary_name,"cat") == 0)
+    {
+        str_copy("bin/cat", buff);
+    }
+    else if(str_compare(binary_name,"echo") == 0)
+    {
+        str_copy("bin/echo", buff);
+    }
+    else if(str_compare(binary_name,"kill") == 0)
+    {
+        str_copy("bin/kill", buff);
+    }
+    else if(str_compare(binary_name,"ls") == 0)
+    {
+        str_copy("bin/ls", buff);
+    }
+    else if(str_compare(binary_name,"ps") == 0)
+    {
+        str_copy("bin/ps", buff);
+    }
+    else if(str_compare(binary_name,"sleep") == 0)
+    {
+        str_copy("bin/sleep", buff);
+    }
+    else
+    {
+        str_copy(binary_name, buff);
+    }
+    kprintf("value issss %s",buff);
+}
+
+
+// FIXME: change return type
+uint64_t load_elf1(Task *cur_pcb, char *binary_name, char *argv[])
+{
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
     {
@@ -69,8 +115,10 @@ uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[])
             struct Elf64_Ehdr *elf_header = (struct Elf64_Ehdr *) ((uint64_t) tarfs_iterator + 512);
             if (elf_read(elf_header, cur_pcb, binary_name, argv) == 0)
             {
+//                kprintf("elf read done");
                 return (uint64_t) elf_header->e_entry;
             }
+
             else
             {
                 return -1;
@@ -135,7 +183,6 @@ open_s(char *d_path,int flags)
     }
     else
     {
-        // FIXME: if path sanitization not done, then provide what to change to correct path
         kprintf("Please provide valid path\n");
         return -1;
     }
@@ -146,13 +193,14 @@ read_s(int fd, char *buffer, int num_bytes)
 {
     if(fd==0)
     {
+
         schedule_terminal_task(buffer,num_bytes);
     }
     else
     {
         if (file_des_validator(fd) != 0)
         {
-            kprintf("Invalid fd.\n");
+            kprintf("Invalid fd\n");
             return 0;
         }
         int file_sz = RunningTask->fd_array[fd].file_sz;
@@ -176,6 +224,46 @@ read_s(int fd, char *buffer, int num_bytes)
     return 0;
 }
 
+
+int
+fgets_s(int fd, char *buffer, int num_bytes)
+{
+    if(fd==0)
+    {
+
+        schedule_terminal_task(buffer,num_bytes);
+    }
+    else
+    {
+        if (file_des_validator(fd) != 0)
+        {
+            kprintf("Invalid fd\n");
+            return 0;
+        }
+        int file_sz = RunningTask->fd_array[fd].file_sz;
+        int num_bytes_read = RunningTask->fd_array[fd].num_bytes_read;
+        int num_bytes_remaining = file_sz - num_bytes_read;
+        void *file_ptr = RunningTask->fd_array[fd].file_ptr;
+        if (num_bytes_read < file_sz)
+        {
+            memcopy(file_ptr, buffer, MIN(num_bytes, num_bytes_remaining));
+            char *temp_fp = (char *) RunningTask->fd_array[fd].file_ptr;
+            temp_fp += num_bytes;
+            RunningTask->fd_array[fd].file_ptr = (void *) temp_fp;
+            RunningTask->fd_array[fd].num_bytes_read += num_bytes;
+            return MIN(num_bytes, num_bytes_remaining);
+        }
+        else
+        {
+            return 0;
+        }
+    }
+    return 0;
+}
+
+
+
+
 int
 close_s(int fd)
 {
@@ -189,12 +277,15 @@ int
 open_dir(char *d_path)
 {
 
+//    kprintf("dir contents ->%s\n", d_path);
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     int fd;
     if (file_exists(d_path) == 1)
     {
         while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
         {
+
+//            kprintf("name %s type %s\n",tarfs_iterator->name,tarfs_iterator->typeflag);
             if (str_compare(tarfs_iterator->name, d_path) == 0 && str_compare(tarfs_iterator->typeflag, "5") == 0)
             {
                 fd = get_free_fd((void *) (tarfs_iterator));
@@ -212,7 +303,6 @@ open_dir(char *d_path)
     }
     else
     {
-        // FIXME: if path sanitization not done, then provide what to change to correct path
         kprintf("Please provide valid path\n");
         return -1;
     }
@@ -260,6 +350,7 @@ read_dir(int fd, char *buffer)
             {
                 RunningTask->fd_array[fd].last_matched_header = (void *) tarfs_iterator;
                 string_sub(tarfs_iterator->name, dir_name, buffer, '/');
+//                kprintf("buffer value is %s",buffer);
                 return 0;
             }
 
@@ -282,24 +373,27 @@ close_dir(int fd)
 void
 fetch_cwd(char *output_buffer)
 {
-    memcopy((void *) &RunningTask->cwd[0], (void *) output_buffer, len(RunningTask->cwd));
+    memcopy(pwd, output_buffer, len(pwd));
 }
 
 void
 set_cwd(char *input_buffer)
 {
-    memset((void *) &RunningTask->cwd[0], '\0', 75);
-    memcopy((void *)input_buffer, (void *)&RunningTask->cwd[0], len(input_buffer));
+    memset((void *) input_buffer, '\0', 200);
+    memcopy(input_buffer, pwd, len(input_buffer));
 }
 
 void
 tarfs_test()
 {
+
+
     //TEST 1 : FILE CALLS TEST
     int SIZE = 100;
     char buff[SIZE];
     RunningTask = (Task *) page_alloc();
     int fd;
+    //FIXME:: should be done inside task
     initialise_fds();
     fd = open_s("test1/abc.txt",1);
     memset((void *) buff, '\0', SIZE + 10);
@@ -322,6 +416,7 @@ tarfs_test()
     //TEST 2 : DIR CALLS TEST
     RunningTask = (Task *) page_alloc();
     int DIR_SIZE = 100;
+    //FIXME:: should be done inside task
     char dir_buff[DIR_SIZE];
     initialise_fds();
     fd = open_dir("test1/");
@@ -333,8 +428,9 @@ tarfs_test()
     }
     close_dir(fd);
     kprintf("value is %d\n", file_exists("test1/test2/"));
-    //------------------------------------------------
-    //    NOTE :: -1 check return value
+//
+//    //------------------------------------------------
+//    //    NOTE :: -1 check return value
     char dir_buff2[DIR_SIZE];
     fd = open_dir("test1/test2/");
     memset((void *) dir_buff2, '\0', DIR_SIZE);
@@ -363,8 +459,8 @@ tarfs_test()
         memset((void *) dir_buff1, '\0', DIR_SIZE);
     }
     close_dir(fd);
-    //**********************************************************************************
-    //TEST 3 : FIND FILES TEST
+//    //**********************************************************************************
+//    //TEST 3 : FIND FILES TEST
     kprintf("file bin exits -> %d\n", file_exists("bin/"));
     kprintf("file test1/abc.txt exits -> %d\n", file_exists("test1/abc.txt"));
     kprintf("file test1/ exists %d\n", file_exists("test1/"));
