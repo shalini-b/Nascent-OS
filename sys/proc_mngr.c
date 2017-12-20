@@ -128,6 +128,9 @@ fetch_free_pcb()
     free_pcb->ppid = -1;
     free_pcb->task_state = READY;
 
+    // FIXME: Set Cur work dir for new process
+    str_copy(" ", free_pcb->cwd);
+
     // FIXME: do we need to memset before reuse of PCB?
     // FIXME: memset regs values?
     // memset((void*)free_pcb->kstack, 0, KSTACK_SIZE);
@@ -151,6 +154,43 @@ fetch_free_pcb()
     }
 
     return free_pcb;
+}
+
+void clear_pcb(Task *cur_task) {
+    // FIXME: clean regs??
+    // reset task vars
+    cur_task->next        = NULL;
+    cur_task->prev        = NULL;
+    cur_task->parent_task = NULL;
+    cur_task->sleep_sec = 0;
+    cur_task->task_state = READY;
+    cur_task->ppid = -1;
+
+    // CAUTION - pid not reset
+    // memset filename
+    memset((void*)cur_task->filename, 0, 75);
+
+    // FIXME: free memory given to task_mm
+    // FIXME: free memory given to vma & its members
+
+    // clean mm struct
+    cur_task->task_mm->vma_head = NULL;
+    cur_task->task_mm->count = 0;
+    cur_task->task_mm->begin_stack = 0;
+    cur_task->task_mm->argv_start = 0;
+    cur_task->task_mm->argv_end = 0;
+
+    // FIXME: clear out all fds - check this
+    // FIXME: free memory given to fd_array & its members
+    memset((void*)cur_task->fd_array, 0, MAX_FDS*sizeof(fd));
+
+    // clean kstack
+    memset((void*)cur_task->kstack, 0, KSTACK_SIZE);
+
+    // FIXME: deep clean the page tables & vma & mm structs
+    // For now, just clear out the PML table
+    uint64_t * proc_pml = (uint64_t *) (cur_task->regs.cr3 + KERNBASE);
+    memset((void*)proc_pml, 0, 511*8);
 }
 
 // ********** Process scheduling helper methods ********

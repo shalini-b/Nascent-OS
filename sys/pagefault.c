@@ -4,6 +4,7 @@
 #include<sys/process.h>
 #include <sys/pagefault.h>
 #include<sys/page.h>
+#include <sys/idt.h>
 #include <sys/memset.h>
 #include<sys/virmem.h>
 #define MIN(a, b)  (a<b)? a : b
@@ -13,6 +14,7 @@ void
 page_fault_handler(uint64_t error_code)
 {
     uint64_t faulting_addr = read_cr2();
+    // kprintf("Faulting address - %p\n", faulting_addr);
     struct vma *vma_v = check_vma(faulting_addr);
     if (vma_v != NULL)
     {
@@ -101,11 +103,12 @@ page_fault_handler(uint64_t error_code)
     {
         kprintf("Segmentation Fault: \n");
         print_status(error_code);
+        while(1);
         // FIXME: prevent infinitely printing this
         // exit here?
+        // restart sbush here?
     }
-    // FIXME: is this needed?
-//    outb(0x20, 0x20);
+    outb(0x20, 0x20);
 }
 
 void

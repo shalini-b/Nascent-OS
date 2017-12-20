@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <strings.h>
 
-char ENV_KEY[150][150];
+/*char ENV_KEY[150][150];
 char ENV_VALUE[150][4096];
 int ENV_ARRAY_LENGTH;
 
@@ -24,6 +24,7 @@ void cache_env( char *env_array[])
     }
     ENV_ARRAY_LENGTH = ary_itr;
 }
+ */
 
 void _start(void) {
   // call main() and exit() here

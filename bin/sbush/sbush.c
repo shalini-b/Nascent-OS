@@ -174,56 +174,59 @@ int
 main(int argc, char *argv[], char *envp[])
 {
     char string_buffer_array[INPUT_STRING_BUFFER_LENGTH];
+    int ptr1 = 0;
     /*FILE *fp = NULL;
     if(argc==2)
     {
         fp = fopen(argv[1],"r+");
     }*/
-    /*if(argc==2) {
+    if(argc==2) {
         int fd;
         fd = open(argv[1], 1);
-        memset((void *) cmd_buff, '\0', CMD_BUFF_SIZE);
+        memset((void *) cmd_buff, -9999, CMD_BUFF_SIZE);
         while (read(fd, cmd_buff, CMD_BUFF_SIZE) != 0) {
-            printf("%s", cmd_buff);
-            memset((void *) cmd_buff, '\0', CMD_BUFF_SIZE);
+            // printf("%s", cmd_buff);
+            // memset((void *) cmd_buff, '\0', CMD_BUFF_SIZE);
         }
         close(fd);
-    }*/
-    while (1)
-    {
+    }
+    while (1) {
         memset((void *) string_buffer_array, '\0', 100);
         clear_2darray(final_parsed_array);
+        int c;
 
         // Input command
-	    if(argc==1)
-        {
+        if (argc == 1) {
             printf("%s", PS1);
             gets(string_buffer_array);
         }
-        /*else
-        {
-
-            for(int i=0;i<CMD_BUFF_SIZE;i++)
-            {
-                if(cmd_buff[i]=='\n')
-                {
+        else {
+            int i = 0;
+            c = 0;
+            while ((ptr1 < CMD_BUFF_SIZE) && (i < INPUT_STRING_BUFFER_LENGTH)) {
+                if (cmd_buff[ptr1] == '\n') {
+                    string_buffer_array[i] = '\0';
+                    ptr1++;
+                    i++;
+                    break;
+                } else {
+                    string_buffer_array[i] = cmd_buff[ptr1];
+                    i++;
+                    if (cmd_buff[ptr1] == -9999) {
+                        c = 1;
+                        break;
+                    }
 
                 }
-                else if(cmd_buff[i]==' ')
-                {
-
-                }
-                else
-                {
-
-                }
+                ptr1++;
 
             }
-        }*/
+        }
+        if (c == 1) {
+            break;
+        }
         int cnt = split_and_count(string_buffer_array, ' ', final_parsed_array);
         command_handler(final_parsed_array, cnt+1);
-
-
     }
     return 0;
 }

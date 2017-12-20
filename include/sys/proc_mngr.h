@@ -32,5 +32,6 @@ void wait_for_child();
 void init_process();
 void clean_child_pcb();
 void create_init_process();
+void clear_pcb(Task *cur_task);
 
 #endif

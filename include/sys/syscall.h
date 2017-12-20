@@ -31,6 +31,8 @@ void sys_ps();
 #define SYS_chdir_s 50
 #define SYS_getcwd_s 51
 #define SYS_execve      59
+#define SYS_yield       99
+#define SYS_sbrk    100
 
 
 #endif

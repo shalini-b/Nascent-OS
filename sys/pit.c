@@ -8,6 +8,7 @@ void timer_int()
 {
     static int timer_count = 0;
     static int time_from_reboot = 0;
+    outb(0x20, 0x20);
     if (timer_count == 18){
         timer_count = -1;
         time_from_reboot++;
@@ -28,9 +29,8 @@ void timer_int()
             }
             p = p->next;
         }
+        // call schedule
+        // schedule();
     }
     timer_count++;
-
-    outb(0x20, 0x20);
-    // FIXME: call sys_yield
 }

@@ -5,11 +5,13 @@
 #define __NR_read 0
 #define __NR_open 2
 #define __NR_close 3
+// FIXME: can we remove this??
 #define __NR_chdir 80
 #define __NR_pipe 22
 #define __NR_execve 59
 #define __NR_fork 57
 #define __NR_dup2 33
+// FIXME: can we remove this??
 #define __NR_getcwd 79
 #define __NR_wait_s 61
 #define __NR_access 21
@@ -23,6 +25,10 @@
 #define __NR_kill_s 76
 #define __NR_chdir_s 50
 #define __NR_getcwd_s 51
+
+// self defined - be careful with the numbers
+#define __NR_sys_yield   99
+#define __NR_sys_sbrk    100
 
 
 #define syscall0(type, name) \
@@ -180,3 +186,5 @@ syscall1(int,sleep_s, int, sec);
 syscall1(int,kill_s, int, pid);
 syscall1(int,chdir_s, char*, path);
 syscall2(char*,getcwd_s, char*, buf,size_t,size);
+syscall0(void, sys_yield);
+syscall1(void *, sys_sbrk, int, limit);

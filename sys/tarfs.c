@@ -12,7 +12,7 @@
 #include <sys/terminal.h>
 #define MIN(a, b)  (a<b)? a : b
 
-char pwd[200];
+// char pwd[200];
 
 int
 convert_oct_int(char *oct_string)
@@ -282,14 +282,14 @@ close_dir(int fd)
 void
 fetch_cwd(char *output_buffer)
 {
-    memcopy(pwd, output_buffer, len(pwd));
+    memcopy((void *) &RunningTask->cwd[0], (void *) output_buffer, len(RunningTask->cwd));
 }
 
 void
 set_cwd(char *input_buffer)
 {
-    memset((void *) input_buffer, '\0', 200);
-    memcopy(input_buffer, pwd, len(input_buffer));
+    memset((void *) &RunningTask->cwd[0], '\0', 75);
+    memcopy((void *)input_buffer, (void *)&RunningTask->cwd[0], len(input_buffer));
 }
 
 void

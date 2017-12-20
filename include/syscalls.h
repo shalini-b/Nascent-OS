@@ -49,4 +49,8 @@ syscall0_def(void, ps);
 syscall1_def(int,kill_s, int, pid);
 syscall1_def(int,chdir_s, char*, path);
 syscall2_def(char*,getcwd_s, char*, buf,size_t,size);
+
+syscall0_def(void, sys_yield);
+syscall1_def(void *, sys_sbrk, int, limit);
+
 #endif

@@ -5,7 +5,8 @@
 #include <sys/types.h>
 #include <sys/process.h>
 #include <sys/proc_mngr.h>
-
+#include <sys/idt.h>
+#include <sys/page.h>
 
 uint64_t
 syscall_handler(Registers1 *regs)
@@ -29,6 +30,8 @@ syscall_handler(Registers1 *regs)
                 for (int i=0; i<18; i++) {
                     __asm__ volatile("popq %%rax":::"%rax");
                 }
+                outb(0x20, 0x20);
+                // FIXME: see if this is req
                 schedule();
                 return 0;
             }
@@ -80,6 +83,7 @@ syscall_handler(Registers1 *regs)
         case SYS_wait_s:
         {
             RunningTask->task_state = SUSPENDED;
+            // schedule();
             break;
         }
         case SYS_exit:
@@ -96,6 +100,7 @@ syscall_handler(Registers1 *regs)
         {
             RunningTask->sleep_sec = (int)regs->rdi ;
             RunningTask->task_state = SLEEP;
+            // schedule();
             break;
         }
         case SYS_kill_s :
@@ -117,11 +122,21 @@ syscall_handler(Registers1 *regs)
             sys_execvpe((char *)regs->rdi,(char **)regs->rsi,(char **)regs->rdx);
             break;
         }
+        case SYS_sbrk: {
+            regs->rax = (uint64_t) kmalloc();
+        }
+        case SYS_yield: {
+            schedule();
+            break;
+        }
         default: {
             // FIXME: check this
             regs->rax = 0;
+            break;
         }
     }
+    // FIXME: do we need to call outb here???
+    outb(0x20, 0x20);
     schedule();
     return regs->rax;
 }

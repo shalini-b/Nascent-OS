@@ -188,7 +188,6 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
         is_first_proc = 0;
     }
 
-    // FIXME: handle envp
     uint64_t bin_viradd = load_elf(RunningTask, filename, argv);
 
     // Set RIP & RSP for new process
@@ -236,6 +235,7 @@ void clean_task_for_exec(Task *cur_task) {
     // reset task vars
     cur_task->next        = NULL;
     cur_task->prev        = NULL;
+    cur_task->sleep_sec = 0;
 
     // memset filename
     memset((void*)cur_task->filename, 0, 75);

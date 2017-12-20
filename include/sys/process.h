@@ -113,6 +113,7 @@ typedef struct Task
     struct Task * parent_task;
     int sleep_sec;
     TASK_STATES task_state;
+    char cwd[75];
 } Task;
 
 Task* RunningTask;
