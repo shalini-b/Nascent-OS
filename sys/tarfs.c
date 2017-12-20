@@ -67,39 +67,108 @@ uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[])
     char buff[100];
     memset((void *) buff, '\0', 100);
     path_sanitize(binary_name,buff);
-    return load_elf1(cur_pcb,buff,argv);
+    return load_elf1(cur_pcb,&buff[1],argv);
 }
 
+
+void remove_d(char *buff,char* b)
+{
+    int i=0;
+    int j=0;
+    int c=0;
+    int p=0;
+    while(buff[i]!='\0')
+    {
+        if(buff[i]=='.')
+        {
+            c++;
+        }
+        if(c==2 && i!=2)
+        {
+            p=j-3;
+            while(b[p]!='/')
+            {
+
+                p--;
+            }
+            p++;
+            b[p]='\0';
+            c=0;
+            j=p;
+            if(buff[i+1]!='\0')
+            {
+                i+=2;
+                if(buff[i]=='.')
+                {
+                    c=1;
+                }
+            }
+            else
+            {
+                i++;
+            }
+        }
+        b[j] = buff[i];
+        if(b[j]=='\0')
+        {
+            i--;
+        }
+        i++;
+        j++;
+    }
+    b[j] = '\0';
+}
 void path_sanitize(char* binary_name,char* buff)
 {
-    if(str_compare(binary_name,"cat") == 0)
-    {
-        str_copy("bin/cat", buff);
-    }
-    else if(str_compare(binary_name,"echo") == 0)
-    {
-        str_copy("bin/echo", buff);
-    }
-    else if(str_compare(binary_name,"kill") == 0)
-    {
-        str_copy("bin/kill", buff);
-    }
-    else if(str_compare(binary_name,"ls") == 0)
-    {
-        str_copy("bin/ls", buff);
-    }
-    else if(str_compare(binary_name,"ps") == 0)
-    {
-        str_copy("bin/ps", buff);
-    }
-    else if(str_compare(binary_name,"sleep") == 0)
-    {
-        str_copy("bin/sleep", buff);
-    }
-    else
+    if(binary_name[0]=='/')
     {
         str_copy(binary_name, buff);
     }
+    else
+    {
+//        str_copy(RunningTask->cwd,pwd);
+        int l=len(RunningTask->cwd);
+        str_copy(RunningTask->cwd, buff);
+        if(buff[l-1]!='/')
+        {
+            buff[l]='/';
+            l++;
+        }
+        str_copy(binary_name, &buff[l]);
+    }
+    char b[100];
+//    str_copy(buff,b);
+    remove_d(buff,b);
+    memset(buff,'\0',100);
+    str_copy(b,buff);
+//    if(str_compare(binary_name,"cat") == 0)
+//    {
+//        str_copy("bin/cat", buff);
+//    }
+//    else if(str_compare(binary_name,"echo") == 0)
+//    {
+//        str_copy("bin/echo", buff);
+//    }
+//    else if(str_compare(binary_name,"kill") == 0)
+//    {
+//        str_copy("bin/kill", buff);
+//    }
+//    else if(str_compare(binary_name,"ls") == 0)
+//    {
+//        str_copy("bin/ls", buff);
+//    }
+//    else if(str_compare(binary_name,"ps") == 0)
+//    {
+//        str_copy("bin/ps", buff);
+//    }
+//    else if(str_compare(binary_name,"sleep") == 0)
+//    {
+//        str_copy("bin/sleep", buff);
+//    }
+//    else
+//    {
+//        str_copy(binary_name, buff);
+//    }
 //    kprintf("value issss %s",buff);
     return;
 }
@@ -159,10 +228,15 @@ initialise_fds()
     }
 }
 int
-open_s(char *d_path,int flags)
+open_s(char *d_path1,int flags)
 {
+
+    char d_path2[100];
+    path_sanitize(d_path1,d_path2);
+    char *d_path=(char*)&d_path2[1];
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     int fd;
+    kprintf("dpath is %s",d_path);
     if (file_exists(d_path) == 1)
     {
         while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
@@ -275,12 +349,21 @@ close_s(int fd)
 }
 
 int
-open_dir(char *d_path)
+open_dir(char *d_path1)
 {
 
 //    kprintf("dir contents ->%s\n", d_path);
-    struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     int fd;
+    char d_path2[100];
+    path_sanitize(d_path1,d_path2);
+    if(d_path2[len(d_path2)-1]!='/')
+    {
+        d_path2[len(d_path2)]='/';
+        d_path2[len(d_path2)+1] = '\0';
+    }
+    char * d_path = (char*)&d_path2[1];
+    struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
+//    kprintf("dpath is %s",d_path);
     if (file_exists(d_path) == 1)
     {
         while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
@@ -374,14 +457,34 @@ close_dir(int fd)
 void
 fetch_cwd(char *output_buffer)
 {
-    memcopy(pwd, output_buffer, len(pwd));
+    str_copy(RunningTask->cwd, output_buffer);
 }
 
 void
 set_cwd(char *input_buffer)
 {
-    memset((void *) input_buffer, '\0', 200);
-    memcopy(input_buffer, pwd, len(input_buffer));
+//    memset((void *) input_buffer, '\0', 200);
+    char buff[100];
+    path_sanitize(input_buffer,buff);
+    if(buff[len(buff)-1]!='/')
+    {
+        buff[len(buff)]='/';
+        buff[len(buff)+1]='\0';
+    }
+//    kprintf("file to search %s",&buff[1]);
+    if(buff[1]=='\0'&&buff[0]=='/')
+    {
+        str_copy(buff,RunningTask->cwd);
+    }
+    else if(file_exists(&buff[1])==1)
+    {
+        str_copy(buff,RunningTask->cwd);
+    }
+    else
+    {
+        kprintf("invalid path\n");
+    }
+
 }
 
 void

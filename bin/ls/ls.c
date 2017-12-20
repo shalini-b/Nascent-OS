@@ -3,6 +3,7 @@
 #include <dirent.h>
 #include<stdio.h>
 #include <mem.h>
+#include<syscalls.h>
 
 void
 ls(char* path)
@@ -30,6 +31,19 @@ int
 main(int argc, char *argv[], char *envp[])
 {
     // FIXME: handle no arguments to ls
-    ls(argv[1]);
+    if(argc==1)
+    {
+       char cwd[100];
+
+        if(getcwd(cwd, sizeof(cwd))== NULL)
+        {
+            puts("ERROR: Could Not Find CWD");
+        }
+        ls(cwd);
+    }
+    else
+    {
+        ls(argv[1]);
+    }
     return 0;
 }

@@ -52,4 +52,5 @@ void
 fetch_cwd(char *output_buffer);
 void  path_sanitize(char* binary_name,char* buff);
 uint64_t load_elf1(Task *cur_pcb, char *binary_name, char *argv[]);
+void remove_d(char *buff,char* b);
 #endif

@@ -213,6 +213,18 @@ void print_key(int shift_flag,char c)
         *video_address = str[i];
     }
 
+
+    if(c==14)
+    {
+        if(array_pointer>0)
+        {
+            array_pointer-=2;
+            *(base_address+array_pointer)=' ';
+            dec_term();
+        }
+
+    }
+
     if(shift_flag)
     {
         if(c=='h')
