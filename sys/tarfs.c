@@ -100,7 +100,8 @@ void path_sanitize(char* binary_name,char* buff)
     {
         str_copy(binary_name, buff);
     }
-    kprintf("value issss %s",buff);
+//    kprintf("value issss %s",buff);
+    return;
 }
 
 
