@@ -20,7 +20,7 @@ char ENV_BUFFER[1024];
 char cmd_buff[CMD_BUFF_SIZE];
 
 
-void
+int
 run_command(char command_array[][150], int args_num){
     // Handle args for background processes
     int background = 0;
@@ -41,8 +41,7 @@ run_command(char command_array[][150], int args_num){
     pid = fork();
     if (pid == 0){
         // Child process - Execute command
-        // FIXME: do error handling
-        execvp(args[0], args, NULL);
+        return execvp(args[0], args, NULL);
     }
     else if (pid > 0){
         // Parent process
@@ -54,6 +53,7 @@ run_command(char command_array[][150], int args_num){
     else{
         puts("ERROR: Failed to execute command.");
     }
+    return 0;
 }
 
 char* getenv(char* key)
@@ -103,9 +103,10 @@ int setenv( char *name, char *value, int overwrite)
 int
 command_handler(char command_array[][150], int args_num)
 {
+    int ret_code = 0;
     if (len(command_array[0]) == 0)
     {
-        return 0;
+        ret_code = 0;
     }
     if ((str_compare(command_array[0], "exit") == 0))
     {
@@ -154,9 +155,9 @@ command_handler(char command_array[][150], int args_num)
     else
     {
         // fork & execvpe goes here with pipe support
-        run_command(command_array, args_num);
+        ret_code = run_command(command_array, args_num);
     }
-    return 0;
+    return ret_code;
 }
 
 void clear_2darray(char array1[150][150])
@@ -194,6 +195,7 @@ main(int argc, char *argv[], char *envp[])
         memset((void *) string_buffer_array, '\0', 100);
         clear_2darray(final_parsed_array);
         int c;
+        int ret=0;
 
         // Input command
         if (argc == 1) {
@@ -226,7 +228,10 @@ main(int argc, char *argv[], char *envp[])
             break;
         }
         int cnt = split_and_count(string_buffer_array, ' ', final_parsed_array);
-        command_handler(final_parsed_array, cnt+1);
+        ret = command_handler(final_parsed_array, cnt+1);
+        if (ret == -1) {
+            printf("Wrong command. Please try again.\n");
+        }
     }
     return 0;
 }

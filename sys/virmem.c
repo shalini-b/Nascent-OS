@@ -147,6 +147,71 @@ uint64_t create_dir_table(uint64_t vir_addr)
     }
 }
 
+// func takes in virtual address of pml4
+void clear_mapping(uint64_t pml4_addr) {
+#define SCLDN(vaddr) (((vaddr >> 12)) << 12)
+
+    // clear all pml entries except for 511th entry
+    uint64_t* pml = (uint64_t *) SCLDN(pml4_addr);
+
+    for (int i = 0; i < 511; i++) {
+        // if entry not present
+        if (!(pml[i] & 1)) {
+            pml[i] = 0;
+            continue;
+        }
+        // if pml entry present calculate pdpte
+        uint64_t *pdpte = (uint64_t * )SCLDN((pml[i] + KERNBASE));
+
+        for (int j = 0; j < 512; j++) {
+            // if entry not present
+            if (!(pdpte[j] & 1)) {
+                pdpte[j] = 0;
+                continue;
+            }
+
+            // if pdpte entry present calculate pde
+            uint64_t *pde = (uint64_t * )SCLDN((pdpte[j] + KERNBASE));
+
+            for (int k = 0; k < 512; k++) {
+                // if entry not present
+                if (!(pde[k] & 1)) {
+                    pde[k] = 0;
+                    continue;
+                }
+
+                // if pde entry present calculate pte
+                uint64_t *pte = (uint64_t *)SCLDN((pde[k] + KERNBASE));
+
+                for (int l = 0; l < 512; l++) {
+                    // if entry not present
+                    if (!(pte[l] & 1)) {
+                        pte[l] = 0;
+                        continue;
+                    }
+
+                    // if pte entry present, free page
+                    uint64_t *pg_addr = (uint64_t *)SCLDN((pte[l] + KERNBASE));
+                    free_page((void *) pg_addr);
+                    pte[l] = 0;
+                }
+
+                // free pde page
+                free_page((void *) SCLDN((pde[k] + KERNBASE)));
+                pde[k] = 0;
+            }
+
+            // free pdpte page
+            free_page((void *) SCLDN((pdpte[j] + KERNBASE)));
+            pdpte[j] = 0;
+        }
+
+        // free pml page
+        free_page((void *) SCLDN((pml[i] + KERNBASE)));
+        pml[i] = 0;
+    }
+}
+
 
 void create_page_list(uint64_t *physfree, uint32_t *modulep, uint64_t *mem_end)
 {
@@ -244,4 +309,3 @@ struct page *fetch_free_page()
 
     return free_pg;
 }
-

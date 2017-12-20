@@ -78,7 +78,7 @@ uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[])
         }
         tarfs_iterator = get_next_tar_header(tarfs_iterator);
     }
-    return 0;
+    return -1;
 }
 
 int
@@ -282,14 +282,16 @@ close_dir(int fd)
 void
 fetch_cwd(char *output_buffer)
 {
-    memcopy((void *) &RunningTask->cwd[0], (void *) output_buffer, len(RunningTask->cwd));
+    // FIXME: do we need to append null character at the end??
+    memcopy((void *) RunningTask->cwd, (void *) output_buffer, len(RunningTask->cwd));
 }
 
 void
 set_cwd(char *input_buffer)
 {
-    memset((void *) &RunningTask->cwd[0], '\0', 75);
-    memcopy((void *)input_buffer, (void *)&RunningTask->cwd[0], len(input_buffer));
+    // FIXME: this dint work, check again
+    memset((void *) RunningTask->cwd, '\0', 75);
+    memcopy((void *)input_buffer, (void *)RunningTask->cwd, len(input_buffer));
 }
 
 void

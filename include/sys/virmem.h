@@ -15,6 +15,6 @@ struct page* fetch_free_page();
 uint64_t get_mapping(uint64_t pml_addr, uint64_t viraddr);
 void set_mapping(uint64_t pml4_addr, uint64_t viraddr, uint64_t phyaddr, uint64_t flags);
 int get_pte_entry(uint64_t pml_addr, uint64_t viraddr, uint64_t *phy_addr);
-
+void clear_mapping(uint64_t pml4_addr);
 
 #endif

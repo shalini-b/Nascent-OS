@@ -28,7 +28,7 @@ void add_to_task_list(Task* task);
 Task * fetch_ready_task();
 void wake_up_task();
 void idle_process();
-void wait_for_child();
+uint64_t wait_for_child();
 void init_process();
 void clean_child_pcb();
 void create_init_process();

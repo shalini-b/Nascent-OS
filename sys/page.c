@@ -69,3 +69,28 @@ void *kmalloc() {
     memset((void *)free_pg_vir, 0, PAGE_SIZE);
     return free_pg;
 }
+
+void free_page(void * page_addr)
+{
+#define SCLDN(addr) (((addr >> 12)) << 12)
+
+    uint64_t ph = (uint64_t) SCLDN(((uint64_t) page_addr - KERNBASE));
+    struct page * p = get_page_from_PA(ph);
+    if(p->ref_count > 1)
+    {
+        p->ref_count--;
+    }
+    else
+    {
+        p->ref_count = 0;
+        memset((void *) page_addr, 0, PAGE_SIZE);
+        add_to_free_pages(p);
+    }
+}
+
+void add_to_free_pages(struct page* p)
+{
+    struct page *page_pntr = (struct page *) ((uint64_t) free_page_end + KERNBASE);
+    page_pntr->next = p;
+    p->next = NULL;
+}

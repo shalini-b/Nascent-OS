@@ -37,16 +37,16 @@ start(uint32_t *modulep, void *physbase, void *physfree)
     {
         if (smap->type == 1 /* memory */ && smap->length != 0)
         {
-            kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
+            // kprintf("Available Physical Memory [%p-%p]\n", smap->base, smap->base + smap->length);
             mem_end = (uint64_t *)(smap->base + smap->length);
         }
     }
     // Initiating paging
-    kprintf("physfree %p\n", (uint64_t) physfree);
+    // kprintf("physfree %p\n", (uint64_t) physfree);
     init_mem((uint64_t *) physfree, modulep, mem_end);
 
     // Initiating interrupts
-    kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
+    // kprintf("tarfs in [%p:%p]\n", &_binary_tarfs_start, &_binary_tarfs_end);
     init_idt();
 
     // Initialise global structures
@@ -61,7 +61,8 @@ start(uint32_t *modulep, void *physbase, void *physfree)
 
     // Idle process as pid 1
     create_idle_process();
-    
+
+    kprintf("Welcome to Sbush!!\n");
     // Call exec but do not clean up the previous task
     if (is_first_proc == 1) {
         RunningTask = fetch_free_pcb();

@@ -14,8 +14,8 @@ void
 page_fault_handler(uint64_t error_code)
 {
     uint64_t faulting_addr = read_cr2();
-    // kprintf("Faulting address - %p\n", faulting_addr);
     struct vma *vma_v = check_vma(faulting_addr);
+    //kprintf("Faulting address cr2 - %p\n", faulting_addr);
     if (vma_v != NULL)
     {
         // FIXME: if page not present but u get page fault
@@ -108,7 +108,6 @@ page_fault_handler(uint64_t error_code)
         // exit here?
         // restart sbush here?
     }
-    outb(0x20, 0x20);
 }
 
 void

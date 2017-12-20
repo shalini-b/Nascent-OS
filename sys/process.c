@@ -11,6 +11,7 @@
 
 void contextswitch(Registers *, Registers *);
 static char args[10][100];
+static char filename[300];
 extern int is_first_proc;
 
 
@@ -162,12 +163,20 @@ uint64_t *copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[])
     return user_stack;
 }
 
-void sys_execvpe(char *filename, char *argv[], char *envp[])
+int sys_execvpe(char *file_name, char *argv[], char *envp[])
 {
+    // Validate file
+    int res = file_exists(file_name);
+    if (res == -1) {
+        return res;
+    }
+    // FIXME: check for elf format
+
     memset(&args[0], 0, 1000);
     uint64_t stack_base = (uint64_t)page_alloc();
     uint64_t stack_start = (stack_base + PAGE_SIZE);
 
+    str_copy(file_name, filename);
     // reorganise arguments
     int argc = 0;
     if (argv) {
@@ -213,6 +222,7 @@ void sys_execvpe(char *filename, char *argv[], char *envp[])
     RunningTask->regs.rsp = (uint64_t) USTACK -  (((uint64_t)PAGE_SIZE) - (((uint64_t)stack_start) - stack_base));
     // iretq to user mode
     return_to_user();
+    return 0;
 }
 
 void return_to_user() {
@@ -222,7 +232,8 @@ void return_to_user() {
     __asm__ __volatile__(
         "pushq $35 \n\t" \
         "pushq %1 \n\t" \
-        "pushfq \n\t"\
+        "pushq $0x200 \n\t" \
+        //"pushfq \n\t"
         "pushq $43 \n\t"\
         "pushq %0 \n\t" \
         "iretq \n\t"
@@ -231,7 +242,6 @@ void return_to_user() {
 }
 
 void clean_task_for_exec(Task *cur_task) {
-    // FIXME: clean regs??
     // reset task vars
     cur_task->next        = NULL;
     cur_task->prev        = NULL;
@@ -240,10 +250,15 @@ void clean_task_for_exec(Task *cur_task) {
     // memset filename
     memset((void*)cur_task->filename, 0, 75);
 
+    // FIXME: free memory given to vma_head & its members
+    // check if vma_head present
+
     // clean mm struct
     cur_task->task_mm->vma_head = NULL;
     cur_task->task_mm->count = 0;
     cur_task->task_mm->begin_stack = 0;
+    cur_task->task_mm->argv_start = 0;
+    cur_task->task_mm->argv_end = 0;
 
     // re-initiate all fds for each pcb
     for (int i = 0; i < MAX_FDS; i++)
@@ -265,10 +280,12 @@ void clean_task_for_exec(Task *cur_task) {
     // clean kstack
     memset((void*)cur_task->kstack, 0, KSTACK_SIZE);
 
-    // FIXME: deep clean the page tables & vma & mm structs
-    // For now, just clear out the PML table
-    uint64_t * proc_pml = (uint64_t *) (cur_task->regs.cr3 + KERNBASE);
-    memset((void*)proc_pml, 0, 511*8);
+    // CAUTION - check this
+    // deep clean the page tables
+    uint64_t proc_pml = (uint64_t) (cur_task->regs.cr3 + KERNBASE);
+    clear_mapping(proc_pml);
+
+    // FIXME: clean regs??
 }
 
 void report_error(char* msg)
@@ -291,8 +308,9 @@ void schedule() {
 
 void sys_exit() {
 
+    kprintf("Exit called by %d\n", RunningTask->pid);
     if (str_compare(RunningTask->filename, "bin/sbush") == 0) {
-        kprintf("Sbush exiting..");
+        kprintf("Thank you for using Sbush.");
     }
     RunningTask->task_state = ZOMBIE;
 
@@ -301,16 +319,28 @@ void sys_exit() {
     if (parent != NULL) {
         if (parent->task_state == SUSPENDED) {
             parent->task_state = READY;
+            kprintf("In exit - Waking up parent %d\n", parent->pid);
         }
+        else
+        {
+            kprintf("In exit - Parent not waiting for me- %d\n", parent->pid);
+        }
+    }
+    else
+    {
+        kprintf("In exit - should not be possible\n");
     }
 
     // Mark init as parent for all children of this Running Task
     // FIXME: Irrespective of their task state?
     for (int i = 0; i < NUM_PCB; i++) {
-        Task tmp = pcb_arr[i];
-        if(tmp.ppid == RunningTask->pid)
+        Task* tmp = &pcb_arr[i];
+        if(tmp->ppid == RunningTask->pid &&
+           tmp->task_state != READY)
         {
-            tmp.ppid = INIT_TASK->pid;
+            kprintf("Making INIT parent of %d\n",tmp->pid);
+            tmp->ppid = INIT_TASK->pid;
         }
     }
+    schedule();
 }

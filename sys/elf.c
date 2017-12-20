@@ -100,9 +100,9 @@ int elf_read(struct Elf64_Ehdr *elf_header, Task *new_pcb, char *filename, char 
                 // mmap(start_viraddr, present_program_header->p_memsz, vm_type == TEXT ? RX_USER : RW_USER);
 
                 // Copy the contents into address space
-                memcopy((void *)present_file_segment, (void *) start_viraddr, (uint64_t)program_header->p_filesz);
-                int bss_size = (present_program_header->p_memsz)-(program_header->p_filesz);
-                memset((void*)((start_viraddr + program_header->p_filesz)), 0, bss_size);
+                memcopy((void *)present_file_segment, (void *) start_viraddr, (uint64_t)present_program_header->p_filesz);
+                int bss_size = (present_program_header->p_memsz)-(present_program_header->p_filesz);
+                memset((void*)((start_viraddr + present_program_header->p_filesz)), 0, bss_size);
             }
             present_program_header += 1;
         }

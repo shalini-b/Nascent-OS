@@ -29,8 +29,10 @@ void timer_int()
             }
             p = p->next;
         }
-        // call schedule
-        // schedule();
     }
     timer_count++;
+
+    if (timer_count == 0)
+        schedule();
+
 }

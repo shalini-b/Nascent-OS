@@ -84,7 +84,9 @@ typedef enum {
     // child running, parent exited
     ZOMBIE,
     // process is waiting for child
-    SUSPENDED
+    SUSPENDED,
+    // unavailable 
+    UNAVAIL
 }TASK_STATES;
 
 
@@ -133,7 +135,7 @@ int fork_process();
 uint64_t *copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[]);
 void report_error(char* msg);
 void clean_task_for_exec(Task *cur_task);
-void sys_execvpe(char *file, char *argv[], char *envp[]);
+int sys_execvpe(char *file, char *argv[], char *envp[]);
 void schedule();
 void return_to_user();
 void sys_exit();

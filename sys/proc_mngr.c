@@ -157,8 +157,8 @@ fetch_free_pcb()
 }
 
 void clear_pcb(Task *cur_task) {
-    // FIXME: clean regs??
     // reset task vars
+    // CAUTION - pid not reset
     cur_task->next        = NULL;
     cur_task->prev        = NULL;
     cur_task->parent_task = NULL;
@@ -166,12 +166,11 @@ void clear_pcb(Task *cur_task) {
     cur_task->task_state = READY;
     cur_task->ppid = -1;
 
-    // CAUTION - pid not reset
     // memset filename
     memset((void*)cur_task->filename, 0, 75);
 
-    // FIXME: free memory given to task_mm
-    // FIXME: free memory given to vma & its members
+    // FIXME: free memory given to vma_head & its members
+    // check if vma_head present
 
     // clean mm struct
     cur_task->task_mm->vma_head = NULL;
@@ -180,17 +179,22 @@ void clear_pcb(Task *cur_task) {
     cur_task->task_mm->argv_start = 0;
     cur_task->task_mm->argv_end = 0;
 
-    // FIXME: clear out all fds - check this
+    // FIXME: free memory given to task_mm
+
     // FIXME: free memory given to fd_array & its members
-    memset((void*)cur_task->fd_array, 0, MAX_FDS*sizeof(fd));
+
+    // FIXME: clear out all fds - check this
+    memset((void*)cur_task->fd_array, 0, MAX_FDS * sizeof(fd));
 
     // clean kstack
     memset((void*)cur_task->kstack, 0, KSTACK_SIZE);
 
-    // FIXME: deep clean the page tables & vma & mm structs
-    // For now, just clear out the PML table
-    uint64_t * proc_pml = (uint64_t *) (cur_task->regs.cr3 + KERNBASE);
-    memset((void*)proc_pml, 0, 511*8);
+    // CAUTION - check this
+    // deep clean the page tables
+    uint64_t proc_pml = (uint64_t) (cur_task->regs.cr3 + KERNBASE);
+    clear_mapping(proc_pml);
+
+    // FIXME: clean regs??
 }
 
 // ********** Process scheduling helper methods ********
@@ -207,11 +211,39 @@ idle_process()
     }
 }
 
-void wait_for_child()
+uint64_t wait_for_child()
 {
+    for (int i = 0; i< NUM_PCB; i++)
+    {
+        Task* child = &pcb_arr[i];
+        if(child->task_state == ZOMBIE &&
+           child->ppid == RunningTask->pid)
+        {
+            // CAUTION - check this
+             //FIXME - Should change this
+            //clear_pcb(child);
+            append_in_free_list(child);
+            return i;
+        }
+    }
+
     RunningTask->task_state = SUSPENDED;
     schedule();
-    return;
+    for (int i = 0; i< NUM_PCB; i++)
+    {
+        Task* child = &pcb_arr[i];
+        if(child->task_state == ZOMBIE &&
+           child->ppid == RunningTask->pid)
+        {
+            // CAUTION - check this
+             //FIXME - Should change this
+            //clear_pcb(child);
+            append_in_free_list(child);
+            return i;
+        }
+    }
+
+    return 0;
 }
 
 void init_process()
@@ -225,15 +257,15 @@ void init_process()
 
 void clean_child_pcb()
 {
-    int parent_id = RunningTask->pid;
     for (int i = 0; i< NUM_PCB; i++)
     {
-        Task child = pcb_arr[i];
-        if(child.ppid == parent_id)
+        Task* child = &pcb_arr[i];
+        if(child->task_state == ZOMBIE &&
+           child->ppid == RunningTask->pid)
         {
-            // FIXME: can this be used? It doesnt clear out fds etc
-            clean_task_for_exec(&child);
-            append_in_free_list(&child);
+            // CAUTION - check this
+            clear_pcb(child);
+            append_in_free_list(child);
         }
     }
 }
@@ -263,6 +295,10 @@ create_init_process( )
 void
 append_in_free_list(Task *task)
 {
+    // FIXME - REMOVE THIS
+    task->task_state = UNAVAIL;
+    return;
+
     // Append the given PCB at the end of free list
     // maintaining the pcb position still because of array
     // if free list is empty

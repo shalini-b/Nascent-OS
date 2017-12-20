@@ -30,9 +30,8 @@ syscall_handler(Registers1 *regs)
                 for (int i=0; i<18; i++) {
                     __asm__ volatile("popq %%rax":::"%rax");
                 }
-                outb(0x20, 0x20);
                 // FIXME: see if this is req
-                schedule();
+                // schedule();
                 return 0;
             }
             else {
@@ -82,8 +81,8 @@ syscall_handler(Registers1 *regs)
         }
         case SYS_wait_s:
         {
-            RunningTask->task_state = SUSPENDED;
-            // schedule();
+            regs->rax = wait_for_child();
+            schedule();
             break;
         }
         case SYS_exit:
@@ -100,7 +99,7 @@ syscall_handler(Registers1 *regs)
         {
             RunningTask->sleep_sec = (int)regs->rdi ;
             RunningTask->task_state = SLEEP;
-            // schedule();
+            schedule();
             break;
         }
         case SYS_kill_s :
@@ -119,25 +118,23 @@ syscall_handler(Registers1 *regs)
             break;
         }
         case SYS_execve: {
-            sys_execvpe((char *)regs->rdi,(char **)regs->rsi,(char **)regs->rdx);
+            regs->rax = sys_execvpe((char *)regs->rdi,(char **)regs->rsi,(char **)regs->rdx);
             break;
         }
         case SYS_sbrk: {
             regs->rax = (uint64_t) kmalloc();
+            break;
         }
         case SYS_yield: {
             schedule();
             break;
         }
         default: {
-            // FIXME: check this
             regs->rax = 0;
             break;
         }
     }
-    // FIXME: do we need to call outb here???
-    outb(0x20, 0x20);
-    schedule();
+    // schedule();
     return regs->rax;
 }
 
@@ -153,12 +150,14 @@ write_to_console(uint64_t fd, char *buffer, uint64_t count)
 
 void sys_ps() {
     Task* p = overall_task_list;
-    // FIXME: show only selected process states
-    char *a[8] = {"RUNNING", "READY", "SLEEP", "WAIT FOR INPUT", "IDLE", "EXIT", "ZOMBIE", "WAITING"};
+    char *a[9] = {"RUNNING", "READY", "SLEEP", "WAIT FOR INPUT", "IDLE", "EXIT", "ZOMBIE", "WAITING", "UNAVAIL"};
     kprintf("PID   PROCESS      MODE \n");
     while(p!=NULL)
     {
-        kprintf("%d     %s           %s\n",p->pid,p->filename,(char*) a[p->task_state]);
+        // show only selected process states - do not show zombie
+        if (p->task_state != 6) {
+            kprintf("%d     %s           %s\n", p->pid, p->filename, (char *) a[p->task_state]);
+        }
         p=p->next;
     }
     kprintf("%d     %s         %s\n",RunningTask->pid,RunningTask->filename, (char*) a[RunningTask->task_state]);

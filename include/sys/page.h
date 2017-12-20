@@ -47,5 +47,7 @@ void *kmalloc();
 uint64_t read_cr2();
 void invalidate_tlb();
 struct page * get_page_from_PA(uint64_t phyaddr);
+void free_page(void * page_addr);
+void add_to_free_pages(struct page* p);
 
 #endif
