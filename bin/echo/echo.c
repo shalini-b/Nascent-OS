@@ -5,12 +5,18 @@
 void
 echo(char* s )
 {
-    printf("%s\n",s);
+    printf("%s ",s);
 }
 
 int
 main(int argc, char *argv[], char *envp[])
 {
-    echo(argv[1]);
+    if (argc <= 1){
+        printf("Invalid arguments\n");
+    }
+
+    for (int i = 1; i < argc;i++)
+        echo(argv[i]);
+    printf("\n");
     return 0;
 }
