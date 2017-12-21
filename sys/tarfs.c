@@ -62,17 +62,21 @@ file_exists(char *f_name)
 
 }
 
-int validate_binary(char *f_name) {
+int
+validate_binary(char *f_name)
+{
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
     {
         if (str_compare1(tarfs_iterator->name, f_name) == 0)
         {
             struct Elf64_Ehdr *elf_header = (struct Elf64_Ehdr *) ((uint64_t) tarfs_iterator + 512);
-            if (is_elf_format(elf_header) == 1) {
+            if (is_elf_format(elf_header) == 1)
+            {
                 return 1;
             }
-            else {
+            else
+            {
                 return -1;
             }
         }
@@ -81,45 +85,46 @@ int validate_binary(char *f_name) {
     return -1;
 }
 
-uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[])
+uint64_t
+load_elf(Task *cur_pcb, char *binary_name, char *argv[])
 {
     char buff[100];
     memset((void *) buff, '\0', 100);
-    path_sanitize(binary_name,buff);
-    return load_elf1(cur_pcb,&buff[1],argv);
+    path_sanitize(binary_name, buff);
+    return load_elf1(cur_pcb, &buff[1], argv);
 }
 
-
-void remove_d(char *buff,char* b)
+void
+remove_d(char *buff, char *b)
 {
-    int i=0;
-    int j=0;
-    int c=0;
-    int p=0;
-    while(buff[i]!='\0')
+    int i = 0;
+    int j = 0;
+    int c = 0;
+    int p = 0;
+    while (buff[i] != '\0')
     {
-        if(buff[i]=='.')
+        if (buff[i] == '.')
         {
             c++;
         }
-        if(c==2 && i!=2)
+        if (c == 2 && i != 2)
         {
-            p=j-3;
-            while(b[p]!='/')
+            p = j - 3;
+            while (b[p] != '/')
             {
 
                 p--;
             }
             p++;
-            b[p]='\0';
-            c=0;
-            j=p;
-            if(buff[i+1]!='\0')
+            b[p] = '\0';
+            c = 0;
+            j = p;
+            if (buff[i + 1] != '\0')
             {
-                i+=2;
-                if(buff[i]=='.')
+                i += 2;
+                if (buff[i] == '.')
                 {
-                    c=1;
+                    c = 1;
                 }
             }
             else
@@ -128,7 +133,7 @@ void remove_d(char *buff,char* b)
             }
         }
         b[j] = buff[i];
-        if(b[j]=='\0')
+        if (b[j] == '\0')
         {
             i--;
         }
@@ -137,29 +142,30 @@ void remove_d(char *buff,char* b)
     }
     b[j] = '\0';
 }
-void path_sanitize(char* binary_name,char* buff)
+void
+path_sanitize(char *binary_name, char *buff)
 {
-    if(binary_name[0]=='/')
+    if (binary_name[0] == '/')
     {
         str_copy(binary_name, buff);
     }
     else
     {
 //        str_copy(RunningTask->cwd,pwd);
-        int l=len(RunningTask->cwd);
+        int l = len(RunningTask->cwd);
         str_copy(RunningTask->cwd, buff);
-        if(buff[l-1]!='/')
+        if (buff[l - 1] != '/')
         {
-            buff[l]='/';
+            buff[l] = '/';
             l++;
         }
         str_copy(binary_name, &buff[l]);
     }
     char b[100];
 //    str_copy(buff,b);
-    remove_d(buff,b);
-    memset(buff,'\0',100);
-    str_copy(b,buff);
+    remove_d(buff, b);
+    memset(buff, '\0', 100);
+    str_copy(b, buff);
 //    if(str_compare(binary_name,"cat") == 0)
 //    {
 //        str_copy("bin/cat", buff);
@@ -192,9 +198,9 @@ void path_sanitize(char* binary_name,char* buff)
     return;
 }
 
-
 // FIXME: change return type
-uint64_t load_elf1(Task *cur_pcb, char *binary_name, char *argv[])
+uint64_t
+load_elf1(Task *cur_pcb, char *binary_name, char *argv[])
 {
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
@@ -247,15 +253,15 @@ initialise_fds()
     }
 }
 int
-open_s(char *d_path1,int flags)
+open_s(char *d_path1, int flags)
 {
 
     char d_path2[100];
-    path_sanitize(d_path1,d_path2);
-    char *d_path=(char*)&d_path2[1];
+    path_sanitize(d_path1, d_path2);
+    char *d_path = (char *) &d_path2[1];
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
     int fd;
-    kprintf("dpath is %s",d_path);
+    kprintf("dpath is %s", d_path);
     if (file_exists(d_path) == 1)
     {
         while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
@@ -285,10 +291,10 @@ open_s(char *d_path1,int flags)
 int
 read_s(int fd, char *buffer, int num_bytes)
 {
-    if(fd==0)
+    if (fd == 0)
     {
 
-        schedule_terminal_task(buffer,num_bytes);
+        schedule_terminal_task(buffer, num_bytes);
     }
     else
     {
@@ -318,14 +324,13 @@ read_s(int fd, char *buffer, int num_bytes)
     return 0;
 }
 
-
 int
 fgets_s(int fd, char *buffer, int num_bytes)
 {
-    if(fd==0)
+    if (fd == 0)
     {
 
-        schedule_terminal_task(buffer,num_bytes);
+        schedule_terminal_task(buffer, num_bytes);
     }
     else
     {
@@ -355,9 +360,6 @@ fgets_s(int fd, char *buffer, int num_bytes)
     return 0;
 }
 
-
-
-
 int
 close_s(int fd)
 {
@@ -370,17 +372,21 @@ close_s(int fd)
 int
 open_dir(char *d_path1)
 {
+    if (str_compare("/", d_path1) == 0)
+    {
+//        kprintf("usr \n  bin  \n  etc \n lib  ");
+        return 25;
+    }
 
-//    kprintf("dir contents ->%s\n", d_path);
     int fd;
     char d_path2[100];
-    path_sanitize(d_path1,d_path2);
-    if(d_path2[len(d_path2)-1]!='/')
+    path_sanitize(d_path1, d_path2);
+    if (d_path2[len(d_path2) - 1] != '/')
     {
-        d_path2[len(d_path2)]='/';
-        d_path2[len(d_path2)+1] = '\0';
+        d_path2[len(d_path2)] = '/';
+        d_path2[len(d_path2) + 1] = '\0';
     }
-    char * d_path = (char*)&d_path2[1];
+    char *d_path = (char *) &d_path2[1];
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
 //    kprintf("dpath is %s",d_path);
     if (file_exists(d_path) == 1)
@@ -433,6 +439,12 @@ file_des_validator(int fd)
 int
 read_dir(int fd, char *buffer)
 {
+    if (fd == 25)
+    {
+        kprintf("usr\n bin\netc\nlib\n ");
+        return 1;
+    }
+
     if (file_des_validator(fd) == 1)
     {
         kprintf("Invalid fd\n");
@@ -467,6 +479,12 @@ read_dir(int fd, char *buffer)
 int
 close_dir(int fd)
 {
+
+    if (fd == 25)
+    {
+
+        return 0;
+    }
     RunningTask->fd_array[fd].alloted = 0;
     RunningTask->fd_array[fd].file_sz = 0;
     RunningTask->fd_array[fd].num_bytes_read = 0;
@@ -483,19 +501,19 @@ void
 set_cwd(char *input_buffer)
 {
     char buff[100];
-    path_sanitize(input_buffer,buff);
-    if(buff[len(buff)-1]!='/')
+    path_sanitize(input_buffer, buff);
+    if (buff[len(buff) - 1] != '/')
     {
-        buff[len(buff)]='/';
-        buff[len(buff)+1]='\0';
+        buff[len(buff)] = '/';
+        buff[len(buff) + 1] = '\0';
     }
-    if(buff[1]=='\0'&&buff[0]=='/')
+    if (buff[1] == '\0' && buff[0] == '/')
     {
-        str_copy(buff,RunningTask->cwd);
+        str_copy(buff, RunningTask->cwd);
     }
-    else if(file_exists(&buff[1])==1)
+    else if (file_exists(&buff[1]) == 1)
     {
-        str_copy(buff,RunningTask->cwd);
+        str_copy(buff, RunningTask->cwd);
     }
     else
     {
@@ -513,7 +531,7 @@ tarfs_test()
     int fd;
     //FIXME:: should be done inside task
     initialise_fds();
-    fd = open_s("test1/abc.txt",1);
+    fd = open_s("test1/abc.txt", 1);
     memset((void *) buff, '\0', SIZE + 10);
     while (read_s(fd, buff, SIZE) != 0)
     {
@@ -522,7 +540,7 @@ tarfs_test()
     }
     close_s(fd);
 
-    fd = open_s("test1/abc.tx",1);
+    fd = open_s("test1/abc.tx", 1);
     memset((void *) buff, '\0', SIZE + 10);
     while (read_s(fd, buff, SIZE) != 0)
     {
