@@ -21,7 +21,8 @@ int fork_process() {
     str_copy(parent_pcb->filename, child_pcb->filename);
     child_pcb->parent_task = parent_pcb;
     child_pcb->ppid = parent_pcb->pid;
-    str_copy(child_pcb->filename, parent_pcb->filename);
+    str_copy(parent_pcb->cwd,child_pcb->cwd);
+    str_copy(parent_pcb->filename,child_pcb->filename);
 
     // copying file desc
     for (int i = 0; i < MAX_FDS; i++) {
@@ -192,6 +193,12 @@ int sys_execvpe(char *file_name, char *argv[], char *envp[])
         is_first_proc = 0;
     }
 
+    if(RunningTask->pid<3)
+    {
+        RunningTask->cwd[0]='/';
+        RunningTask->cwd[1]='\0';
+    }
+
     uint64_t bin_viradd = load_elf(RunningTask, filename, argv);
 
     // Set RIP & RSP for new process
@@ -215,6 +222,7 @@ int sys_execvpe(char *file_name, char *argv[], char *envp[])
 
     // assign stack address which points to argc
     RunningTask->regs.rsp = (uint64_t) USTACK -  (((uint64_t)PAGE_SIZE) - (((uint64_t)stack_start) - stack_base));
+
     // iretq to user mode
     return_to_user();
     return 0;

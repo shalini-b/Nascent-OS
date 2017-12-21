@@ -5,8 +5,6 @@
 #define MIN(a, b)  (a<b)? a : b
 #define MAX(a, b)  (a>b)? a : b
 
-char term_buff[BUFF_SIZE];
-int terminal_line_count;
 int r_buff_ptr = 0;
 int w_buff_ptr = 0;
 void
@@ -27,9 +25,20 @@ terminal_handler(char c)
     {
         term_buff[w_buff_ptr] = c;
         w_buff_ptr++;
+//        kprintf("writ buff value %d",w_buff_ptr);
 
     }
 
+}
+
+void dec_term()
+{
+    term_buff[w_buff_ptr]='\0';
+    w_buff_ptr--;
+    term_buff[w_buff_ptr]='\0';
+//    term_buff[w_buff_ptr]='\0';
+//    w_buff_ptr--;
+//    kprintf("writ buff value %d",w_buff_ptr);
 }
 
 int

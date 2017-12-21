@@ -3,10 +3,11 @@
 //
 // FIXME: do we need this big buffer?
 #define OUTPUT_BUFFER_MAX_LENGTH 20480
-#include <stdarg.h>
-#include <stdio.h>
+#include <sys/stdarg.h>
+#include <sys/stdio.h>
 #include <sys/page.h>
-#include <strings.h>
+#include <sys/strings.h>
+#include <sys/terminal.h>
 
 int OUTPUT_BUFFER_LENGTH = 0;
 int array_pointer = 0;
@@ -212,6 +213,18 @@ void print_key(int shift_flag,char c)
         *video_address = str[i];
     }
 
+
+    if(c==14)
+    {
+        if(array_pointer>0)
+        {
+            array_pointer-=2;
+            *(base_address+array_pointer)=' ';
+            dec_term();
+        }
+
+    }
+
     if(shift_flag)
     {
         if(c=='h')
@@ -219,6 +232,8 @@ void print_key(int shift_flag,char c)
             if(array_pointer>0)
             {
                 array_pointer-=2;
+                dec_term();
+//                kprintf("writ buff value in kprintf %d",w_buff_ptr);
                 *(base_address+array_pointer)=' ';
                 array_pointer-=2;
                 *(base_address+array_pointer)=' ';

@@ -124,7 +124,7 @@ command_handler(char command_array[][150], int args_num)
         char cwd[1024];
         if(getcwd(cwd, sizeof(cwd))!= NULL)
         {
-            puts(cwd);
+            printf("%s\n",cwd);
         }
         else
         {
