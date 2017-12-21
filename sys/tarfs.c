@@ -294,7 +294,7 @@ read_s(int fd, char *buffer, int num_bytes)
     {
         if (file_des_validator(fd) != 0)
         {
-            kprintf("Invalid fd\n");
+            kprintf("file not found\n");
             return 0;
         }
         int file_sz = RunningTask->fd_array[fd].file_sz;

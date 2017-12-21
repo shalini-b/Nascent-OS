@@ -35,9 +35,9 @@ void dec_term()
 {
     term_buff[w_buff_ptr]='\0';
     w_buff_ptr--;
-    term_buff[w_buff_ptr]='\0';
 //    term_buff[w_buff_ptr]='\0';
-//    w_buff_ptr--;
+    term_buff[w_buff_ptr]='\0';
+    w_buff_ptr--;
 //    kprintf("writ buff value %d",w_buff_ptr);
 }
 

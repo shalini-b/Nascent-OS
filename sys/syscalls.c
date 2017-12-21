@@ -120,8 +120,10 @@ syscall_handler(Registers1 *regs)
             break;
         }
         case SYS_sbrk: {
-            regs->rax = (uint64_t) kmalloc();
+//            kprintf("in kmalloc");
+            regs->rax = (uint64_t) page_alloc();
             break;
+
         }
         case SYS_yield: {
             schedule();

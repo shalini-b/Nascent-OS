@@ -1,5 +1,5 @@
-bin/cat test1/abc.txt
-bin/ls bin/
-bin/sleep 3
-bin/ps
-bin/echo "working"
+#! /bin/sbush
+/bin/ls /bin
+/bin/sleep 3
+/bin/ps
+/bin/echo "working"
