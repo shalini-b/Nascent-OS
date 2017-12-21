@@ -162,8 +162,16 @@ uint64_t *copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[])
 
 int sys_execvpe(char *file_name, char *argv[], char *envp[])
 {
+    if(RunningTask->pid<3)
+    {
+        RunningTask->cwd[0]='/';
+        RunningTask->cwd[1]='\0';
+    }
+
     // Validate file
-    int res = validate_binary(file_name);
+    char buff[100];
+    path_sanitize(file_name, buff);
+    int res = validate_binary((char*)&buff[1]);
     if (res == -1) {
         return res;
     }
@@ -191,12 +199,6 @@ int sys_execvpe(char *file_name, char *argv[], char *envp[])
     }
     else if (is_first_proc == 1) {
         is_first_proc = 0;
-    }
-
-    if(RunningTask->pid<3)
-    {
-        RunningTask->cwd[0]='/';
-        RunningTask->cwd[1]='\0';
     }
 
     uint64_t bin_viradd = load_elf(RunningTask, filename, argv);
@@ -254,6 +256,10 @@ void clean_task_for_exec(Task *cur_task) {
 
     // FIXME: free memory given to vma_head & its members
     // check if vma_head present
+    /* if (cur_task->task_mm->vma_head != NULL) {
+        struct vma * tmp = cur_task->task_mm->vma_head;
+        tmp
+    }*/
 
     // clean mm struct
     cur_task->task_mm->vma_head = NULL;
@@ -310,9 +316,9 @@ void schedule() {
 
 void sys_exit(int pid) {
     Task * target_task = &pcb_arr[pid];
-    if (str_compare(target_task->filename, "bin/sbush") == 0) {
+    /*if (str_compare(target_task->filename, "bin/sbush") == 0) {
         kprintf("Thank you for using Sbush.\n");
-    }
+    }*/
     target_task->task_state = ZOMBIE;
 
     // Wake up the parent of this task if it was waiting

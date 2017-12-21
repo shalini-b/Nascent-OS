@@ -197,15 +197,10 @@ main(int argc, char *argv[], char *envp[])
     int t = 0;
     if (argc == 2)
     {
-//        printf("argc is %d",argc);
         int fd;
         fd = open(argv[1], 1);
         memset((void *) cmd_buff, '\0', CMD_BUFF_SIZE);
-        while (read(fd, cmd_buff, CMD_BUFF_SIZE) != 0)
-        {
-            // printf("%s", cmd_buff);
-            // memset((void *) cmd_buff, '\0', CMD_BUFF_SIZE);
-        }
+        while (read(fd, cmd_buff, CMD_BUFF_SIZE) != 0);
         close(fd);
     }
     while (1)
@@ -214,7 +209,6 @@ main(int argc, char *argv[], char *envp[])
         clear_2darray(final_parsed_array);
         int c;
         int ret = 0;
-
 
         // Input command
         if (argc == 1)
@@ -241,10 +235,8 @@ main(int argc, char *argv[], char *envp[])
                 {
                     string_buffer_array[i] = cmd_buff[ptr1];
                     i++;
-//                    printf("%s",string_buffer_array);
                     if (cmd_buff[ptr1] == '\0')
                     {
-//                        printf("in 9999\n");
                         memset((void *) string_buffer_array, '\0', 100);
                         c = 1;
                         break;
@@ -262,7 +254,9 @@ main(int argc, char *argv[], char *envp[])
 
         if (t >= 2)
         {
-//            printf("commands are %s\n",string_buffer_array);
+            if (str_compare(string_buffer_array, "") == 0) {
+                continue;
+            }
             int cnt = split_and_count(string_buffer_array, ' ', final_parsed_array);
             ret = command_handler(final_parsed_array, cnt + 1);
             if (ret == -1)

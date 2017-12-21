@@ -45,6 +45,14 @@ get_free_vma()
     free_vma_head = free_vma_head->next;
     free_vma->next = NULL;
     free_vma->prev = NULL;
+    free_vma->start_addr = 0;
+    free_vma->end_addr = 0;
+    free_vma->vm_flags = 0;
+    // making ANON as default value
+    free_vma->vmtype = 4;
+    free_vma->p_filesz = 0;
+    free_vma->tarfs_base = 0;
+
     return free_vma;
 }
 

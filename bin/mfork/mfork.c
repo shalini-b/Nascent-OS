@@ -14,8 +14,8 @@ int main(int argc, char* argv[], char* envp[])
       int pid = fork();
       if (pid == 0)
       {
-         char* argv[10] = {"bin/test1", "3", 0};
-         execvp("bin/test1", argv, envp);
+         char* argv[10] = {"/bin/test1", "3", 0};
+         execvp("/bin/test1", argv, envp);
       }
    }
 
