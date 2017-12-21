@@ -50,4 +50,6 @@ void
 set_cwd(char *input_buffer);
 void
 fetch_cwd(char *output_buffer);
+int validate_binary(char *f_name);
+
 #endif

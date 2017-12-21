@@ -15,7 +15,7 @@ page_fault_handler(uint64_t error_code)
 {
     uint64_t faulting_addr = read_cr2();
     struct vma *vma_v = check_vma(faulting_addr);
-    //kprintf("Faulting address cr2 - %p\n", faulting_addr);
+    // kprintf("Faulting address cr2 - %p\n", faulting_addr);
     if (vma_v != NULL)
     {
         // FIXME: if page not present but u get page fault
@@ -103,10 +103,7 @@ page_fault_handler(uint64_t error_code)
     {
         kprintf("Segmentation Fault: \n");
         print_status(error_code);
-        while(1);
-        // FIXME: prevent infinitely printing this
-        // exit here?
-        // restart sbush here?
+        sys_exit(RunningTask->pid);
     }
 }
 

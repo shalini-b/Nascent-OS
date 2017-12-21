@@ -193,7 +193,7 @@ void clear_pcb(Task *cur_task) {
     // deep clean the page tables
     uint64_t proc_pml = (uint64_t) (cur_task->regs.cr3 + KERNBASE);
     clear_mapping(proc_pml);
-
+    
     // FIXME: clean regs??
 }
 
@@ -220,8 +220,7 @@ uint64_t wait_for_child()
            child->ppid == RunningTask->pid)
         {
             // CAUTION - check this
-             //FIXME - Should change this
-            //clear_pcb(child);
+            clear_pcb(child);
             append_in_free_list(child);
             return i;
         }
@@ -236,8 +235,7 @@ uint64_t wait_for_child()
            child->ppid == RunningTask->pid)
         {
             // CAUTION - check this
-             //FIXME - Should change this
-            //clear_pcb(child);
+            clear_pcb(child);
             append_in_free_list(child);
             return i;
         }
@@ -296,8 +294,8 @@ void
 append_in_free_list(Task *task)
 {
     // FIXME - REMOVE THIS
-    task->task_state = UNAVAIL;
-    return;
+    //task->task_state = UNAVAIL;
+    //return;
 
     // Append the given PCB at the end of free list
     // maintaining the pcb position still because of array
@@ -332,6 +330,10 @@ add_to_task_list(Task *task)
     {
         task->task_state = READY;
     }
+    // if zombie, dont add
+    if (task->task_state == ZOMBIE)
+       return;
+
     // empty list case
     if (overall_task_list == NULL)
     {

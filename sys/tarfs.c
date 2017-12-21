@@ -59,6 +59,25 @@ file_exists(char *f_name)
 
 }
 
+int validate_binary(char *f_name) {
+    struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;
+    while (tarfs_iterator < (struct posix_header_ustar *) &_binary_tarfs_end)
+    {
+        if (str_compare1(tarfs_iterator->name, f_name) == 0)
+        {
+            struct Elf64_Ehdr *elf_header = (struct Elf64_Ehdr *) ((uint64_t) tarfs_iterator + 512);
+            if (is_elf_format(elf_header) == 1) {
+                return 1;
+            }
+            else {
+                return -1;
+            }
+        }
+        tarfs_iterator = get_next_tar_header(tarfs_iterator);
+    }
+    return -1;
+}
+
 uint64_t load_elf(Task *cur_pcb, char *binary_name, char *argv[])
 {
     struct posix_header_ustar *tarfs_iterator = (struct posix_header_ustar *) &_binary_tarfs_start;

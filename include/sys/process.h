@@ -86,7 +86,7 @@ typedef enum {
     // process is waiting for child
     SUSPENDED,
     // unavailable 
-    UNAVAIL
+    // UNAVAIL
 }TASK_STATES;
 
 
@@ -138,7 +138,7 @@ void clean_task_for_exec(Task *cur_task);
 int sys_execvpe(char *file, char *argv[], char *envp[]);
 void schedule();
 void return_to_user();
-void sys_exit();
+void sys_exit(int pid);
 
 
 #endif

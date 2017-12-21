@@ -30,8 +30,6 @@ syscall_handler(Registers1 *regs)
                 for (int i=0; i<18; i++) {
                     __asm__ volatile("popq %%rax":::"%rax");
                 }
-                // FIXME: see if this is req
-                // schedule();
                 return 0;
             }
             else {
@@ -87,7 +85,7 @@ syscall_handler(Registers1 *regs)
         }
         case SYS_exit:
         {
-            sys_exit();
+            sys_exit(RunningTask->pid);
             break;
         }
         case SYS_ps:
@@ -104,7 +102,7 @@ syscall_handler(Registers1 *regs)
         }
         case SYS_kill_s :
         {
-            // FIXME: implement this
+            sys_exit((int)regs->rdi);
             break;
         }
         case SYS_chdir_s:
@@ -112,7 +110,7 @@ syscall_handler(Registers1 *regs)
             set_cwd((char *)regs->rdi);
             break;
         }
-        case  SYS_getcwd_s:
+        case SYS_getcwd_s:
         {
             fetch_cwd((char *)regs->rdi);
             break;
@@ -134,7 +132,6 @@ syscall_handler(Registers1 *regs)
             break;
         }
     }
-    // schedule();
     return regs->rax;
 }
 
@@ -150,7 +147,7 @@ write_to_console(uint64_t fd, char *buffer, uint64_t count)
 
 void sys_ps() {
     Task* p = overall_task_list;
-    char *a[9] = {"RUNNING", "READY", "SLEEP", "WAIT FOR INPUT", "IDLE", "EXIT", "ZOMBIE", "WAITING", "UNAVAIL"};
+    char *a[8] = {"RUNNING", "READY", "SLEEP", "WAIT FOR INPUT", "IDLE", "EXIT", "ZOMBIE", "WAITING"};
     kprintf("PID   PROCESS      MODE \n");
     while(p!=NULL)
     {

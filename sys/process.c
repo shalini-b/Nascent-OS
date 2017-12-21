@@ -21,15 +21,11 @@ int fork_process() {
     str_copy(parent_pcb->filename, child_pcb->filename);
     child_pcb->parent_task = parent_pcb;
     child_pcb->ppid = parent_pcb->pid;
-    // FIXME: filename followed by zeros, guess it is not a problem
     str_copy(child_pcb->filename, parent_pcb->filename);
 
     // copying file desc
     for (int i = 0; i < MAX_FDS; i++) {
-        // FIXME: check if copy works properly
         child_pcb->fd_array[i] = parent_pcb->fd_array[i];
-        // FIXME: increment fd for parent if child is pointing to it??
-        // parent_pcb->fd_array[i].alloted++;
     }
 
     // Backup CR3 values
@@ -166,11 +162,10 @@ uint64_t *copy_arg_to_stack(uint64_t *user_stack, int argc, char *envp[])
 int sys_execvpe(char *file_name, char *argv[], char *envp[])
 {
     // Validate file
-    int res = file_exists(file_name);
+    int res = validate_binary(file_name);
     if (res == -1) {
         return res;
     }
-    // FIXME: check for elf format
 
     memset(&args[0], 0, 1000);
     uint64_t stack_base = (uint64_t)page_alloc();
@@ -233,7 +228,6 @@ void return_to_user() {
         "pushq $35 \n\t" \
         "pushq %1 \n\t" \
         "pushq $0x200 \n\t" \
-        //"pushfq \n\t"
         "pushq $43 \n\t"\
         "pushq %0 \n\t" \
         "iretq \n\t"
@@ -306,39 +300,28 @@ void schedule() {
     contextswitch(&last->regs, &RunningTask->regs);
 }
 
-void sys_exit() {
-
-    kprintf("Exit called by %d\n", RunningTask->pid);
-    if (str_compare(RunningTask->filename, "bin/sbush") == 0) {
-        kprintf("Thank you for using Sbush.");
+void sys_exit(int pid) {
+    Task * target_task = &pcb_arr[pid];
+    if (str_compare(target_task->filename, "bin/sbush") == 0) {
+        kprintf("Thank you for using Sbush.\n");
     }
-    RunningTask->task_state = ZOMBIE;
+    target_task->task_state = ZOMBIE;
 
     // Wake up the parent of this task if it was waiting
-    Task* parent = RunningTask->parent_task;
+    Task* parent = target_task->parent_task;
     if (parent != NULL) {
         if (parent->task_state == SUSPENDED) {
             parent->task_state = READY;
-            kprintf("In exit - Waking up parent %d\n", parent->pid);
         }
-        else
-        {
-            kprintf("In exit - Parent not waiting for me- %d\n", parent->pid);
-        }
-    }
-    else
-    {
-        kprintf("In exit - should not be possible\n");
     }
 
     // Mark init as parent for all children of this Running Task
     // FIXME: Irrespective of their task state?
     for (int i = 0; i < NUM_PCB; i++) {
         Task* tmp = &pcb_arr[i];
-        if(tmp->ppid == RunningTask->pid &&
+        if(tmp->ppid == target_task->pid &&
            tmp->task_state != READY)
         {
-            kprintf("Making INIT parent of %d\n",tmp->pid);
             tmp->ppid = INIT_TASK->pid;
         }
     }

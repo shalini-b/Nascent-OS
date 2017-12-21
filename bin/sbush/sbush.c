@@ -176,19 +176,12 @@ main(int argc, char *argv[], char *envp[])
 {
     char string_buffer_array[INPUT_STRING_BUFFER_LENGTH];
     int ptr1 = 0;
-    /*FILE *fp = NULL;
-    if(argc==2)
-    {
-        fp = fopen(argv[1],"r+");
-    }*/
+
     if(argc==2) {
         int fd;
         fd = open(argv[1], 1);
         memset((void *) cmd_buff, -9999, CMD_BUFF_SIZE);
-        while (read(fd, cmd_buff, CMD_BUFF_SIZE) != 0) {
-            // printf("%s", cmd_buff);
-            // memset((void *) cmd_buff, '\0', CMD_BUFF_SIZE);
-        }
+        while (read(fd, cmd_buff, CMD_BUFF_SIZE) != 0);
         close(fd);
     }
     while (1) {
